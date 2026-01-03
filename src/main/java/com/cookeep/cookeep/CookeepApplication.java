@@ -1,0 +1,13 @@
+package com.cookeep.cookeep;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+@SpringBootApplication
+public class CookeepApplication {
+
+	public static void main(String[] args) {
+		SpringApplication.run(CookeepApplication.class, args);
+	}
+
+}
