@@ -1,9 +1,7 @@
 package com.cookeep.cookeep.domain.ingredient.common;
 
-public enum StorageType {
-
+public enum Storage {
     FRIDGE,
     FREEZER,
     PANTRY
-
 }

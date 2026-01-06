@@ -1,7 +1,8 @@
 package com.cookeep.cookeep.domain.ingredient.defaultingredient.entity;
 
 import com.cookeep.cookeep.domain.ingredient.common.Category;
-import com.cookeep.cookeep.domain.ingredient.common.StorageType;
+import com.cookeep.cookeep.domain.ingredient.common.Storage;
+import com.cookeep.cookeep.domain.ingredient.common.Unit;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -20,7 +21,7 @@ public class DefaultIngredient {
     @Column(name = "default_ingredient_id")
     private Long id;
 
-    @Column(name = "ingredient", length = 100)
+    @Column(name = "default_ingredient", length = 100)
     private String ingredient;
 
     @Column(name = "default_expiration_days")
@@ -28,9 +29,13 @@ public class DefaultIngredient {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "default_storage")
-    private StorageType defaultStorage;
+    private Storage defaultStorage;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "category")
     private Category category;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "default_unit")
+    private Unit unit;
 }
