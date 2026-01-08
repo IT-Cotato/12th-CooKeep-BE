@@ -9,6 +9,7 @@ import lombok.Getter;
 
 @Getter
 @JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonPropertyOrder({"status", "timestamp", "data"}) // 응답 필드 순서 지정
 public class DataResponse<T> extends BaseResponse {
 
 	private final T data;
