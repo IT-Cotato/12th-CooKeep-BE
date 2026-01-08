@@ -1,6 +1,7 @@
 package com.cookeep.cookeep.common.dto;
 
 
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import org.springframework.http.HttpStatus;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
