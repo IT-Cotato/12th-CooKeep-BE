@@ -20,6 +20,7 @@ public class UserPlantService {
     private final UserPlantRepository userPlantRepository;
     private final UserRepository userRepository;
 
+    // 유저 보유 식물 목록 조회
     @Transactional(readOnly = true) // 성능 최적화를 위해 읽기 전용 설정
     public List<MyPlantResponse> getMyPlants(Long userId) {
         Users user = userRepository.findById(userId)
@@ -31,5 +32,25 @@ public class UserPlantService {
         return userPlants.stream()
                 .map(plant -> MyPlantResponse.from(plant, user))
                 .collect(Collectors.toList());
+    }
+
+    // 프로필 식물 지정
+    @Transactional
+    public void updateProfilePlant(Long userId, Long userPlantId) {
+        // 1. 유저 조회
+        Users user = userRepository.findById(userId)
+                .orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND));
+
+        // 2. 변경할 식물 조회
+        UserPlants userPlant = userPlantRepository.findById(userPlantId)
+                .orElseThrow(() -> new AppException(ErrorCode.PLANT_NOT_FOUND));
+
+        // 3. 보안 체크: 이 식물의 주인이 현재 로그인한 유저가 맞는지 검증
+        if (!userPlant.getUser().getUserId().equals(userId)) {
+            throw new AppException(ErrorCode.NOT_MY_PLANT); // 본인 식물이 아닐 경우 예외 발생
+        }
+
+        // 4. 프로필 식물 업데이트 (더티 체킹에 의해 자동 반영)
+        user.updateProfilePlant(userPlant);
     }
 }
