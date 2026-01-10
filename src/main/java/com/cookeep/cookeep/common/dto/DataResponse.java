@@ -1,6 +1,7 @@
 package com.cookeep.cookeep.common.dto;
 
 
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import org.springframework.http.HttpStatus;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -9,6 +10,7 @@ import lombok.Getter;
 
 @Getter
 @JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonPropertyOrder({"status", "timestamp", "data"}) // 응답 필드 순서 지정
 public class DataResponse<T> extends BaseResponse {
 
 	private final T data;
