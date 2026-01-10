@@ -2,20 +2,13 @@ package com.cookeep.cookeep.domain.user.entity;
 
 import java.time.LocalDateTime;
 
+import com.cookeep.cookeep.domain.plant.entity.UserPlant;
+import jakarta.persistence.*;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import com.cookeep.cookeep.common.entity.BaseEntity;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EntityListeners;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Pattern;
 import lombok.AccessLevel;
@@ -64,6 +57,7 @@ public class User extends BaseEntity {
 	private int passwordCnt;
 
 	@Column(nullable = false)
+	@Builder.Default
 	private int cookieCnt = 0;
 
 	@Enumerated(EnumType.STRING)
@@ -72,4 +66,13 @@ public class User extends BaseEntity {
 
 	@LastModifiedDate
 	private LocalDateTime updatedAt;
+
+	@OneToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "profile_plant_id")
+	private UserPlant profilePlant;
+
+	// 프로필 식물 변경
+	public void updateProfilePlant(UserPlant newUserPlant) {
+		this.profilePlant = newUserPlant;
+	}
 }

@@ -1,7 +1,7 @@
-package com.cookeep.cookeep.domain.Plant.entity;
+package com.cookeep.cookeep.domain.plant.entity;
 
 import com.cookeep.cookeep.common.entity.BaseEntity;
-import com.cookeep.cookeep.domain.Users.entity.Users;
+import com.cookeep.cookeep.domain.user.entity.User;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -21,7 +21,7 @@ public class UserPlant extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
-    private Users user; // 식물 소유자
+    private User user; // 식물 소유자
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "plant_id", nullable = false)
@@ -40,7 +40,7 @@ public class UserPlant extends BaseEntity {
     private Boolean isFrozen; // 성장 정지 여부 (14일 미접속 시 true)
 
     @Builder
-    public UserPlant(Users user, Plant plant) {
+    public UserPlant(User user, Plant plant) {
         this.user = user;
         this.plant = plant;
         this.level = 1;         // 씨앗 단계부터 시작

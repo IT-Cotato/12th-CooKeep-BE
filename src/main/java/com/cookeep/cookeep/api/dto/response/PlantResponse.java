@@ -1,6 +1,6 @@
 package com.cookeep.cookeep.api.dto.response;
 
-import com.cookeep.cookeep.domain.Plant.entity.Plant;
+import com.cookeep.cookeep.domain.plant.entity.Plant;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import lombok.Builder;
 import lombok.Getter;

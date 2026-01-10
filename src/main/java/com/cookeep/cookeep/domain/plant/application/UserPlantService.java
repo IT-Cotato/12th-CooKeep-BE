@@ -1,12 +1,12 @@
-package com.cookeep.cookeep.domain.Plant.application;
+package com.cookeep.cookeep.domain.plant.application;
 
 import com.cookeep.cookeep.api.dto.response.MyPlantResponse;
 import com.cookeep.cookeep.common.exception.AppException;
 import com.cookeep.cookeep.common.exception.ErrorCode;
-import com.cookeep.cookeep.domain.Plant.dao.UserPlantRepository;
-import com.cookeep.cookeep.domain.Plant.entity.UserPlant;
-import com.cookeep.cookeep.domain.Users.entity.Users;
-import com.cookeep.cookeep.domain.Users.repository.UserRepository;
+import com.cookeep.cookeep.domain.plant.dao.UserPlantRepository;
+import com.cookeep.cookeep.domain.plant.entity.UserPlant;
+import com.cookeep.cookeep.domain.user.dao.UserRepository;
+import com.cookeep.cookeep.domain.user.entity.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,7 +23,7 @@ public class UserPlantService {
     // 유저 보유 식물 목록 조회
     @Transactional(readOnly = true) // 성능 최적화를 위해 읽기 전용 설정
     public List<MyPlantResponse> getMyPlants(Long userId) {
-        Users user = userRepository.findById(userId)
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND));
 
         // @EntityGraph 덕분에 Plant 정보까지 한 번에 긁어옴
@@ -38,7 +38,7 @@ public class UserPlantService {
     @Transactional
     public void updateProfilePlant(Long userId, Long userPlantId) {
         // 1. 유저 조회
-        Users user = userRepository.findById(userId)
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND));
 
         // 2. 변경할 식물 조회

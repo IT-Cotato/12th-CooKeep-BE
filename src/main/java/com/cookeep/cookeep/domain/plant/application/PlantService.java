@@ -1,7 +1,7 @@
-package com.cookeep.cookeep.domain.Plant.application;
+package com.cookeep.cookeep.domain.plant.application;
 
-import com.cookeep.cookeep.domain.Plant.dao.PlantRepository;
-import com.cookeep.cookeep.domain.Plant.entity.Plant;
+import com.cookeep.cookeep.domain.plant.dao.PlantRepository;
+import com.cookeep.cookeep.domain.plant.entity.Plant;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

@@ -1,4 +1,4 @@
-package com.cookeep.cookeep.domain.Plant.entity;
+package com.cookeep.cookeep.domain.plant.entity;
 
 import jakarta.persistence.*;
 import lombok.*;

@@ -1,7 +1,7 @@
 package com.cookeep.cookeep.api.dto.response;
 
-import com.cookeep.cookeep.domain.Plant.entity.UserPlant;
-import com.cookeep.cookeep.domain.Users.entity.Users;
+import com.cookeep.cookeep.domain.plant.entity.UserPlant;
+import com.cookeep.cookeep.domain.user.entity.User;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -16,7 +16,7 @@ public class MyPlantResponse {
     private Boolean isProfile;     // 현재 이 식물이 유저의 프로필 식물인지 여부
     private String createdAt;      // 언제부터 키웠는지 (BaseEntity 활용)
 
-    public static MyPlantResponse from(UserPlant userPlant, Users user) {
+    public static MyPlantResponse from(UserPlant userPlant, User user) {
         // 유저의 profile_plant_id와 현재 식물의 ID가 같으면 true
         boolean isProfile = user.getProfilePlant() != null &&
                 user.getProfilePlant().getUserPlantId().equals(userPlant.getUserPlantId());

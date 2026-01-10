@@ -1,7 +1,7 @@
-package com.cookeep.cookeep.domain.Plant.entity;
+package com.cookeep.cookeep.domain.plant.entity;
 
 import com.cookeep.cookeep.common.entity.BaseEntity;
-import com.cookeep.cookeep.domain.Users.entity.Users;
+import com.cookeep.cookeep.domain.user.entity.User;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -24,5 +24,5 @@ public class WateringLog extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
-    private Users user; // 물을 준 사용자 (랭킹 집계용)
+    private User user; // 물을 준 사용자 (랭킹 집계용)
 }
