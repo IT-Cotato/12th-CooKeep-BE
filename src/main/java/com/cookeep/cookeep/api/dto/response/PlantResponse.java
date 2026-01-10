@@ -1,6 +1,6 @@
 package com.cookeep.cookeep.api.dto.response;
 
-import com.cookeep.cookeep.domain.Plants.entity.Plants;
+import com.cookeep.cookeep.domain.Plant.entity.Plant;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import lombok.Builder;
 import lombok.Getter;
@@ -17,7 +17,7 @@ public class PlantResponse {
     private String growthImageUrl;
     private String harvestImageUrl;
 
-    public static PlantResponse from(Plants plant) {
+    public static PlantResponse from(Plant plant) {
         return PlantResponse.builder()
                 .plantId(plant.getPlantId())
                 .plantName(plant.getPlantName().getDisplayName()) // 한글 이름

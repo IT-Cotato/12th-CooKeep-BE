@@ -1,7 +1,7 @@
-package com.cookeep.cookeep.domain.Plants.application;
+package com.cookeep.cookeep.domain.Plant.application;
 
-import com.cookeep.cookeep.domain.Plants.dao.PlantRepository;
-import com.cookeep.cookeep.domain.Plants.entity.Plants;
+import com.cookeep.cookeep.domain.Plant.dao.PlantRepository;
+import com.cookeep.cookeep.domain.Plant.entity.Plant;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -14,7 +14,7 @@ public class PlantService {
     private final PlantRepository plantRepository;
 
     @Transactional(readOnly = true)
-    public List<Plants> getAllPlants() {
+    public List<Plant> getAllPlants() {
         return plantRepository.findAll();
     }
 }

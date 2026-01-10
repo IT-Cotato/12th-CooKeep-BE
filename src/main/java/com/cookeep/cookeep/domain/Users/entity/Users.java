@@ -1,7 +1,7 @@
 package com.cookeep.cookeep.domain.Users.entity;
 
 import com.cookeep.cookeep.common.entity.BaseEntity;
-import com.cookeep.cookeep.domain.Plants.entity.UserPlants;
+import com.cookeep.cookeep.domain.Plant.entity.UserPlant;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -27,10 +27,10 @@ public class Users extends BaseEntity {
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "profile_plant_id")
-    private UserPlants profilePlant;
+    private UserPlant profilePlant;
 
     // 프로필 식물 변경
-    public void updateProfilePlant(UserPlants newUserPlant) {
+    public void updateProfilePlant(UserPlant newUserPlant) {
         this.profilePlant = newUserPlant;
     }
 }

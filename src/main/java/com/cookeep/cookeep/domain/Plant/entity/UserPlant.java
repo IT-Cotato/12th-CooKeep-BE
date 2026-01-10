@@ -1,4 +1,4 @@
-package com.cookeep.cookeep.domain.Plants.entity;
+package com.cookeep.cookeep.domain.Plant.entity;
 
 import com.cookeep.cookeep.common.entity.BaseEntity;
 import com.cookeep.cookeep.domain.Users.entity.Users;
@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
 @Table(name = "user_plants")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class UserPlants extends BaseEntity {
+public class UserPlant extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -25,7 +25,7 @@ public class UserPlants extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "plant_id", nullable = false)
-    private Plants plant; // 기본 식물 정보
+    private Plant plant; // 기본 식물 정보
 
     @Column(nullable = false)
     private Integer level; // 현재 성장 단계 (예: 1~4단계)
@@ -40,7 +40,7 @@ public class UserPlants extends BaseEntity {
     private Boolean isFrozen; // 성장 정지 여부 (14일 미접속 시 true)
 
     @Builder
-    public UserPlants(Users user, Plants plant) {
+    public UserPlant(Users user, Plant plant) {
         this.user = user;
         this.plant = plant;
         this.level = 1;         // 씨앗 단계부터 시작

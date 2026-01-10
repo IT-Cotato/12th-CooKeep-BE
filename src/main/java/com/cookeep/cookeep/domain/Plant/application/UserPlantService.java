@@ -1,10 +1,10 @@
-package com.cookeep.cookeep.domain.Plants.application;
+package com.cookeep.cookeep.domain.Plant.application;
 
 import com.cookeep.cookeep.api.dto.response.MyPlantResponse;
 import com.cookeep.cookeep.common.exception.AppException;
 import com.cookeep.cookeep.common.exception.ErrorCode;
-import com.cookeep.cookeep.domain.Plants.dao.UserPlantRepository;
-import com.cookeep.cookeep.domain.Plants.entity.UserPlants;
+import com.cookeep.cookeep.domain.Plant.dao.UserPlantRepository;
+import com.cookeep.cookeep.domain.Plant.entity.UserPlant;
 import com.cookeep.cookeep.domain.Users.entity.Users;
 import com.cookeep.cookeep.domain.Users.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -27,7 +27,7 @@ public class UserPlantService {
                 .orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND));
 
         // @EntityGraph 덕분에 Plant 정보까지 한 번에 긁어옴
-        List<UserPlants> userPlants = userPlantRepository.findAllByUser(user);
+        List<UserPlant> userPlants = userPlantRepository.findAllByUser(user);
 
         return userPlants.stream()
                 .map(plant -> MyPlantResponse.from(plant, user))
@@ -42,7 +42,7 @@ public class UserPlantService {
                 .orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND));
 
         // 2. 변경할 식물 조회
-        UserPlants userPlant = userPlantRepository.findById(userPlantId)
+        UserPlant userPlant = userPlantRepository.findById(userPlantId)
                 .orElseThrow(() -> new AppException(ErrorCode.PLANT_NOT_FOUND));
 
         // 3. 보안 체크: 이 식물의 주인이 현재 로그인한 유저가 맞는지 검증

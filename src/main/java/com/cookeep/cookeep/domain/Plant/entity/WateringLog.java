@@ -1,4 +1,4 @@
-package com.cookeep.cookeep.domain.Plants.entity;
+package com.cookeep.cookeep.domain.Plant.entity;
 
 import com.cookeep.cookeep.common.entity.BaseEntity;
 import com.cookeep.cookeep.domain.Users.entity.Users;
@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 @Table(name = "watering_logs")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class WateringLogs extends BaseEntity {
+public class WateringLog extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -20,7 +20,7 @@ public class WateringLogs extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_plant_id", nullable = false)
-    private UserPlants userPlant; // 어떤 식물에 물을 줬는지
+    private UserPlant userPlant; // 어떤 식물에 물을 줬는지
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)

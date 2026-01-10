@@ -1,4 +1,4 @@
-package com.cookeep.cookeep.domain.Plants.entity;
+package com.cookeep.cookeep.domain.Plant.entity;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;

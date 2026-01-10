@@ -1,4 +1,4 @@
-package com.cookeep.cookeep.domain.Plants.entity;
+package com.cookeep.cookeep.domain.Plant.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
@@ -9,7 +9,7 @@ import lombok.*;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Builder
-public class Plants {
+public class Plant {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
