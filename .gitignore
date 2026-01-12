@@ -37,6 +37,8 @@ out/
 .vscode/
 
 # Secret Configuration
+application.yaml
+application.yml
 application-secret.yaml
 application-secret.yml
 **/application-secret.yaml
