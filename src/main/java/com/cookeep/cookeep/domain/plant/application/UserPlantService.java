@@ -97,7 +97,7 @@ public class UserPlantService {
             throw new AppException(ErrorCode.NOT_MY_PLANT);
         }
 
-        // 3. 상태 체크: 반드시 얼어있는(isFrozen) 상태여야만 포기가 가능하도록 제한
+        // 3. 상태 체크: 반드시 성장 정지(isFrozen) 상태여야만 포기가 가능하도록 제한
         if (!userPlant.getIsFrozen()) {
             throw new AppException(ErrorCode.PLANT_NOT_FROZEN);
         }
@@ -124,7 +124,7 @@ public class UserPlantService {
             throw new AppException(ErrorCode.NOT_MY_PLANT); // 403
         }
 
-        // 3. 상태 체크 (이미 수확했거나 얼어있는 경우)
+        // 3. 상태 체크 (이미 수확했거나 성장 정지인 경우)
         if (userPlant.getIsHarvested()) {
             throw new AppException(ErrorCode.ALREADY_HARVESTED); // 400
         }
@@ -133,9 +133,33 @@ public class UserPlantService {
         }
 
         // 4. 쿠키 차감 로직 (Cookie 브랜치에서 구현 예정)
-        // TODO: userService.useCookie(userId, 1);
+        // TODO: useCookie(userId, 1);
 
         // 5. 물 주기 수행
         userPlant.giveWater();
+    }
+
+    // 식물 살리기
+    @Transactional
+    public void revivePlant(Long userId, Long userPlantId) {
+        // 1. 식물 조회
+        UserPlant userPlant = userPlantRepository.findById(userPlantId)
+                .orElseThrow(() -> new AppException(ErrorCode.PLANT_NOT_FOUND)); // 404
+
+        // 2. 권한 체크
+        if (!userPlant.getUser().getUserId().equals(userId)) {
+            throw new AppException(ErrorCode.NOT_MY_PLANT); // 403
+        }
+
+        // 3. 상태 체크: 성장 정지 상태가 아니면 살릴 수 없음
+        if (!userPlant.getIsFrozen()) {
+            throw new AppException(ErrorCode.PLANT_NOT_FROZEN); // 400
+        }
+
+        // 4. 쿠키 차감 로직 (feat/Cookie 브랜치에서 구현 예정)
+        // TODO: useCookie(userId, 5); // 살리기는 쿠키 5개 소모 정책
+
+        // 5. 식물 살리기 수행 (isFrozen = false)
+        userPlant.revive();
     }
 }

@@ -82,4 +82,18 @@ public class MyPlantController {
         userPlantService.giveWater(userId, userPlantId);
         return DataResponse.from(null);
     }
+
+    @Operation(summary = "식물 다시 살리기", description = "성장이 정지된(isFrozen=true) 식물을 쿠키를 사용하여 다시 살립니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "식물 살리기 성공"),
+            @ApiResponse(responseCode = "400", description = "성장 정지 상태가 아님 (살릴 필요 없음)"),
+            @ApiResponse(responseCode = "403", description = "본인의 식물이 아님"),
+            @ApiResponse(responseCode = "404", description = "보유 식물을 찾을 수 없음")
+    })
+    @PostMapping("/{userPlantId}/revive")
+    public DataResponse<Void> revivePlant(
+            @Parameter(description = "다시 살릴 보유 식물 ID") @PathVariable Long userPlantId) {
+        userPlantService.revivePlant(userId, userPlantId);
+        return DataResponse.from(null);
+    }
 }

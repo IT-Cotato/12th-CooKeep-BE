@@ -77,6 +77,13 @@ public class UserPlant extends BaseEntity {
         };
     }
 
+    public void revive() {
+        // 얼어있는 상태일 때만 해제 가능
+        if (this.isFrozen) {
+            unfreeze();
+        }
+    }
+
     // 성장 정지 처리
     public void freeze() {
         this.isFrozen = true;
