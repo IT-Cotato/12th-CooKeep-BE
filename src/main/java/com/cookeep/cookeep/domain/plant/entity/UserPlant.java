@@ -46,8 +46,14 @@ public class UserPlant extends BaseEntity {
         this.waterCount++;
 
         if (canLevelUp()) {
-            this.level++;
-            this.waterCount = 0; // 다음 단계를 위해 초기화
+            // 현재 3단계(성장)에서 조건을 만족하면 수확 상태로 변경
+            if (this.level == 3) {
+                this.level = 4; // 수확 단계 도달
+                this.isHarvested = true;
+            } else {
+                this.level++;
+                this.waterCount = 0; // 다음 단계를 위해 초기화
+            }
         }
     }
 

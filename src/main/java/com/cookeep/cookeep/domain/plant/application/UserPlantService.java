@@ -84,4 +84,31 @@ public class UserPlantService {
         // 4. 자동 모드(isProfileAutoUpdate=true)일 때만 프로필 갱신
         user.setProfilePlantAuto(newUserPlant);
     }
+
+    // 식물 포기하기
+    @Transactional
+    public void abandonPlant(Long userId, Long userPlantId) {
+        // 1. 식물 조회
+        UserPlant userPlant = userPlantRepository.findById(userPlantId)
+                .orElseThrow(() -> new AppException(ErrorCode.PLANT_NOT_FOUND));
+
+        // 2. 권한 체크 (내 식물인지)
+        if (!userPlant.getUser().getUserId().equals(userId)) {
+            throw new AppException(ErrorCode.NOT_MY_PLANT);
+        }
+
+        // 3. 상태 체크: 반드시 얼어있는(isFrozen) 상태여야만 포기가 가능하도록 제한
+        if (!userPlant.getIsFrozen()) {
+            throw new AppException(ErrorCode.PLANT_NOT_FROZEN);
+        }
+
+        // 4. 식물 삭제
+        userPlantRepository.delete(userPlant);
+
+        // 5. 삭제한 식물이 현재 프로필 식물이라면 연관 관계 해제
+        User user = userPlant.getUser();
+        if (user.getProfilePlant() != null && user.getProfilePlant().getUserPlantId().equals(userPlantId)) {
+            user.updateProfilePlant(null);
+        }
+    }
 }
