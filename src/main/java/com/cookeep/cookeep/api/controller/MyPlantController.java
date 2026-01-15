@@ -1,7 +1,5 @@
 package com.cookeep.cookeep.api.controller;
 
-import com.cookeep.cookeep.api.dto.request.PlantRegisterRequest;
-import com.cookeep.cookeep.api.dto.request.ProfilePlantRequest;
 import com.cookeep.cookeep.api.dto.response.MyPlantResponse;
 import com.cookeep.cookeep.common.dto.DataResponse;
 import com.cookeep.cookeep.domain.plant.application.UserPlantService;
@@ -10,9 +8,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
