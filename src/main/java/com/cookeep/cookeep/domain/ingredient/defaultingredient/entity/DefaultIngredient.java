@@ -38,4 +38,7 @@ public class DefaultIngredient {
     @Enumerated(EnumType.STRING)
     @Column(name = "default_unit")
     private Unit unit;
+
+    @Column(name = "ai_tip")
+    private String aiTip;
 }
