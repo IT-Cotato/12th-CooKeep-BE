@@ -3,14 +3,13 @@ package com.cookeep.cookeep.domain.plant.entity;
 import com.cookeep.cookeep.common.entity.BaseEntity;
 import com.cookeep.cookeep.domain.user.entity.User;
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 @Entity
 @Table(name = "user_plants")
 @Getter
+@Builder
+@AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class UserPlant extends BaseEntity {
 
@@ -38,16 +37,6 @@ public class UserPlant extends BaseEntity {
 
     @Column(name = "is_frozen", nullable = false)
     private Boolean isFrozen; // 성장 정지 여부 (14일 미접속 시 true)
-
-    @Builder
-    public UserPlant(User user, Plant plant) {
-        this.user = user;
-        this.plant = plant;
-        this.level = 1;         // 씨앗 단계부터 시작
-        this.waterCount = 0;    // 물 주기 0회부터 시작
-        this.isHarvested = false;
-        this.isFrozen = false;  // 기본은 활동 중
-    }
 
     // 물 주기 및 단계 상승 체크
     // 정책: 씨앗(1회) -> 새싹(2회) -> 성장(3회) -> 수확

@@ -3,7 +3,9 @@ package com.cookeep.cookeep.domain.plant.application;
 import com.cookeep.cookeep.api.dto.response.MyPlantResponse;
 import com.cookeep.cookeep.common.exception.AppException;
 import com.cookeep.cookeep.common.exception.ErrorCode;
+import com.cookeep.cookeep.domain.plant.dao.PlantRepository;
 import com.cookeep.cookeep.domain.plant.dao.UserPlantRepository;
+import com.cookeep.cookeep.domain.plant.entity.Plant;
 import com.cookeep.cookeep.domain.plant.entity.UserPlant;
 import com.cookeep.cookeep.domain.user.dao.UserRepository;
 import com.cookeep.cookeep.domain.user.entity.User;
@@ -19,6 +21,7 @@ import java.util.stream.Collectors;
 public class UserPlantService {
     private final UserPlantRepository userPlantRepository;
     private final UserRepository userRepository;
+    private final PlantRepository plantRepository;
 
     // 유저 보유 식물 목록 조회
     @Transactional(readOnly = true) // 성능 최적화를 위해 읽기 전용 설정
@@ -52,5 +55,33 @@ public class UserPlantService {
 
         // 4. 프로필 식물 업데이트 (더티 체킹에 의해 자동 반영)
         user.updateProfilePlant(userPlant);
+    }
+
+    // 현재 키우는 식물 등록
+    @Transactional
+    public void registerPlant(Long userId, long plantId) {
+        // 1. 유저 존재 확인
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND));
+
+        // 2. 기본으로 존재하는 식물인지 확인
+        Plant plant = plantRepository.findById(plantId)
+                .orElseThrow(() -> new AppException(ErrorCode.PLANT_NOT_FOUND));
+
+        // 3. UserPlant 엔티티 생성 및 저장
+        UserPlant newUserPlant = UserPlant.builder()
+                .user(user)
+                .plant(plant)
+                .level(1)         // 초기 레벨 1
+                .waterCount(0)    // 초기 물 주기 횟수 0
+                .isHarvested(false)
+                .isFrozen(false)
+                .build();
+
+        userPlantRepository.save(newUserPlant);
+        userPlantRepository.flush(); // 이 줄을 추가하여 DB와 동기화 (createdAt 채워짐)
+
+        // 4. 자동 모드(isProfileAutoUpdate=true)일 때만 프로필 갱신
+        user.setProfilePlantAuto(newUserPlant);
     }
 }

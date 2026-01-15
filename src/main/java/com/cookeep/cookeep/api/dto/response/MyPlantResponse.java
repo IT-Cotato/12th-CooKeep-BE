@@ -23,7 +23,7 @@ public class MyPlantResponse {
 
         return MyPlantResponse.builder()
                 .userPlantId(userPlant.getUserPlantId())
-                .plantName(userPlant.getPlant().getPlantName().getDisplayName())
+                .plantName(userPlant.getPlant().getPlantType().getDisplayName())
                 .imageUrl(userPlant.getCurrentImageUrl())
                 .level(userPlant.getLevel())
                 .isHarvested(userPlant.getIsHarvested())

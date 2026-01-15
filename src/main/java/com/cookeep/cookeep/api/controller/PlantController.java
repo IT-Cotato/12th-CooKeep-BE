@@ -1,5 +1,6 @@
 package com.cookeep.cookeep.api.controller;
 
+import com.cookeep.cookeep.api.dto.request.PlantRegisterRequest;
 import com.cookeep.cookeep.api.dto.request.ProfilePlantRequest;
 import com.cookeep.cookeep.api.dto.response.MyPlantResponse;
 import com.cookeep.cookeep.api.dto.response.PlantResponse;
@@ -25,8 +26,9 @@ public class PlantController {
 
     private final PlantService plantService;
     private final UserPlantService userPlantService;
+    Long userId = 2L;
 
-    @Operation(summary = "전체 식물 도감 목록 조회", description = "시스템에 등록된 모든 식물 종류를 조회합니다.")
+    @Operation(summary = "전체 식물 목록 조회", description = "시스템에 등록된 모든 식물 종류를 조회합니다.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "조회 성공")
     })
@@ -46,7 +48,6 @@ public class PlantController {
     @GetMapping("/me")
     public DataResponse<List<MyPlantResponse>> getMyPlants() {
         // TODO: 시큐리티 적용 전이므로 임시 유저 ID 1L 사용
-        Long userId = 1L;
         return DataResponse.from(userPlantService.getMyPlants(userId));
     }
 
@@ -56,11 +57,21 @@ public class PlantController {
             @ApiResponse(responseCode = "403", description = "본인의 식물이 아님"),
             @ApiResponse(responseCode = "404", description = "유저 또는 식물을 찾을 수 없음")
     })
-    @PatchMapping("/me/profile-plant")
+    @PatchMapping("/me/profile")
     public DataResponse<Void> updateProfilePlant(@Valid @RequestBody ProfilePlantRequest request) {
         // TODO: 시큐리티 적용 전 임시 ID
-        Long userId = 1L;
         userPlantService.updateProfilePlant(userId, request.getUserPlantId());
+        return DataResponse.from(null);
+    }
+
+    @Operation(summary = "새로운 식물 등록", description = "기본 식물 중 하나를 선택하여 현재 키우는 식물로 등록합니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "식물 등록 성공"),
+            @ApiResponse(responseCode = "404", description = "유저 또는 도감 식물을 찾을 수 없음")
+    })
+    @PostMapping("/new")
+    public DataResponse<Void> registerPlant(@Valid @RequestBody PlantRegisterRequest request) {
+        userPlantService.registerPlant(userId, request.getPlantId());
         return DataResponse.from(null);
     }
 }

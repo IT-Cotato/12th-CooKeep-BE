@@ -14,11 +14,11 @@ public class Plant {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "plant_id")
-    private Integer plantId;
+    private long plantId;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "plant_name", nullable = false, length = 20)
-    private PlantType plantName;
+    private PlantType plantType;
 
     @Column(name = "seed_image_url", nullable = false, length = 512)
     private String seedImageUrl; // 추후에 기본값 고정 예정
