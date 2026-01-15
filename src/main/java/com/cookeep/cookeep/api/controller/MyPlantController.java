@@ -6,6 +6,7 @@ import com.cookeep.cookeep.api.dto.response.MyPlantResponse;
 import com.cookeep.cookeep.common.dto.DataResponse;
 import com.cookeep.cookeep.domain.plant.application.UserPlantService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -34,26 +35,28 @@ public class MyPlantController {
         return DataResponse.from(userPlantService.getMyPlants(userId));
     }
 
-    @Operation(summary = "새로운 식물 등록(심기)", description = "기본 식물 중 하나를 선택하여 현재 키우는 식물로 새롭게 등록합니다.")
+    @Operation(summary = "새로운 식물 등록", description = "기본 식물 ID를 경로에 전달하여 새로운 식물을 등록합니다.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "식물 등록 성공"),
             @ApiResponse(responseCode = "404", description = "유저 또는 도감 식물을 찾을 수 없음")
     })
-    @PostMapping
-    public DataResponse<Void> registerPlant(@Valid @RequestBody PlantRegisterRequest request) {
-        userPlantService.registerPlant(userId, request.getPlantId());
+    @PostMapping("/{plantId}") // /api/my-plants/{plantId}
+    public DataResponse<Void> registerPlant(
+            @Parameter(description = "기본 식물 ID") @PathVariable int plantId) {
+        userPlantService.registerPlant(userId, plantId);
         return DataResponse.from(null);
     }
 
-    @Operation(summary = "프로필 식물 지정", description = "내 식물 중 하나를 대표 프로필로 설정합니다.")
+    @Operation(summary = "프로필 식물 지정", description = "내 보유 식물 ID를 경로에 전달하여 대표 프로필로 설정합니다.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "지정 성공"),
             @ApiResponse(responseCode = "403", description = "본인의 식물이 아님"),
             @ApiResponse(responseCode = "404", description = "식물을 찾을 수 없음")
     })
-    @PatchMapping("/profile")
-    public DataResponse<Void> updateProfilePlant(@Valid @RequestBody ProfilePlantRequest request) {
-        userPlantService.updateProfilePlant(userId, request.getUserPlantId());
+    @PatchMapping("/{userPlantId}/profile") // /api/my-plants/{userPlantId}/profile
+    public DataResponse<Void> updateProfilePlant(
+            @Parameter(description = "유저 보유 식물 ID (user_plant_id)") @PathVariable long userPlantId) {
+        userPlantService.updateProfilePlant(userId, userPlantId);
         return DataResponse.from(null);
     }
 }
