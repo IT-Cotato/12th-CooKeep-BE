@@ -69,4 +69,17 @@ public class MyPlantController {
         userPlantService.abandonPlant(userId, userPlantId);
         return DataResponse.from(null);
     }
+
+    @Operation(summary = "식물 물 주기", description = "보유한 식물에게 물을 줍니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "물 주기 성공"),
+            @ApiResponse(responseCode = "400", description = "이미 수확했거나 얼어있는 상태"),
+            @ApiResponse(responseCode = "403", description = "본인의 식물이 아님"),
+            @ApiResponse(responseCode = "404", description = "식물을 찾을 수 없음")
+    })
+    @PostMapping("/{userPlantId}/water")
+    public DataResponse<Void> giveWater(@PathVariable Long userPlantId) {
+        userPlantService.giveWater(userId, userPlantId);
+        return DataResponse.from(null);
+    }
 }

@@ -13,6 +13,8 @@ public enum ErrorCode {
 	BAD_REQUEST(HttpStatus.BAD_REQUEST, "잘못된 요청입니다.", "COMMON-001"),
 	INVALID_PARAMETER(HttpStatus.BAD_REQUEST, "요청 파라미터가 잘못되었습니다.", "COMMON-002"),
 	PLANT_NOT_FROZEN(HttpStatus.BAD_REQUEST, "성장 정지 상태의 식물만 포기할 수 있습니다.", "PLANT-003"),
+	ALREADY_HARVESTED(HttpStatus.BAD_REQUEST, "이미 수확한 식물입니다.", "PLANT-004"),
+	PLANT_IS_FROZEN(HttpStatus.BAD_REQUEST, "성장 정지 상태의 식물입니다.", " PLANT-005"),
 
 	// 403 FORBIDDEN (권한 관련)
 	NOT_MY_PLANT(HttpStatus.FORBIDDEN, "해당 식물에 대한 권한이 없습니다.", "PLANT-001"),

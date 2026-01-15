@@ -111,4 +111,31 @@ public class UserPlantService {
             user.updateProfilePlant(null);
         }
     }
+
+    // 식물에게 물 주기
+    @Transactional
+    public void giveWater(Long userId, Long userPlantId) {
+        // 1. 식물 조회
+        UserPlant userPlant = userPlantRepository.findById(userPlantId)
+                .orElseThrow(() -> new AppException(ErrorCode.PLANT_NOT_FOUND)); // 404
+
+        // 2. 권한 체크
+        if (!userPlant.getUser().getUserId().equals(userId)) {
+            throw new AppException(ErrorCode.NOT_MY_PLANT); // 403
+        }
+
+        // 3. 상태 체크 (이미 수확했거나 얼어있는 경우)
+        if (userPlant.getIsHarvested()) {
+            throw new AppException(ErrorCode.ALREADY_HARVESTED); // 400
+        }
+        if (userPlant.getIsFrozen()) {
+            throw new AppException(ErrorCode.PLANT_IS_FROZEN); // 400
+        }
+
+        // 4. 쿠키 차감 로직 (Cookie 브랜치에서 구현 예정)
+        // TODO: userService.useCookie(userId, 1);
+
+        // 5. 물 주기 수행
+        userPlant.giveWater();
+    }
 }
