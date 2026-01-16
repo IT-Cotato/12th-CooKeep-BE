@@ -1,0 +1,47 @@
+{
+  "info": {
+    "_postman_id": "e8166ad6-1888-4a05-9a41-02f83595d815",
+    "name": "카카오로그인",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "로그인토큰발급",
+      "id": "49988e92-fe25-48bc-8a5a-31f9f0690436",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8080/api/auth/login/kakao?code=NhiBE9ct_7Tx1ZPz3g8oXGhcA6-4vCJpKWi2aV7iyAiDd1L5KytVaAAAAAQKDR-XAAABm8ZaGLcq3eF1vjqPRg",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8080",
+          "path": [
+            "api",
+            "auth",
+            "login",
+            "kakao"
+          ],
+          "query": [
+            {
+              "key": "https://kauth.kakao.com/oauth/authorize?client_id=93e8813a9ef6da8001cb900ae58ca9e1&redirect_uri=http://localhost:8080/api/auth/login/kakao&response_type=code",
+              "value": null,
+              "type": "text",
+              "uuid": "137b7228-272e-4114-8d07-1b8d9b2cfc66",
+              "disabled": true
+            },
+            {
+              "key": "code",
+              "value": "NhiBE9ct_7Tx1ZPz3g8oXGhcA6-4vCJpKWi2aV7iyAiDd1L5KytVaAAAAAQKDR-XAAABm8ZaGLcq3eF1vjqPRg",
+              "type": "text",
+              "uuid": "e6c66115-e1ee-4b1f-969d-66b851d08d77"
+            }
+          ]
+        }
+      },
+      "response": []
+    }
+  ]
+}
