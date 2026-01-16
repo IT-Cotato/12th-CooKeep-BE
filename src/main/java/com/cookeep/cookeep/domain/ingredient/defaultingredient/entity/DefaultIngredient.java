@@ -39,6 +39,6 @@ public class DefaultIngredient {
     @Column(name = "default_unit")
     private Unit unit;
 
-    @Column(name = "ai_tip")
+    @Column(name = "ai_tip", length = 500)
     private String aiTip;
 }
