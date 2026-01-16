@@ -2,6 +2,10 @@ spring:
   application:
     name: cookeep
 
+  profiles:
+    active: local
+    include: secret
+
   datasource:
     url: ${DB_URL}
     username: ${DB_USERNAME}
