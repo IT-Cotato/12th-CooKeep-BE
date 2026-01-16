@@ -48,3 +48,6 @@ application-secret.yml
 .env
 .env.local
 .env.*.local
+
+# OS 시스템 파일
+.DS_Store
