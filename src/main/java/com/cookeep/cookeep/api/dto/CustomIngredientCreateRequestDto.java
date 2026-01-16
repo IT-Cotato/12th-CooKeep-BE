@@ -1,4 +1,4 @@
-package com.cookeep.cookeep.domain.ingredient.customingredient.dto;
+package com.cookeep.cookeep.api.dto;
 
 import com.cookeep.cookeep.domain.ingredient.common.Category;
 import com.cookeep.cookeep.domain.ingredient.common.Storage;
