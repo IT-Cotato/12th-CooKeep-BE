@@ -102,14 +102,14 @@ public class UserPlantService {
             throw new AppException(ErrorCode.PLANT_NOT_FROZEN);
         }
 
-        // 4. 식물 삭제
-        userPlantRepository.delete(userPlant);
-
-        // 5. 삭제한 식물이 현재 프로필 식물이라면 연관 관계 해제
+        // 4. 삭제한 식물이 현재 프로필 식물이라면 연관 관계 해제
         User user = userPlant.getUser();
         if (user.getProfilePlant() != null && user.getProfilePlant().getUserPlantId().equals(userPlantId)) {
             user.updateProfilePlant(null);
         }
+
+        // 5. 식물 삭제
+        userPlantRepository.delete(userPlant);
     }
 
     // 식물에게 물 주기
