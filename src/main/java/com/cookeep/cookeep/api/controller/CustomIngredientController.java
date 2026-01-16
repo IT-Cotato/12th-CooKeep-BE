@@ -1,10 +1,10 @@
 package com.cookeep.cookeep.api.controller;
 
 import com.cookeep.cookeep.common.dto.DataResponse;
+import com.cookeep.cookeep.config.JwtTokenProvider;
 import com.cookeep.cookeep.domain.ingredient.customingredient.application.CustomIngredientService;
 import com.cookeep.cookeep.domain.ingredient.customingredient.dto.CustomIngredientCreateRequestDto;
 import com.cookeep.cookeep.domain.ingredient.customingredient.dto.CustomIngredientCreateResponseDto;
-import com.cookeep.cookeep.domain.user.application.AuthService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -17,22 +17,23 @@ import org.springframework.web.bind.annotation.*;
 public class CustomIngredientController {
 
     private final CustomIngredientService customIngredientService;
-    private final AuthService authService;
+    private final JwtTokenProvider jwtTokenProvider;
 
     @PostMapping
-    public ResponseEntity<CustomIngredientCreateResponseDto> createCustomIngredient(
+    public ResponseEntity<DataResponse<CustomIngredientCreateResponseDto>> createCustomIngredient(
             @RequestHeader("Authorization") String authorization,
             @RequestBody @Valid CustomIngredientCreateRequestDto request
     ) {
         String token = authorization.replace("Bearer ", "");
-        Long userId = authService.extractUserIdFromToken(token);
+
+        // JwtTokenProvider로 userId 추출
+        Long userId = jwtTokenProvider.getUserId(token, false);
 
         CustomIngredientCreateResponseDto response =
                 customIngredientService.create(userId, request);
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)
-                .body(DataResponse.of(response));
-    }
+                .body(DataResponse.created(response));
     }
 }
