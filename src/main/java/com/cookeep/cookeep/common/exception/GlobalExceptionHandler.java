@@ -1,5 +1,6 @@
 package com.cookeep.cookeep.common.exception;
 
+import io.jsonwebtoken.JwtException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -11,6 +12,8 @@ import com.cookeep.cookeep.common.dto.ErrorResponse;
 
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
+
+import javax.naming.AuthenticationException;
 
 @Slf4j
 @RestControllerAdvice
@@ -24,6 +27,19 @@ public class GlobalExceptionHandler {
 		return ResponseEntity
 			.status(e.getErrorCode().getHttpStatus())
 			.body(errorResponse);
+	}
+
+	// JWT 토큰 관련 예외 처리
+	@ExceptionHandler({JwtException.class, AuthenticationException.class})
+	public ResponseEntity<ErrorResponse> handleAuthenticationException(
+			Exception e, HttpServletRequest request) {
+		log.error("인증 에러 발생: {}", e.getMessage());
+		log.error("에러가 발생한 지점 {}, {}", request.getMethod(), request.getRequestURI());
+
+		ErrorResponse errorResponse = ErrorResponse.of(ErrorCode.UNAUTHORIZED, request);
+		return ResponseEntity
+				.status(HttpStatus.UNAUTHORIZED)
+				.body(errorResponse);
 	}
 
 	// Validation 실패 (필수값 누락, @Valid 검증 실패)
