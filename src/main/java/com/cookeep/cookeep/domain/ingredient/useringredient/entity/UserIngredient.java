@@ -1,0 +1,86 @@
+package com.cookeep.cookeep.domain.ingredient.useringredient.entity;
+
+import com.cookeep.cookeep.common.entity.BaseEntity;
+import com.cookeep.cookeep.domain.ingredient.common.Storage;
+import com.cookeep.cookeep.domain.ingredient.common.Type;
+import com.cookeep.cookeep.domain.ingredient.common.Unit;
+import com.cookeep.cookeep.domain.user.entity.User;
+import jakarta.persistence.*;
+import lombok.AccessLevel;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+
+import java.time.LocalDate;
+
+@Entity
+@Table(name = "user_ingredients")
+@Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+public class UserIngredient extends BaseEntity {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "ingredients_id")
+    private Long ingredientId;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private Type type;
+
+    @Column(name = "reference_id", nullable = false)
+    private Long referenceId;
+
+    @Column(nullable = false)
+    private Integer quantity;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private Unit unit;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private Storage storage;
+
+    @Column(name = "expiration_date", nullable = false)
+    private LocalDate expirationDate;
+
+    @Column(columnDefinition = "TEXT", nullable = true)
+    private String memo;
+
+    @Column(name = "left_days", nullable = false)
+    private Integer leftDays;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
+
+    @Builder
+    public UserIngredient(
+            Type type,
+            Long referenceId,
+            Integer quantity,
+            Unit unit, Storage storage,
+            LocalDate expirationDate,
+            String memo,
+            User user) {
+
+        this.type = type;
+        this.referenceId = referenceId;
+        this.quantity = quantity;
+        this.unit = unit;
+        this.storage = storage;
+        this.expirationDate = expirationDate;
+        this.memo = memo;
+        this.user = user;
+        this.leftDays = calculateLeftDays(expirationDate);
+    }
+
+    private Integer calculateLeftDays(LocalDate expirationDate) {
+        return (int) java.time.temporal.ChronoUnit.DAYS.between(LocalDate.now(), expirationDate);
+    }
+
+    public void updateLeftDays() {
+        this.leftDays = calculateLeftDays(this.expirationDate);
+    }
+}
