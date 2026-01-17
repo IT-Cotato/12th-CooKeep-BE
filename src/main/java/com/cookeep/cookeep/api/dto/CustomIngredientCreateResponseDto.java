@@ -10,7 +10,8 @@ import lombok.Getter;
 @AllArgsConstructor
 public class CustomIngredientCreateResponseDto {
 
-    private int customIngredientId;
+
+    private Long customIngredientId;
     private String name;
     private Integer expirationDays;
     private Storage storage;
