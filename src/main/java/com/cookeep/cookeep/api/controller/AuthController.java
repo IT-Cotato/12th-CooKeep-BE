@@ -6,10 +6,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.cookeep.cookeep.api.dto.KakaoLoginResponseDTO;
+import com.cookeep.cookeep.api.dto.response.KakaoLoginResponseDTO;
 import com.cookeep.cookeep.common.dto.DataResponse;
 import com.cookeep.cookeep.domain.user.application.AuthService;
-import com.cookeep.cookeep.domain.user.application.OAuthProvider;
 
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;

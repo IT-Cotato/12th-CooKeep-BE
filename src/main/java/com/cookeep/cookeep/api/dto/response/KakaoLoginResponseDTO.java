@@ -1,6 +1,4 @@
-package com.cookeep.cookeep.api.dto;
-
-import java.util.Optional;
+package com.cookeep.cookeep.api.dto.response;
 
 import com.cookeep.cookeep.domain.user.entity.NextStep;
 import com.cookeep.cookeep.domain.user.entity.UserStatus;
