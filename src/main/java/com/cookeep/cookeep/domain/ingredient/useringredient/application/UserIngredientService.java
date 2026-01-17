@@ -2,6 +2,8 @@ package com.cookeep.cookeep.domain.ingredient.useringredient.application;
 
 import com.cookeep.cookeep.api.dto.request.UserIngredientCreateRequestDto;
 import com.cookeep.cookeep.api.dto.response.UserIngredientCreateResponseDto;
+import com.cookeep.cookeep.common.exception.EntityNotFoundException;
+import com.cookeep.cookeep.common.exception.ErrorCode;
 import com.cookeep.cookeep.domain.ingredient.common.Storage;
 import com.cookeep.cookeep.domain.ingredient.common.Type;
 import com.cookeep.cookeep.domain.ingredient.customingredient.dao.CustomIngredientRepository;
@@ -31,7 +33,7 @@ public class UserIngredientService {
     @Transactional
     public UserIngredientCreateResponseDto create(Long userId, UserIngredientCreateRequestDto request) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+                .orElseThrow(() -> new EntityNotFoundException(ErrorCode.USER_NOT_FOUND));
 
         // DefaultIngredient에서 조회
         DefaultIngredient defaultIngredient = defaultIngredientRepository
@@ -49,12 +51,12 @@ public class UserIngredientService {
             type = Type.DEFAULT;
             ingredientName = defaultIngredient.getIngredient();
 
-            // storage: 사용자가 입력하지 않으면 기본값 사용
+            // storage: 사용자가 입력하지 않으면 DB에 저장된 값으로
             finalStorage = request.getStorage() != null
                     ? request.getStorage()
                     : defaultIngredient.getDefaultStorage();
 
-            // expirationDate: 사용자가 입력하지 않으면 자동 계산
+            // expirationDate: 사용자가 입력하지 않으면 DB에 저장된 값으로 계산
             finalExpirationDate = request.getExpirationDate() != null
                     ? request.getExpirationDate()
                     : LocalDate.now().plusDays(defaultIngredient.getDefaultExpirationDays());
@@ -65,7 +67,7 @@ public class UserIngredientService {
             // CustomIngredient에서 찾기
             CustomIngredient customIngredient = customIngredientRepository
                     .findByIdAndUserId(request.getReferenceId(), userId)
-                    .orElseThrow(() -> new IllegalArgumentException("식재료를 찾을 수 없습니다."));
+                    .orElseThrow(() -> new EntityNotFoundException(ErrorCode.INGREDIENT_REFERENCE_NOT_FOUND));
 
             type = Type.CUSTOM;
             ingredientName = customIngredient.getName();
