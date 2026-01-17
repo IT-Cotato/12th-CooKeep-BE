@@ -127,7 +127,7 @@ public class UserPlantService {
             throw new AppException(ErrorCode.NOT_MY_PLANT); // 403
         }
 
-        // 3. 쿠키 차감 로직 (Cookie 브랜치에서 구현 예정)
+        // 3. 쿠키 차감 로직
         cookieService.updateCookie(userId, -10, CookieLog.CookieLogType.WATERING);
 
         // 4. 물 주기 수행
@@ -156,7 +156,7 @@ public class UserPlantService {
             throw new AppException(ErrorCode.PLANT_NOT_FROZEN); // 400
         }
 
-        // 4. 쿠키 차감 로직 (feat/Cookie 브랜치에서 구현 예정)
+        // 4. 쿠키 차감 로직
         cookieService.updateCookie(userId, -5, CookieLog.CookieLogType.REVIVE_PLANT);
 
         // 5. 식물 살리기 수행 (isFrozen = false)
