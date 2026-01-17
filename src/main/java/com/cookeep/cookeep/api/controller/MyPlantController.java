@@ -40,7 +40,7 @@ public class MyPlantController {
     })
     @PostMapping("/{plantId}") // /api/my-plants/{plantId}
     public DataResponse<Void> registerPlant(
-            @Parameter(description = "기본 식물 ID") @PathVariable int plantId) {
+            @Parameter(description = "기본 식물 ID") @PathVariable long plantId) {
         Long userId = userProvider.getCurrentUserId();
         userPlantService.registerPlant(userId, plantId);
         return DataResponse.from(null);
