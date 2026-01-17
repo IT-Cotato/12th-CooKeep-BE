@@ -52,6 +52,11 @@ public class User extends BaseEntity {
 	 */
 	private Boolean marketingConsent;
 
+	// 소셜 로그인은 가입 완료 이후에 설정하므로 setter 필요
+	public void setMarketingConsent(Boolean marketingConsent) {
+		this.marketingConsent = marketingConsent;
+	}
+
 	private Boolean marketingPush;
 
 	// 비밀번호 오류 횟수, 5회 오류시 LOCKED 상태됨
