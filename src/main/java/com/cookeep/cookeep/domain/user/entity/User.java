@@ -60,6 +60,7 @@ public class User extends BaseEntity {
 
 	// @Builder 어노테이션 사용중이므로 기본값이 있는 필드에 @Builder.Default 추가
 	@Column(nullable = false)
+	@Builder.Default
 	private int cookieCnt = 0;
 
 	@Builder.Default
