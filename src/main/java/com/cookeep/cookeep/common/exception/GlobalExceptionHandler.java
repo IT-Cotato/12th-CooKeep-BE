@@ -26,6 +26,47 @@ public class GlobalExceptionHandler {
 			.body(errorResponse);
 	}
 
+	// Validation 실패 (필수값 누락, @Valid 검증 실패)
+	@ExceptionHandler(MethodArgumentNotValidException.class)
+	public ResponseEntity<ErrorResponse> handleValidationException(
+			MethodArgumentNotValidException e, HttpServletRequest request) {
+		log.error("Validation 에러 발생: {}", e.getBindingResult().getAllErrors().get(0).getDefaultMessage());
+		log.error("에러가 발생한 지점 {}, {}", request.getMethod(), request.getRequestURI());
+
+		ErrorResponse errorResponse = ErrorResponse.of(
+				ErrorCode.INGREDIENT_REQUIRED_FIELDS_MISSING,
+				request
+		);
+		return ResponseEntity
+				.status(HttpStatus.BAD_REQUEST)
+				.body(errorResponse);
+	}
+
+	// JSON 파싱 실패 또는 ENUM 타입 불일치
+	@ExceptionHandler(HttpMessageNotReadableException.class)
+	public ResponseEntity<ErrorResponse> handleHttpMessageNotReadableException(
+			HttpMessageNotReadableException e, HttpServletRequest request) {
+		log.error("JSON 파싱 에러 발생: {}", e.getMessage());
+		log.error("에러가 발생한 지점 {}, {}", request.getMethod(), request.getRequestURI());
+
+		// ENUM 타입 에러인지 확인
+		String message = e.getMessage();
+		ErrorCode errorCode;
+
+		if (message != null && message.contains("Unit")) {
+			errorCode = ErrorCode.INVALID_UNIT_TYPE;
+		} else if (message != null && message.contains("Storage")) {
+			errorCode = ErrorCode.INVALID_STORAGE_TYPE;
+		} else {
+			errorCode = ErrorCode.BAD_REQUEST;
+		}
+
+		ErrorResponse errorResponse = ErrorResponse.of(errorCode, request);
+		return ResponseEntity
+				.status(HttpStatus.BAD_REQUEST)
+				.body(errorResponse);
+	}
+
 	// 처리되지 않은 모든 예외를 잡는 핸들러
 	@ExceptionHandler(Exception.class)
 	public ResponseEntity<ErrorResponse> handleAllException(Exception e, HttpServletRequest request) {

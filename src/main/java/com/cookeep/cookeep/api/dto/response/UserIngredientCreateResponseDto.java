@@ -1,5 +1,6 @@
 package com.cookeep.cookeep.api.dto.response;
 
+import com.cookeep.cookeep.domain.ingredient.common.Type;
 import com.cookeep.cookeep.domain.ingredient.useringredient.entity.UserIngredient;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -10,8 +11,8 @@ import java.time.LocalDate;
 @AllArgsConstructor
 public class UserIngredientCreateResponseDto {
 
-    private Long ingredientId;
     private String type;
+    private Long ingredientId;
     private Long referenceId;
     private String name;
     private Integer quantity;
@@ -26,8 +27,8 @@ public class UserIngredientCreateResponseDto {
             String ingredientName
     ) {
         return new UserIngredientCreateResponseDto(
-                userIngredient.getIngredientId(),
                 userIngredient.getType().name(),
+                userIngredient.getIngredientId(),
                 userIngredient.getReferenceId(),
                 ingredientName,
                 userIngredient.getQuantity(),
