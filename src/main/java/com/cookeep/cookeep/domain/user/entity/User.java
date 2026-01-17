@@ -31,7 +31,7 @@ public class User extends BaseEntity {
 
 	// 닉네임 처리는 추후 값 전달받은 후에 업데이트할 예정
 	//@Column(length = 20, nullable = false, unique = true)
-	@Column(length = 20, unique = true)
+	@Column(length = 20, unique = true, nullable = true)
 	private String nickname;
 
 	// 소셜 로그인은 전화번호를 수집하지 않으므로 nullable
@@ -56,6 +56,7 @@ public class User extends BaseEntity {
 
 	// 비밀번호 오류 횟수, 5회 오류시 LOCKED 상태됨
 	// 소셜로그인 회원은 별도로 카운트하지 않으므로 nullable
+	@Column(nullable = true)
 	private Integer passwordCnt;
 
 	// @Builder 어노테이션 사용중이므로 기본값이 있는 필드에 @Builder.Default 추가
