@@ -1,6 +1,8 @@
 package com.cookeep.cookeep.domain.plant.entity;
 
 import com.cookeep.cookeep.common.entity.BaseEntity;
+import com.cookeep.cookeep.common.exception.AppException;
+import com.cookeep.cookeep.common.exception.ErrorCode;
 import com.cookeep.cookeep.domain.user.entity.User;
 import jakarta.persistence.*;
 import lombok.*;
@@ -41,7 +43,12 @@ public class UserPlant extends BaseEntity {
     // 물 주기 및 단계 상승 체크
     // 정책: 씨앗(1회) -> 새싹(2회) -> 성장(3회) -> 수확
     public void giveWater() {
-        if (this.isHarvested || this.isFrozen) return;
+        if (this.isHarvested) {
+            throw new AppException(ErrorCode.ALREADY_HARVESTED);
+        }
+        if (this.isFrozen) {
+            throw new AppException(ErrorCode.PLANT_IS_FROZEN);
+        }
 
         this.waterCount++;
 

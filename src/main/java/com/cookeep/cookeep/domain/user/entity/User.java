@@ -29,7 +29,7 @@ public class User extends BaseEntity {
 	@GeneratedValue(strategy= GenerationType.IDENTITY)
 	private Long userId;
 
-	@Column(length = 20, nullable = false, unique = true)
+	@Column(length = 20, unique = true)
 	private String nickname;
 
 	// 소셜 로그인은 전화번호를 수집하지 않으므로 nullable

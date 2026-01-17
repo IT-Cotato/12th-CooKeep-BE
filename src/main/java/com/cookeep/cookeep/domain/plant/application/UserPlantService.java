@@ -124,18 +124,10 @@ public class UserPlantService {
             throw new AppException(ErrorCode.NOT_MY_PLANT); // 403
         }
 
-        // 3. 상태 체크 (이미 수확했거나 성장 정지인 경우)
-        if (userPlant.getIsHarvested()) {
-            throw new AppException(ErrorCode.ALREADY_HARVESTED); // 400
-        }
-        if (userPlant.getIsFrozen()) {
-            throw new AppException(ErrorCode.PLANT_IS_FROZEN); // 400
-        }
-
-        // 4. 쿠키 차감 로직 (Cookie 브랜치에서 구현 예정)
+        // 3. 쿠키 차감 로직 (Cookie 브랜치에서 구현 예정)
         // TODO: useCookie(userId, 1);
 
-        // 5. 물 주기 수행
+        // 4. 물 주기 수행
         userPlant.giveWater();
     }
 
