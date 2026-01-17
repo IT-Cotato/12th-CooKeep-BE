@@ -1,6 +1,7 @@
 package com.cookeep.cookeep.api.controller;
 
 import com.cookeep.cookeep.api.dto.response.MyPlantResponse;
+import com.cookeep.cookeep.api.dto.user.UserProvider;
 import com.cookeep.cookeep.common.dto.DataResponse;
 import com.cookeep.cookeep.domain.plant.application.UserPlantService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -20,7 +21,7 @@ import java.util.List;
 public class MyPlantController {
 
     private final UserPlantService userPlantService;
-    private final Long userId = 2L; // TODO: 시큐리티 적용 후 인증 객체에서 추출
+    private final UserProvider userProvider;
 
     @Operation(summary = "보유 식물 목록 조회", description = "내가 현재 키우거나 수확한 식물 리스트를 조회합니다.")
     @ApiResponses(value = {
@@ -28,6 +29,7 @@ public class MyPlantController {
     })
     @GetMapping
     public DataResponse<List<MyPlantResponse>> getMyPlants() {
+        Long userId = userProvider.getCurrentUserId();
         return DataResponse.from(userPlantService.getMyPlants(userId));
     }
 
@@ -39,6 +41,7 @@ public class MyPlantController {
     @PostMapping("/{plantId}") // /api/my-plants/{plantId}
     public DataResponse<Void> registerPlant(
             @Parameter(description = "기본 식물 ID") @PathVariable int plantId) {
+        Long userId = userProvider.getCurrentUserId();
         userPlantService.registerPlant(userId, plantId);
         return DataResponse.from(null);
     }
@@ -52,6 +55,7 @@ public class MyPlantController {
     @PatchMapping("/{userPlantId}/profile") // /api/my-plants/{userPlantId}/profile
     public DataResponse<Void> updateProfilePlant(
             @Parameter(description = "유저 보유 식물 ID (user_plant_id)") @PathVariable long userPlantId) {
+        Long userId = userProvider.getCurrentUserId();
         userPlantService.updateProfilePlant(userId, userPlantId);
         return DataResponse.from(null);
     }
@@ -66,6 +70,7 @@ public class MyPlantController {
     @DeleteMapping("/{userPlantId}")
     public DataResponse<Void> abandonPlant(
             @Parameter(description = "포기할 보유 식물 ID") @PathVariable Long userPlantId) {
+        Long userId = userProvider.getCurrentUserId();
         userPlantService.abandonPlant(userId, userPlantId);
         return DataResponse.from(null);
     }
@@ -79,6 +84,7 @@ public class MyPlantController {
     })
     @PostMapping("/{userPlantId}/water")
     public DataResponse<Void> giveWater(@PathVariable Long userPlantId) {
+        Long userId = userProvider.getCurrentUserId();
         userPlantService.giveWater(userId, userPlantId);
         return DataResponse.from(null);
     }
@@ -93,6 +99,7 @@ public class MyPlantController {
     @PostMapping("/{userPlantId}/revive")
     public DataResponse<Void> revivePlant(
             @Parameter(description = "다시 살릴 보유 식물 ID") @PathVariable Long userPlantId) {
+        Long userId = userProvider.getCurrentUserId();
         userPlantService.revivePlant(userId, userPlantId);
         return DataResponse.from(null);
     }
