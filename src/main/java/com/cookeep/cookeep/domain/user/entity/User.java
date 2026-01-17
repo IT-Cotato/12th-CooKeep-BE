@@ -2,20 +2,13 @@ package com.cookeep.cookeep.domain.user.entity;
 
 import java.time.LocalDateTime;
 
+import com.cookeep.cookeep.domain.plant.entity.UserPlant;
+import jakarta.persistence.*;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import com.cookeep.cookeep.common.entity.BaseEntity;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EntityListeners;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Pattern;
 import lombok.AccessLevel;
@@ -67,8 +60,8 @@ public class User extends BaseEntity {
 	private Integer passwordCnt;
 
 	// @Builder 어노테이션 사용중이므로 기본값이 있는 필드에 @Builder.Default 추가
-	@Builder.Default
 	@Column(nullable = false)
+	@Builder.Default
 	private int cookieCnt = 0;
 
 	@Builder.Default
@@ -78,4 +71,25 @@ public class User extends BaseEntity {
 
 	@LastModifiedDate
 	private LocalDateTime updatedAt;
+
+	@OneToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "profile_plant_id")
+	private UserPlant profilePlant;
+
+	@Builder.Default
+	@Column(nullable = false)
+	private boolean isProfileAutoUpdate = true; // 프로필 식물 변경을 자동 or 수동 모드 관리
+
+	// 유저가 API를 통해 직접 프로필을 변경할 때 호출
+	public void updateProfilePlant(UserPlant nesUserPlant) {
+		this.profilePlant = nesUserPlant;
+		this.isProfileAutoUpdate = false; // 수동으로 변경하면 자동 갱신 모드 해제
+	}
+
+	// 새로운 식물 등록 시 시스템에 의해 호출
+	public void setProfilePlantAuto(UserPlant userPlant) {
+		if (this.isProfileAutoUpdate) {
+			this.profilePlant = userPlant;
+		}
+	}
 }
