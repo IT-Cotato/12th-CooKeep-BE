@@ -8,7 +8,7 @@ import java.util.Optional;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.cookeep.cookeep.api.dto.KakaoLoginResponseDTO;
+import com.cookeep.cookeep.api.dto.response.KakaoLoginResponseDTO;
 import com.cookeep.cookeep.config.JwtTokenProvider;
 import com.cookeep.cookeep.domain.user.dao.UserAuthRepository;
 import com.cookeep.cookeep.domain.user.dao.UserRepository;
