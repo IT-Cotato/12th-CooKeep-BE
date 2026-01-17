@@ -3,6 +3,8 @@ package com.cookeep.cookeep.domain.plant.application;
 import com.cookeep.cookeep.api.dto.response.MyPlantResponse;
 import com.cookeep.cookeep.common.exception.AppException;
 import com.cookeep.cookeep.common.exception.ErrorCode;
+import com.cookeep.cookeep.domain.cookie.application.CookieService;
+import com.cookeep.cookeep.domain.cookie.entity.CookieLog;
 import com.cookeep.cookeep.domain.plant.dao.PlantRepository;
 import com.cookeep.cookeep.domain.plant.dao.UserPlantRepository;
 import com.cookeep.cookeep.domain.plant.entity.Plant;
@@ -22,6 +24,7 @@ public class UserPlantService {
     private final UserPlantRepository userPlantRepository;
     private final UserRepository userRepository;
     private final PlantRepository plantRepository;
+    private final CookieService cookieService;
 
     // 유저 보유 식물 목록 조회
     @Transactional(readOnly = true) // 성능 최적화를 위해 읽기 전용 설정
@@ -125,10 +128,15 @@ public class UserPlantService {
         }
 
         // 3. 쿠키 차감 로직 (Cookie 브랜치에서 구현 예정)
-        // TODO: useCookie(userId, 1);
+        cookieService.updateCookie(userId, -10, CookieLog.CookieLogType.WATERING);
 
         // 4. 물 주기 수행
         userPlant.giveWater();
+
+        // 5. 수확 완료 체크 및 보상 지급
+        if (userPlant.getIsHarvested()) {
+            cookieService.updateCookie(userId, 15, CookieLog.CookieLogType.PLANT_HARVEST_REWARD);
+        }
     }
 
     // 식물 살리기
@@ -149,7 +157,7 @@ public class UserPlantService {
         }
 
         // 4. 쿠키 차감 로직 (feat/Cookie 브랜치에서 구현 예정)
-        // TODO: useCookie(userId, 5); // 살리기는 쿠키 5개 소모 정책
+        cookieService.updateCookie(userId, -5, CookieLog.CookieLogType.REVIVE_PLANT);
 
         // 5. 식물 살리기 수행 (isFrozen = false)
         userPlant.revive();
