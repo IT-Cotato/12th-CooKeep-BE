@@ -16,19 +16,6 @@ import lombok.extern.slf4j.Slf4j;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-	// JSON 파싱 에러 (필드명 불일치 등) 처리
-	@ExceptionHandler(MethodArgumentNotValidException.class)
-	protected ResponseEntity<ErrorResponse> handleMethodArgumentNotValidException(
-			MethodArgumentNotValidException e,
-			HttpServletRequest request) {
-
-		log.error("Validation 에러 발생: {}", e.getMessage());
-
-		return ResponseEntity
-				.status(HttpStatus.BAD_REQUEST)
-				.body(ErrorResponse.of(ErrorCode.INVALID_PARAMETER, request));
-	}
-
 	@ExceptionHandler(AppException.class)
 	public ResponseEntity<ErrorResponse> handleAppCustomException(AppException e, HttpServletRequest request) {
 		log.error("AppException 발생: {}", e.getErrorCode().getMessage());
