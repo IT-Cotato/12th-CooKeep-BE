@@ -35,3 +35,19 @@ out/
 
 ### VS Code ###
 .vscode/
+
+# Secret Configuration
+application.yaml
+application.yml
+application-secret.yaml
+application-secret.yml
+**/application-secret.yaml
+**/application-secret.yml
+
+# Environment Variables
+.env
+.env.local
+.env.*.local
+
+# OS 시스템 파일
+.DS_Store

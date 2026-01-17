@@ -15,3 +15,14 @@ spring:
     properties:
       hibernate:
         format_sql: true
+
+kakao:
+  auth:
+    client: ${CLIENT_ID}
+    secret: ${CLIENT_SECRET}
+    redirect: ${REDIRECT_URI}
+    accessTokenURL: https://kauth.kakao.com/oauth/token
+    userInfoURL: https://kapi.kakao.com/v2/user/me
+jwt:
+  access-secret: ${JWT_ACCESS_SECRET_KEY}
+  refresh-secret: ${JWT_REFRESH_SECRET_KEY}

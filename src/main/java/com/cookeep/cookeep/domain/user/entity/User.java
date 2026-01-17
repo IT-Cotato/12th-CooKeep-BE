@@ -29,6 +29,8 @@ public class User extends BaseEntity {
 	@GeneratedValue(strategy= GenerationType.IDENTITY)
 	private Long userId;
 
+	// 닉네임 처리는 추후 값 전달받은 후에 업데이트할 예정
+	//@Column(length = 20, nullable = false, unique = true)
 	@Column(length = 20, unique = true)
 	private String nickname;
 
@@ -54,12 +56,15 @@ public class User extends BaseEntity {
 
 	// 비밀번호 오류 횟수, 5회 오류시 LOCKED 상태됨
 	// 소셜로그인 회원은 별도로 카운트하지 않으므로 nullable
-	private int passwordCnt;
+	private Integer passwordCnt;
 
+	// @Builder 어노테이션 사용중이므로 기본값이 있는 필드에 @Builder.Default 추가
+	@Builder.Default
 	@Column(nullable = false)
 	@Builder.Default
 	private int cookieCnt = 0;
 
+	@Builder.Default
 	@Enumerated(EnumType.STRING)
 	@Column(nullable = false)
 	private UserStatus userStatus = UserStatus.CREATED;

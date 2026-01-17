@@ -1,0 +1,29 @@
+package com.cookeep.cookeep.api.controller;
+
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.cookeep.cookeep.api.dto.KakaoLoginResponseDTO;
+import com.cookeep.cookeep.common.dto.DataResponse;
+import com.cookeep.cookeep.domain.user.application.AuthService;
+import com.cookeep.cookeep.domain.user.application.OAuthProvider;
+
+import io.swagger.v3.oas.annotations.Operation;
+import lombok.RequiredArgsConstructor;
+
+@RestController
+@RequiredArgsConstructor
+@RequestMapping("/api/auth")
+public class AuthController {
+
+	private final AuthService authService;
+
+	@Operation(summary = "카카오 로그인 API")
+	@GetMapping("/login/kakao")
+	public ResponseEntity<DataResponse<KakaoLoginResponseDTO>> kakaoLogin(@RequestParam String code) {
+		return ResponseEntity.ok(DataResponse.from(authService.kakaoLogin(code)));
+	}
+}
