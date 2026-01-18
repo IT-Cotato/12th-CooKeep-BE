@@ -19,6 +19,9 @@ public enum ErrorCode {
 
 	NOT_ENOUGH_COOKIES(HttpStatus.BAD_REQUEST, "보유한 쿠키가 부족합니다.", "COOKIE-001"),
 
+	// 401 UNAUTHORIZED (인증 관련)
+	UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "인증되지 않았습니다.", "AUTH-001"),
+
 	// 403 FORBIDDEN (권한 관련)
 	NOT_MY_PLANT(HttpStatus.FORBIDDEN, "해당 식물에 대한 권한이 없습니다.", "PLANT-001"),
 
