@@ -1,6 +1,9 @@
 package com.cookeep.cookeep.common.exception;
 
+import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
+import io.jsonwebtoken.MalformedJwtException;
+import io.jsonwebtoken.UnsupportedJwtException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -13,7 +16,7 @@ import com.cookeep.cookeep.common.dto.ErrorResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 
-import javax.naming.AuthenticationException;
+import java.security.SignatureException;
 
 @Slf4j
 @RestControllerAdvice
@@ -30,7 +33,16 @@ public class GlobalExceptionHandler {
 	}
 
 	// JWT 토큰 관련 예외 처리
-	@ExceptionHandler({JwtException.class, AuthenticationException.class})
+	// - JwtException: io.jsonwebtoken 라이브러리의 모든 JWT 예외
+	// - AuthenticationException: Spring Security의 인증 예외
+	@ExceptionHandler({
+			JwtException.class,
+			ExpiredJwtException.class,
+			MalformedJwtException.class,
+			SignatureException.class,
+			UnsupportedJwtException.class,
+			IllegalArgumentException.class
+	})
 	public ResponseEntity<ErrorResponse> handleAuthenticationException(
 			Exception e, HttpServletRequest request) {
 		log.error("인증 에러 발생: {}", e.getMessage());
