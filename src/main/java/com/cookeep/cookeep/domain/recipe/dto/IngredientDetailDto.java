@@ -3,9 +3,10 @@ package com.cookeep.cookeep.domain.recipe.dto;
 import jakarta.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 @Getter
-@Builder
+@NoArgsConstructor
 public class IngredientDetailDto {
 
     @NotNull

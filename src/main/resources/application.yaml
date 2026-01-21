@@ -32,10 +32,8 @@ jwt:
 
 google:
   gemini:
-    api-key: ${GEMINI_API_KEY}
-    model: gemini-1.5-flash
+    model: gemini-2.5-flash
   youtube:
-    api-key: ${YOUTUBE_API_KEY}
 
 ai:
   recipe:

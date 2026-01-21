@@ -11,20 +11,20 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 
+import java.net.URI;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class GeminiService {
-
-    private static final String GEMINI_BASE_URL =
-            "https://generativelanguage.googleapis.com/v1beta/models/";
 
     @Value("${google.gemini.api-key}")
     private String apiKey;
@@ -35,29 +35,33 @@ public class GeminiService {
     private final WebClient webClient;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
+    public GeminiRecipeResponseDto generateRecipe(List<IngredientDetailDto> ingredients, Difficulty difficulty) {
+        String prompt = buildPrompt(ingredients, difficulty);
+        return generateRecipeByPrompt(prompt);
+    }
+
     // 레시피 생성
-    public GeminiRecipeResponseDto generateRecipe(
-            List<IngredientDetailDto> ingredients,
-            Difficulty difficulty
-    ) {
+    public GeminiRecipeResponseDto generateRecipeByPrompt(String prompt) {
         try {
-            String prompt = buildPrompt(ingredients, difficulty);
-            log.info("[Gemini Prompt]\n{}", prompt);
+            GeminiRecipeRequestDto requestBody = GeminiRecipeRequestDto.from(prompt);
 
-            // 요청 Body 구성
-            GeminiRecipeRequestDto request = GeminiRecipeRequestDto.from(prompt);
-
-            String responseBody = webClient.post()
-                    .uri(GEMINI_BASE_URL + model + ":generateContent?key=" + apiKey)
+            String response = webClient.post()
+                    .uri(uriBuilder -> uriBuilder
+                            .scheme("https")
+                            .host("generativelanguage.googleapis.com")
+                            .path("/v1beta/models/{model}:generateContent")
+                            .queryParam("key", apiKey)
+                            .build(model)
+                    )
                     .contentType(MediaType.APPLICATION_JSON)
-                    .bodyValue(request)
+                    .bodyValue(requestBody)
                     .retrieve()
                     .bodyToMono(String.class)
                     .block();
 
-            log.info("[Gemini Raw Response]\n{}", responseBody);
+            log.info("Gemini raw response = {}", response);
 
-            return parseResponse(responseBody);
+            return parseResponse(response);
 
         } catch (Exception e) {
             log.error("Gemini API 호출 실패", e);
@@ -65,19 +69,19 @@ public class GeminiService {
         }
     }
 
-    // Gemini 응답 파싱
+    // Gemini 응답 파싱 (DTO에 맞게)
     private GeminiRecipeResponseDto parseResponse(String responseBody) throws Exception {
         JsonNode root = objectMapper.readTree(responseBody);
 
         JsonNode textNode = root
                 .path("candidates")
-                .get(0)
+                .path(0)
                 .path("content")
                 .path("parts")
-                .get(0)
+                .path(0)
                 .path("text");
 
-        if (textNode.isMissingNode()) {
+        if (textNode.isMissingNode() || textNode.isNull()) {
             throw new IllegalStateException("Gemini 응답에 text 필드가 없습니다");
         }
 
@@ -91,6 +95,7 @@ public class GeminiService {
 
         log.info("[Gemini Parsed JSON]\n{}", cleanedJson);
 
+        // ✅ 너가 만든 GeminiRecipeResponseDto 구조로 변환
         return objectMapper.readValue(cleanedJson, GeminiRecipeResponseDto.class);
     }
 
