@@ -34,7 +34,8 @@ public class CookieService {
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
 
         // 2. 검증
-        if (amount < 0 && user.getCookieCnt() < Math.abs(amount)) {
+        if (amount == 0 ||
+                amount < 0 && (user.getCookieCnt() < Math.abs(amount))) {
             throw new AppException(ErrorCode.NOT_ENOUGH_COOKIES);
         }
 
