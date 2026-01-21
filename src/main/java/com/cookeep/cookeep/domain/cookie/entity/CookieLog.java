@@ -31,9 +31,10 @@ public class CookieLog extends BaseEntity {
     public enum CookieLogType {
         // --- 지급 ---
         ONBOARDING_INGREDIENT(1),          // 최초 냉장고 재료 등록
+        ONBOARDING_RECIPE(1),              // 레시피 받기 + ‘이 레시피대로 요리’ 버튼 클릭
 
         BASIC_DAILY_FIRST_CONSUME(1),      // 냉장고 재료 직접 소비 (당일 최초)
-        BASIC_LOAD_RECIPE(1),              // 마이쿠킵에 레시피 등록
+        BASIC_LOAD_RECIPE(1),              // 마이쿠킵에 레시피 불러와서 기록
         BASIC_FOOD_PHOTO_REG(1),           // 음식 사진 등록
 
         BONUS_WEEKLY_GOAL_ACHIEVE(1),      // 주간 목표 달성
