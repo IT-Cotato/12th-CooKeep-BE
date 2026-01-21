@@ -32,7 +32,7 @@ public class CookieController {
     public DataResponse<Integer> getMyCookies(
             @RequestHeader("Authorization") String authorization
     ) {
-        // TODO: 추루 시큐리티 설정(JwtAuthenticationFilter)이 완료되면
+        // TODO: 추후 시큐리티 설정(JwtAuthenticationFilter)이 완료되면
         // TODO: @AuthenticationPrincipal 또는 커스텀 @LoginUser를 사용하여
         // TODO: 컨트롤러 레이어에서 토큰 파싱 로직을 제거하고 보안 책임을 위임할 예정입니다.
 
