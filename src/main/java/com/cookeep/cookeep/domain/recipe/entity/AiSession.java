@@ -55,6 +55,7 @@ public class AiSession {
     @Column(name = "user_id", nullable = false)
     private Long userId;
 
+    // Domain Logic
     public void pin() {
         this.isPinned = true;
     }
