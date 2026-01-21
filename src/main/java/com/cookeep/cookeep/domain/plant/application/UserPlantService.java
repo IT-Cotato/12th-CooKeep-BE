@@ -85,7 +85,6 @@ public class UserPlantService {
                 .build();
 
         userPlantRepository.save(newUserPlant);
-        userPlantRepository.flush(); // 이 줄을 추가하여 DB와 동기화 (createdAt 채워짐)
 
         // 4. 자동 모드(isProfileAutoUpdate=true)일 때만 프로필 갱신
         user.setProfilePlantAuto(newUserPlant);
