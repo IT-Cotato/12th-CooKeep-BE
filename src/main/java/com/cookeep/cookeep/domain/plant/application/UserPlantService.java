@@ -128,14 +128,14 @@ public class UserPlantService {
         }
 
         // 3. 쿠키 차감 로직
-        cookieService.updateCookie(userId, -10, CookieLog.CookieLogType.WATERING);
+        cookieService.updateCookie(userId, CookieLog.CookieLogType.WATERING);
 
         // 4. 물 주기 수행
         userPlant.giveWater();
 
         // 5. 수확 완료 체크 및 보상 지급
         if (userPlant.getIsHarvested()) {
-            cookieService.updateCookie(userId, 15, CookieLog.CookieLogType.PLANT_HARVEST_REWARD);
+            cookieService.updateCookie(userId, CookieLog.CookieLogType.BONUS_PLANT_HARVEST_REWARD);
         }
     }
 
@@ -157,7 +157,7 @@ public class UserPlantService {
         }
 
         // 4. 쿠키 차감 로직
-        cookieService.updateCookie(userId, -5, CookieLog.CookieLogType.REVIVE_PLANT);
+        cookieService.updateCookie(userId, CookieLog.CookieLogType.REVIVE_PLANT);
 
         // 5. 식물 살리기 수행 (isFrozen = false)
         userPlant.revive();

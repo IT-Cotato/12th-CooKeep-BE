@@ -26,7 +26,9 @@ public class CookieService {
 
     // 쿠키 사용/지급 공통 로직
     @Transactional
-    public void updateCookie(Long userId, int amount, CookieLog.CookieLogType type) {
+    public void updateCookie(Long userId, CookieLog.CookieLogType type) {
+        int amount = type.getDefaultAmount();
+
         // 1. 비관적 락을 사용하여 유저 정보를 가져옴 (다른 트랜잭션 대기)
         User user = userRepository.findByIdForUpdate(userId)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
