@@ -42,8 +42,8 @@ public class CookieLog extends BaseEntity {
         BONUS_RETENTION_REWARD(1),         // 14일 이상 미접속 후 복귀 보너스
 
         // --- 차감 ---
-        WATERING(10),                      // 식물 물 주기 (쿠키 10개 소모)
-        REVIVE_PLANT(5);                   // 식물 다시 살리기 (쿠키 5개 소모)
+        WATERING(-10),                      // 식물 물 주기 (쿠키 10개 소모)
+        REVIVE_PLANT(-5);                   // 식물 다시 살리기 (쿠키 5개 소모)
 
         private final int defaultAmount;
 
