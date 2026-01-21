@@ -38,6 +38,7 @@ public enum ErrorCode {
 
 	//500
 	INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "서버 내부에서 에러가 발생하였습니다.", "COMMON-004"),
+	AI_SEARCH_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "AI 호출에 실패하였습니다.", "RECIPE-001"),
 	;
 
 	private final HttpStatus httpStatus;
