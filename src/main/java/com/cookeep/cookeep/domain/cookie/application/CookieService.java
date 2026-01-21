@@ -27,18 +27,18 @@ public class CookieService {
     // 쿠키 사용/지급 공통 로직
     @Transactional
     public void updateCookie(Long userId, int amount, CookieLog.CookieLogType type) {
-        User user = userRepository.findById(userId)
+        // 1. 비관적 락을 사용하여 유저 정보를 가져옴 (다른 트랜잭션 대기)
+        User user = userRepository.findByIdForUpdate(userId)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
 
-        // 쿠키 차감 시 잔액 검증
+        // 2. 검증
         if (amount < 0 && user.getCookieCnt() < Math.abs(amount)) {
             throw new AppException(ErrorCode.NOT_ENOUGH_COOKIES);
         }
 
-        // 1. 유저 쿠키 개수 업데이트
+        // 3. 업데이트 및 로그 저장
         user.updateCookieCnt(amount);
 
-        // 2. 트랜잭션 로그 저장
         CookieLog log = CookieLog.builder()
                 .user(user)
                 .amount(amount)
