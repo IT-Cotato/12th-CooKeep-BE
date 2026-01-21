@@ -31,6 +31,16 @@ dependencies {
 	runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.5'
 	runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.5'
 	implementation 'org.springframework.boot:spring-boot-starter-webflux'
+
+	// Google Generative AI (Gemini)
+	implementation 'com.google.ai.client:generativeai:0.2.2'
+
+	// Google API Client (YouTube)
+	implementation 'com.google.api-client:google-api-client:2.2.0'
+	implementation 'com.google.apis:google-api-services-youtube:v3-rev20231011-2.0.0'
+
+	// JSON 처리
+	implementation 'com.google.code.gson:gson:2.10.1'
 }
 
 tasks.named('test') {

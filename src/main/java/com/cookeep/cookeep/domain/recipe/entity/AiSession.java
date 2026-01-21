@@ -55,10 +55,6 @@ public class AiSession {
     @Column(name = "user_id", nullable = false)
     private Long userId;
 
-    // -------------------------
-    // 도메인 로직 (필수 요구사항)
-    // -------------------------
-
     public void pin() {
         this.isPinned = true;
     }
