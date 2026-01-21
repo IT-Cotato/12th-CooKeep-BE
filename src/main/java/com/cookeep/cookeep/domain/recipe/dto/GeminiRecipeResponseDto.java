@@ -47,4 +47,5 @@ public class GeminiRecipeResponseDto {
         private Integer quantity;
         private String unit;
     }
+
 }
