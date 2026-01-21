@@ -92,4 +92,8 @@ public class User extends BaseEntity {
 			this.profilePlant = userPlant;
 		}
 	}
+
+	public void updateCookieCnt(int amount) {
+		this.cookieCnt += amount;
+	}
 }
