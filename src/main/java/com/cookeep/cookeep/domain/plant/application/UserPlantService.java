@@ -7,8 +7,10 @@ import com.cookeep.cookeep.domain.cookie.application.CookieService;
 import com.cookeep.cookeep.domain.cookie.entity.CookieLog;
 import com.cookeep.cookeep.domain.plant.dao.PlantRepository;
 import com.cookeep.cookeep.domain.plant.dao.UserPlantRepository;
+import com.cookeep.cookeep.domain.plant.dao.WateringLogRepository;
 import com.cookeep.cookeep.domain.plant.entity.Plant;
 import com.cookeep.cookeep.domain.plant.entity.UserPlant;
+import com.cookeep.cookeep.domain.plant.entity.WateringLog;
 import com.cookeep.cookeep.domain.user.dao.UserRepository;
 import com.cookeep.cookeep.domain.user.entity.User;
 import lombok.RequiredArgsConstructor;
@@ -22,6 +24,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class UserPlantService {
     private final UserPlantRepository userPlantRepository;
+    private final WateringLogRepository wateringLogRepository;
     private final UserRepository userRepository;
     private final PlantRepository plantRepository;
     private final CookieService cookieService;
@@ -122,6 +125,9 @@ public class UserPlantService {
         UserPlant userPlant = userPlantRepository.findById(userPlantId)
                 .orElseThrow(() -> new AppException(ErrorCode.PLANT_NOT_FOUND)); // 404
 
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND)); // 404
+
         // 2. 권한 체크
         if (!userPlant.getUser().getUserId().equals(userId)) {
             throw new AppException(ErrorCode.NOT_MY_PLANT); // 403
@@ -130,8 +136,14 @@ public class UserPlantService {
         // 3. 쿠키 차감 로직
         cookieService.updateCookie(userId, CookieLog.CookieLogType.WATERING);
 
-        // 4. 물 주기 수행
+        // 4. 물 주기 수행 및 로그 저장
         userPlant.giveWater();
+
+        WateringLog log = WateringLog.builder()
+                .userPlant(userPlant)
+                .user(user)
+                .build();
+        wateringLogRepository.save(log);
 
         // 5. 수확 완료 체크 및 보상 지급
         if (userPlant.getIsHarvested()) {
