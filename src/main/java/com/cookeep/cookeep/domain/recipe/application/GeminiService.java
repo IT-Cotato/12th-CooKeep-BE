@@ -121,9 +121,7 @@ public class GeminiService {
         }
     }
 
-    /**
-     * 프롬프트 생성
-     */
+    // 프롬프트 생성
     private String buildPrompt(List<IngredientDetailDto> ingredients, Difficulty difficulty) {
 
         String ingredientList = ingredients.stream()
@@ -163,27 +161,45 @@ public class GeminiService {
             1. 제공된 재료의 단위와 수량을 그대로 사용하세요.
             2. 제공된 재료보다 많은 양을 사용하면 안 됩니다.
             3. user_ingredients에는 type과 referenceId를 반드시 포함하세요.
-            4. 반드시 JSON만 응답하세요. 설명 문구는 절대 포함하지 마세요.
+            4. 추가로 필요한 재료가 있다면 additional_ingredients에 포함하세요.
+            5. 생략 가능하거나 대체 가능한 재료는 optional_ingredients에 포함하세요.
+            6. 레시피와 관련된 실제 유튜브 동영상 1-3개를 추천해주세요. VIDEO_ID는 실제 존재하는 영상의 ID를 사용하세요.
+            7. 유튜브 썸네일 URL은 https://img.youtube.com/vi/{VIDEO_ID}/default.jpg 형식을 사용하세요.
+            8. 반드시 JSON만 응답하세요. 설명 문구는 절대 포함하지 마세요.
+            9. steps는 간결하고 실용적인 요리 방법을 단계별로 작성하세요.
             
             [응답 형식]
             {
               "title": "요리 제목",
               "ingredients": {
                 "user_ingredients": %s,
-                "additional_ingredients": [],
-                "optional_ingredients": []
+                "additional_ingredients": [
+                  {
+                    "name": "간장",
+                    "quantity": 2,
+                    "unit": "TABLESPOON"
+                  }
+                ],
+                "optional_ingredients": [
+                  {
+                    "name": "참기름",
+                    "quantity": 1,
+                    "unit": "TEASPOON"
+                  }
+                ]
               },
               "steps": [
-                "1. ...",
-                "2. ..."
+                "1. 양파를 채썬다.",
+                "2. 팬에 기름을 두르고 양파를 볶는다.",
+                "3. 간장으로 간을 맞춘다."
               ],
-             "youtube_references": [
-               {
-                 "title": "유튜브 영상 제목",
-                 "url": "https://www.youtube.com/watch?v=VIDEO_ID",
-                 "thumbnail": "https://img.youtube.com/vi/VIDEO_ID/default.jpg"
-               }
-             ]
+              "youtube_references": [
+                {
+                  "title": "유튜브 영상 제목",
+                  "url": "https://www.youtube.com/watch?v=VIDEO_ID",
+                  "thumbnail": "https://img.youtube.com/vi/VIDEO_ID/default.jpg"
+                }
+              ]
             }
             """.formatted(
                 ingredientList,
