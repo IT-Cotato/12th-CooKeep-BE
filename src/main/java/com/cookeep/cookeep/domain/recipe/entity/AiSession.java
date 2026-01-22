@@ -38,11 +38,6 @@ public class AiSession {
     @Column(name = "is_pinned")
     private Boolean isPinned;
 
-    /**
-     * JSON 컬럼 (MySQL)
-     * - 일단은 raw JSON 문자열로 저장 (예: [1,2,3])
-     * - columnDefinition="json"로 MySQL JSON 타입 유지
-     */
     @Column(name = "user_ingredient_ids", columnDefinition = "json")
     private String userIngredientIds;
 
@@ -51,6 +46,9 @@ public class AiSession {
 
     @Column(name = "is_completed")
     private Boolean isCompleted;
+
+    @Column(name = "completed_at")
+    private LocalDateTime completedAt;
 
     @Column(name = "user_id", nullable = false)
     private Long userId;
@@ -66,6 +64,7 @@ public class AiSession {
 
     public void complete() {
         this.isCompleted = true;
+        this.completedAt = LocalDateTime.now();
     }
 
     public void updateTitle(String title) {
