@@ -11,7 +11,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -70,33 +69,56 @@ public class GeminiService {
     }
 
     // Gemini 응답 파싱 (DTO에 맞게)
-    private GeminiRecipeResponseDto parseResponse(String responseBody) throws Exception {
-        JsonNode root = objectMapper.readTree(responseBody);
+    private GeminiRecipeResponseDto parseResponse(String responseBody) {
+        try {
+            JsonNode root = objectMapper.readTree(responseBody);
 
-        JsonNode textNode = root
-                .path("candidates")
-                .path(0)
-                .path("content")
-                .path("parts")
-                .path(0)
-                .path("text");
+            JsonNode textNode = root
+                    .path("candidates")
+                    .path(0)
+                    .path("content")
+                    .path("parts")
+                    .path(0)
+                    .path("text");
 
-        if (textNode.isMissingNode() || textNode.isNull()) {
-            throw new IllegalStateException("Gemini 응답에 text 필드가 없습니다");
+            if (textNode.isMissingNode() || textNode.isNull()) {
+                throw new AppException(ErrorCode.AI_RESPONSE_INVALID_FORMAT);
+            }
+
+            String rawText = textNode.asText().trim();
+
+            String cleanedJson = rawText
+                    .replaceAll("```json\\n?", "")
+                    .replaceAll("\\n?```", "")
+                    .trim();
+
+            log.info("[Gemini Parsed JSON]\n{}", cleanedJson);
+
+            GeminiRecipeResponseDto result = objectMapper.readValue(cleanedJson, GeminiRecipeResponseDto.class);
+
+            // 필수 필드 검증
+            validateRecipeResponse(result);
+
+            return result;
+
+        } catch (AppException e) {
+            throw e;
+        } catch (Exception e) {
+            log.error("응답 파싱 실패", e);
+            throw new AppException(ErrorCode.AI_RESPONSE_PARSE_FAILED);
         }
+    }
 
-        String rawText = textNode.asText().trim();
-
-        // ```json 제거
-        String cleanedJson = rawText
-                .replaceAll("```json\\n?", "")
-                .replaceAll("\\n?```", "")
-                .trim();
-
-        log.info("[Gemini Parsed JSON]\n{}", cleanedJson);
-
-        // ✅ 너가 만든 GeminiRecipeResponseDto 구조로 변환
-        return objectMapper.readValue(cleanedJson, GeminiRecipeResponseDto.class);
+    private void validateRecipeResponse(GeminiRecipeResponseDto response) {
+        if (response.getTitle() == null || response.getTitle().isBlank()) {
+            throw new AppException(ErrorCode.AI_RESPONSE_INVALID_FORMAT);
+        }
+        if (response.getIngredients() == null) {
+            throw new AppException(ErrorCode.AI_RESPONSE_INVALID_FORMAT);
+        }
+        if (response.getSteps() == null || response.getSteps().isEmpty()) {
+            throw new AppException(ErrorCode.AI_RESPONSE_INVALID_FORMAT);
+        }
     }
 
     /**
@@ -154,7 +176,14 @@ public class GeminiService {
               "steps": [
                 "1. ...",
                 "2. ..."
-              ]
+              ],
+             "youtube_references": [
+               {
+                 "title": "유튜브 영상 제목",
+                 "url": "https://www.youtube.com/watch?v=VIDEO_ID",
+                 "thumbnail": "https://img.youtube.com/vi/VIDEO_ID/default.jpg"
+               }
+             ]
             }
             """.formatted(
                 ingredientList,

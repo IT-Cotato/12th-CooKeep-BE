@@ -16,6 +16,9 @@ public class GeminiRecipeResponseDto {
 
     private List<String> steps;
 
+    @JsonProperty("youtube_references")
+    private List<YoutubeReference> youtubeReferences;
+
     @Getter
     @NoArgsConstructor
     public static class Ingredients {
@@ -46,6 +49,14 @@ public class GeminiRecipeResponseDto {
         private String name;
         private Integer quantity;
         private String unit;
+    }
+
+    @Getter
+    @NoArgsConstructor
+    public static class YoutubeReference {
+        private String title;
+        private String url;
+        private String thumbnail;
     }
 
 }

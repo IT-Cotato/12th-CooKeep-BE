@@ -1,12 +1,15 @@
 package com.cookeep.cookeep.domain.recipe.dto;
 
 import jakarta.validation.constraints.NotNull;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Getter
 @NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class IngredientDetailDto {
 
     @NotNull
@@ -15,7 +18,6 @@ public class IngredientDetailDto {
     @NotNull
     private Long referenceId;
 
-    @NotNull
     private String name;
 
     @NotNull
