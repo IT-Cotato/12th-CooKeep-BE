@@ -59,6 +59,10 @@ public class User extends BaseEntity {
 
 	private Boolean marketingPush;
 
+	public void setMarketingPush(Boolean marketingPush) {
+		this.marketingPush = marketingPush;
+	}
+
 	// 비밀번호 오류 횟수, 5회 오류시 LOCKED 상태됨
 	// 소셜로그인 회원은 별도로 카운트하지 않으므로 nullable
 	private Integer passwordCnt;

@@ -31,11 +31,24 @@ public class OnboardingController {
 		@ApiResponse(responseCode = "404", description = "사용자를 찾을 수 없음")
 	})
 	@PatchMapping("/agreements")
-	public ResponseEntity<DataResponse<?>> saveAgreement(
+	public ResponseEntity<DataResponse<Void>> saveAgreement(
 		@RequestBody AgreementRequestDTO agreementRequestDTO
 		) {
 		Long userId = userProvider.getCurrentUserId();
 		onboardingService.saveAgreement(agreementRequestDTO, userId);
+		return ResponseEntity.ok(DataResponse.ok());
+	}
+
+	@Operation(summary = "온보딩 내 알림 설정 업데이트", description = "온보딩 과정에서 회원이 마케팅 푸쉬 알람 수신에 동의할 경우 설정을 변경합니다")
+	@PatchMapping("/onboarding/push")
+	@ApiResponses(value = {
+		@ApiResponse(responseCode = "200", description = "알림 설정 업데이트 성공"),
+		@ApiResponse(responseCode = "401", description = "회원 인증 실패, AccessToken이 없거나 유효하지 않음"),
+		@ApiResponse(responseCode = "404", description = "사용자를 찾을 수 없음")
+	})
+	public ResponseEntity<DataResponse<Void>> agreeMarketingPush() {
+		Long userId = userProvider.getCurrentUserId();
+		onboardingService.agreeMarketingPush(userId);
 		return ResponseEntity.ok(DataResponse.ok());
 	}
 }

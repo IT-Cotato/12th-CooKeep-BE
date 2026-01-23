@@ -29,4 +29,14 @@ public class OnboardingService {
 
 		user.setMarketingConsent(agreementRequestDTO.marketingConsent());
 	}
+
+	// 온보딩 과정에서 알림 켜기를 선택한 경우
+	@Transactional
+	public void agreeMarketingPush(Long userId) {
+		User user = userRepository.findById(userId)
+			.orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+
+		// 알림 켜기 버튼을 누른 사용자만 해당 api 경로로 진입하므로 true로 설정
+		user.setMarketingPush(true);
+	}
 }
