@@ -1,5 +1,7 @@
 package com.cookeep.cookeep.domain.onboarding.application;
 
+import java.util.List;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -65,6 +67,13 @@ public class OnboardingService {
 
 		userOnboardingRepository.save(userOnboarding);
 
+		List<FoodType> foodTypes = onboardingRequestDTO.favoriteFoodTypes();
+
+		// 4개 이상의 값이 들어올 경우 선택 가능한 개수를 초과한 것이므로 예외 발생
+		// 질문 건너뛰기가 가능하므로 null은 가능함
+		if (foodTypes != null && foodTypes.size() > 3) {
+			throw new AppException(ErrorCode.INVALID_FOOD_TYPE_COUNT);
+		}
 
 		// userFoodPreferencerk 만약 존재한다면, 테이블 구조가 다르기 때문에 앞과는 다르게
 		// update가 아니라 user의 값을 전체 삭제 후 새롭게 저장

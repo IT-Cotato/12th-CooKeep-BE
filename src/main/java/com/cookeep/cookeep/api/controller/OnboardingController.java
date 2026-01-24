@@ -55,6 +55,12 @@ public class OnboardingController {
 	}
 
 	@Operation(summary = "온보딩 응답값 저장", description = "온보딩 과정에서 회원이 응답한 값을 저장합니다")
+	@ApiResponses(value = {
+		@ApiResponse(responseCode = "200", description = "온보딩 응답값 저장 성공"),
+		@ApiResponse(responseCode = "400", description = "선호하는 음식 종류는 최대 3개까지만 응답 가능함"),
+		@ApiResponse(responseCode = "401", description = "회원 인증 실패, AccessToken이 없거나 유효하지 않음"),
+		@ApiResponse(responseCode = "404", description = "사용자를 찾을 수 없음")
+	})
 	@PostMapping("/onboarding")
 	public ResponseEntity<DataResponse<Void>> saveOnboarding(
 		@RequestBody OnboardingRequestDTO onboardingRequestDTO

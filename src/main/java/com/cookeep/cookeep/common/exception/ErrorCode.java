@@ -15,6 +15,7 @@ public enum ErrorCode {
 	PLANT_NOT_FROZEN(HttpStatus.BAD_REQUEST, "성장 정지 상태가 아닙니다.", "PLANT-003"),
 	ALREADY_HARVESTED(HttpStatus.BAD_REQUEST, "이미 수확한 식물입니다.", "PLANT-004"),
 	PLANT_IS_FROZEN(HttpStatus.BAD_REQUEST, "성장 정지 상태의 식물입니다.", "PLANT-005"),
+	INVALID_FOOD_TYPE_COUNT(HttpStatus.BAD_REQUEST, "선호하는 음식 종류는 3개까지만 선택 가능합니다.", "ONBOARDING-001"),
 
 	// 403 FORBIDDEN (권한 관련)
 	NOT_MY_PLANT(HttpStatus.FORBIDDEN, "해당 식물에 대한 권한이 없습니다.", "PLANT-001"),
