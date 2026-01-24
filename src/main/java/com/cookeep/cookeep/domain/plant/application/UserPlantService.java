@@ -3,10 +3,14 @@ package com.cookeep.cookeep.domain.plant.application;
 import com.cookeep.cookeep.api.dto.response.MyPlantResponse;
 import com.cookeep.cookeep.common.exception.AppException;
 import com.cookeep.cookeep.common.exception.ErrorCode;
+import com.cookeep.cookeep.domain.cookie.application.CookieService;
+import com.cookeep.cookeep.domain.cookie.entity.CookieLog;
 import com.cookeep.cookeep.domain.plant.dao.PlantRepository;
 import com.cookeep.cookeep.domain.plant.dao.UserPlantRepository;
+import com.cookeep.cookeep.domain.plant.dao.WateringLogRepository;
 import com.cookeep.cookeep.domain.plant.entity.Plant;
 import com.cookeep.cookeep.domain.plant.entity.UserPlant;
+import com.cookeep.cookeep.domain.plant.entity.WateringLog;
 import com.cookeep.cookeep.domain.user.dao.UserRepository;
 import com.cookeep.cookeep.domain.user.entity.User;
 import lombok.RequiredArgsConstructor;
@@ -20,8 +24,10 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class UserPlantService {
     private final UserPlantRepository userPlantRepository;
+    private final WateringLogRepository wateringLogRepository;
     private final UserRepository userRepository;
     private final PlantRepository plantRepository;
+    private final CookieService cookieService;
 
     // 유저 보유 식물 목록 조회
     @Transactional(readOnly = true) // 성능 최적화를 위해 읽기 전용 설정
@@ -79,7 +85,6 @@ public class UserPlantService {
                 .build();
 
         userPlantRepository.save(newUserPlant);
-        userPlantRepository.flush(); // 이 줄을 추가하여 DB와 동기화 (createdAt 채워짐)
 
         // 4. 자동 모드(isProfileAutoUpdate=true)일 때만 프로필 갱신
         user.setProfilePlantAuto(newUserPlant);
@@ -119,16 +124,30 @@ public class UserPlantService {
         UserPlant userPlant = userPlantRepository.findById(userPlantId)
                 .orElseThrow(() -> new AppException(ErrorCode.PLANT_NOT_FOUND)); // 404
 
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND)); // 404
+
         // 2. 권한 체크
         if (!userPlant.getUser().getUserId().equals(userId)) {
             throw new AppException(ErrorCode.NOT_MY_PLANT); // 403
         }
 
-        // 3. 쿠키 차감 로직 (Cookie 브랜치에서 구현 예정)
-        // TODO: useCookie(userId, 1);
+        // 3. 쿠키 차감 로직
+        cookieService.updateCookie(userId, CookieLog.CookieLogType.WATERING);
 
-        // 4. 물 주기 수행
+        // 4. 물 주기 수행 및 로그 저장
         userPlant.giveWater();
+
+        WateringLog log = WateringLog.builder()
+                .userPlant(userPlant)
+                .user(user)
+                .build();
+        wateringLogRepository.save(log);
+
+        // 5. 수확 완료 체크 및 보상 지급
+        if (userPlant.getIsHarvested()) {
+            cookieService.updateCookie(userId, CookieLog.CookieLogType.BONUS_PLANT_HARVEST_REWARD);
+        }
     }
 
     // 식물 살리기
@@ -148,8 +167,8 @@ public class UserPlantService {
             throw new AppException(ErrorCode.PLANT_NOT_FROZEN); // 400
         }
 
-        // 4. 쿠키 차감 로직 (feat/Cookie 브랜치에서 구현 예정)
-        // TODO: useCookie(userId, 5); // 살리기는 쿠키 5개 소모 정책
+        // 4. 쿠키 차감 로직
+        cookieService.updateCookie(userId, CookieLog.CookieLogType.REVIVE_PLANT);
 
         // 5. 식물 살리기 수행 (isFrozen = false)
         userPlant.revive();
