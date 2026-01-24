@@ -2,11 +2,13 @@ package com.cookeep.cookeep.api.controller;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.cookeep.cookeep.api.dto.request.AgreementRequestDTO;
+import com.cookeep.cookeep.api.dto.request.OnboardingRequestDTO;
 import com.cookeep.cookeep.api.dto.user.UserProvider;
 import com.cookeep.cookeep.common.dto.DataResponse;
 import com.cookeep.cookeep.domain.onboarding.application.OnboardingService;
@@ -49,6 +51,16 @@ public class OnboardingController {
 	public ResponseEntity<DataResponse<Void>> agreeMarketingPush() {
 		Long userId = userProvider.getCurrentUserId();
 		onboardingService.agreeMarketingPush(userId);
+		return ResponseEntity.ok(DataResponse.ok());
+	}
+
+	@Operation(summary = "온보딩 응답값 저장", description = "온보딩 과정에서 회원이 응답한 값을 저장합니다")
+	@PostMapping("/onboarding")
+	public ResponseEntity<DataResponse<Void>> saveOnboarding(
+		@RequestBody OnboardingRequestDTO onboardingRequestDTO
+	) {
+		Long userId = userProvider.getCurrentUserId();
+		onboardingService.saveOnboarding(userId, onboardingRequestDTO);
 		return ResponseEntity.ok(DataResponse.ok());
 	}
 }

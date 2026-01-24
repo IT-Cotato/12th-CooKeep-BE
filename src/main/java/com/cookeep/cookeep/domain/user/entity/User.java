@@ -26,7 +26,7 @@ import lombok.NoArgsConstructor;
 @Table(name = "Users")
 public class User extends BaseEntity {
 	@Id
-	@GeneratedValue(strategy= GenerationType.IDENTITY)
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long userId;
 
 	// 닉네임 처리는 추후 값 전달받은 후에 업데이트할 예정
@@ -45,10 +45,10 @@ public class User extends BaseEntity {
 	private String email;
 
 	/**
-	소셜 로그인 회원의 경우 회원가입 및 로그인 완료 후에 약관 동의 페이지로 넘어가므로
-	marketingConsent와 marketingPush 모두 nullable로 둠
-	null: 아직 선택하지 않음 (소셜 로그인 직후)
-	true: 동의, false: 미동의
+	 소셜 로그인 회원의 경우 회원가입 및 로그인 완료 후에 약관 동의 페이지로 넘어가므로
+	 marketingConsent와 marketingPush 모두 nullable로 둠
+	 null: 아직 선택하지 않음 (소셜 로그인 직후)
+	 true: 동의, false: 미동의
 	 */
 	private Boolean marketingConsent;
 
@@ -57,7 +57,10 @@ public class User extends BaseEntity {
 		this.marketingConsent = marketingConsent;
 	}
 
-	private Boolean marketingPush;
+	// 온보딩 과정에서 알림 켜기를 선택한 경우로 true로 업데이트되므로 알림 켜기에 동의하지 않은 회원은 marketingPush 값이 null로 남게 됨
+	// 따라서 디폴트값 false로 설정, 알림 켜기 선택시에 true로 변경하도록 함
+	@Builder.Default
+	private Boolean marketingPush = false;
 
 	public void setMarketingPush(Boolean marketingPush) {
 		this.marketingPush = marketingPush;
