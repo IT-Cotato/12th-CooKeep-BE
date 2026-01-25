@@ -7,4 +7,5 @@ import java.util.Optional;
 
 public interface AiSessionRepository extends JpaRepository<AiSession, Long> {
     Optional<AiSession> findByIdAndUserId(Long id, Long userId);
+    Optional<AiSession> findById(Long sessionId);
 }

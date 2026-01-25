@@ -1,5 +1,7 @@
 package com.cookeep.cookeep.domain.recipe.entity;
 
+import com.cookeep.cookeep.domain.recipe.dto.GeminiRecipeResponseDto;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -34,4 +36,19 @@ public class AiMessage {
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
+
+    public static AiMessage from(AiSession session, GeminiRecipeResponseDto response, MessageType type) {
+        try {
+            ObjectMapper mapper = new ObjectMapper();
+            String json = mapper.writeValueAsString(response);
+
+            return AiMessage.builder()
+                    .session(session)
+                    .role(Role.AI)
+                    .content(json)
+                    .build();
+        } catch (Exception e) {
+            throw new RuntimeException("AI 메시지 생성 실패", e);
+        }
+    }
 }

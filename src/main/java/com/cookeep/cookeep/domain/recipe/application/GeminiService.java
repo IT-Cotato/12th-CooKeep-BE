@@ -34,10 +34,32 @@ public class GeminiService {
     private final WebClient webClient;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    public GeminiRecipeResponseDto generateRecipe(List<IngredientDetailDto> ingredients, Difficulty difficulty) {
+    public GeminiRecipeResponseDto generateRecipe(
+            List<IngredientDetailDto> ingredients,
+            Difficulty difficulty) {
         String prompt = buildPrompt(ingredients, difficulty);
         return generateRecipeByPrompt(prompt);
     }
+
+    public GeminiRecipeResponseDto generateRecipeWithExclusion(
+            List<IngredientDetailDto> ingredients,
+            Difficulty difficulty,
+            List<String> excludedTitles
+    ) {
+        String prompt = buildPrompt(ingredients, difficulty);
+
+        if (!excludedTitles.isEmpty()) {
+            prompt += "\n\n이전에 추천한 다음 요리는 제외하고 추천해줘:\n";
+            for (String title : excludedTitles) {
+                prompt += "- " + title + "\n";
+            }
+        }
+
+        prompt += "\n기존 요리와 겹치지 않는 새로운 레시피를 추천해줘.";
+
+        return generateRecipeByPrompt(prompt);
+    }
+
 
     // 레시피 생성
     public GeminiRecipeResponseDto generateRecipeByPrompt(String prompt) {

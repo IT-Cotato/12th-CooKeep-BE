@@ -83,4 +83,9 @@ public class AiSession {
     public boolean isCompletedSession() {
         return Boolean.TRUE.equals(this.isCompleted);
     }
+
+    public void increaseAttempt() {
+        this.attemptNumber++;
+    }
+
 }

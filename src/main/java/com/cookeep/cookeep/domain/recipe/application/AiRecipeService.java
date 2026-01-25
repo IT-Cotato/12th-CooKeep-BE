@@ -12,6 +12,7 @@ import com.cookeep.cookeep.domain.recipe.dao.AiRecipeRepository;
 import com.cookeep.cookeep.domain.recipe.dao.AiSessionRepository;
 import com.cookeep.cookeep.domain.recipe.dto.*;
 import com.cookeep.cookeep.domain.recipe.entity.*;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -27,7 +28,7 @@ import java.util.stream.Collectors;
 @Transactional
 public class AiRecipeService {
 
-    private static final int MAX_CHANGE_COUNT = 5;
+    private static final int MAX_RETRY_COUNT = 5;
 
     private final GeminiService geminiService;
     private final AiSessionRepository aiSessionRepository;
@@ -38,60 +39,90 @@ public class AiRecipeService {
     private final DefaultIngredientRepository defaultIngredientRepository;
     private final CustomIngredientRepository customIngredientRepository;
 
-    public AiRecipeResponseDto generateRecipe(
-            Long userId,
-            AiRecipeRequestDto request
-    ) {
-
-        // 1. 요청 검증
+    // sessionId 유무에 따라 신규/재요청 로직 분기
+    public AiRecipeResponseDto generateRecipe(Long userId, AiRecipeRequestDto request) {
         validateRequest(request);
 
-        // 2. 세션 조회 or 생성
-        AiSession session = getOrCreateSession(userId, request);
+        if (request.getSessionId() == null) {
+            // 신규 레시피 생성
+            return generateInitialRecipe(userId, request);
+        } else {
+            // 재요청
+            return regenerateRecipe(userId, request.getSessionId());
+        }
+    }
 
-        // 3. 세션 완료 여부 확인
+    // 1. 새 레시피 요청
+    private AiRecipeResponseDto generateInitialRecipe(Long userId, AiRecipeRequestDto request) {
+        // 1. 세션 생성
+        AiSession session = AiSession.builder()
+                .userId(userId)
+                .difficulty(request.getDifficulty())
+                .attemptNumber(1)
+                .isCompleted(false)
+                .userIngredientIds(writeIngredientsAsJson(request.getIngredients()))
+                .build();
+        aiSessionRepository.save(session);
+
+        // 2. AI 레시피 생성
+        GeminiRecipeResponseDto aiResponse = geminiService.generateRecipe(
+                request.getIngredients(),
+                request.getDifficulty()
+        );
+
+        // 3. AI 메시지 저장
+        saveAiMessage(session, aiResponse, MessageType.INITIAL_REQUEST);
+
+        // 4. 응답 반환
+        return AiRecipeResponseDto.builder()
+                .sessionId(session.getId())
+                .changeCount(session.getAttemptNumber())
+                .recipe(aiResponse)
+                .build();
+    }
+
+    // 2. 레시피 재요청
+    private AiRecipeResponseDto regenerateRecipe(Long userId, Long sessionId) {
+        // 1. 세션 조회 및 검증
+        AiSession session = aiSessionRepository.findByIdAndUserId(sessionId, userId)
+                .orElseThrow(() -> new AppException(ErrorCode.AI_SESSION_NOT_FOUND));
+
         if (session.getIsCompleted()) {
             throw new AppException(ErrorCode.SESSION_ALREADY_COMPLETED);
         }
 
-        // 4. 변경 횟수 제한 체크
-        if (session.isChangeLimitExceeded(MAX_CHANGE_COUNT)) {
+        if (session.getAttemptNumber() >= MAX_RETRY_COUNT) {
             throw new AppException(ErrorCode.AI_RECIPE_CHANGE_LIMIT_EXCEEDED);
         }
 
-        // 5. 시도 횟수 증가
-        session.incrementAttemptNumber();
+        // 2. 이전 재료 복원
+        List<IngredientDetailDto> ingredients = readIngredientsFromSession(session);
 
-        // 6. USER 프리셋 메시지 저장
-        MessageType messageType = (session.getAttemptNumber() == 1)
-                ? MessageType.INITIAL_REQUEST
-                : MessageType.RETRY_REQUEST;
-        saveUserMessage(session, messageType);
+        // 3. 이전 레시피 제목 목록 조회
+        List<String> excludedTitles = extractRecipeTitlesFromMessages(sessionId);
 
-        // 7. 재료 이름 enrichment
-        List<IngredientDetailDto> enrichedIngredients =
-                enrichIngredientsWithNames(request.getIngredients());
+        // 4. AI 호출 (제외 리스트 포함)
+        GeminiRecipeResponseDto aiResponse = geminiService.generateRecipeWithExclusion(
+                ingredients,
+                session.getDifficulty(),
+                excludedTitles
+        );
 
-        // 8. Gemini 호출
-        GeminiRecipeResponseDto geminiResponse =
-                geminiService.generateRecipe(
-                        enrichedIngredients,
-                        request.getDifficulty()
-                );
+        // 5. 재요청 메시지 저장
+        saveAiMessage(session, aiResponse, MessageType.RETRY_REQUEST);
 
-        // 9. AI 메시지 저장
-        saveAiMessage(session, geminiResponse);
+        // 6. 시도 횟수 증가
+        session.increaseAttempt();
 
-        // 10. 세션 제목 갱신
-        session.updateTitle(geminiResponse.getTitle());
-
+        // 7. 응답 반환
         return AiRecipeResponseDto.builder()
                 .sessionId(session.getId())
                 .changeCount(session.getAttemptNumber())
-                .recipe(geminiResponse)
+                .recipe(aiResponse)
                 .build();
     }
 
+    // 3. 레시피 채택
     public AiRecipeAdoptResponseDto adoptRecipe(Long userId, Long sessionId) {
         // 1. 세션 조회
         AiSession session = aiSessionRepository.findByIdAndUserId(sessionId, userId)
@@ -131,6 +162,7 @@ public class AiRecipeService {
                 .build();
     }
 
+    // 내부 메서드
     private void validateRequest(AiRecipeRequestDto request) {
         // 재료 목록 검증
         if (request.getIngredients() == null || request.getIngredients().isEmpty()) {
@@ -143,7 +175,120 @@ public class AiRecipeService {
         }
     }
 
-    // 내부 메서드
+    // 추가: AI 메시지에서 레시피 제목 추출
+    private List<String> extractRecipeTitlesFromMessages(Long sessionId) {
+        List<AiMessage> aiMessages = aiMessageRepository.findAllBySessionIdAndRoleAi(sessionId);
+
+        return aiMessages.stream()
+                .map(message -> {
+                    try {
+                        GeminiRecipeResponseDto recipe = objectMapper.readValue(
+                                message.getContent(),
+                                GeminiRecipeResponseDto.class
+                        );
+                        return recipe.getTitle();
+                    } catch (Exception e) {
+                        log.warn("레시피 제목 파싱 실패: {}", message.getId());
+                        return null;
+                    }
+                })
+                .filter(title -> title != null && !title.isBlank())
+                .collect(Collectors.toList());
+    }
+
+    // AI 메시지 저장 (MessageType 포함)
+    private void saveAiMessage(AiSession session, GeminiRecipeResponseDto response, MessageType type) {
+        try {
+            String json = objectMapper.writeValueAsString(response);
+
+            AiMessage message = AiMessage.builder()
+                    .session(session)
+                    .role(Role.AI)
+                    .content(json)
+                    .build();
+
+            aiMessageRepository.save(message);
+
+            // USER 메시지도 함께 저장 (대화 흐름 추적)
+            saveUserMessage(session, type);
+
+        } catch (Exception e) {
+            log.error("AI 메시지 저장 실패", e);
+            throw new AppException(ErrorCode.AI_SEARCH_FAILED);
+        }
+    }
+
+    private void saveUserMessage(AiSession session, MessageType messageType) {
+        aiMessageRepository.save(
+                AiMessage.builder()
+                        .session(session)
+                        .role(Role.USER)
+                        .content(messageType.getDescription())
+                        .build()
+        );
+    }
+
+    // 마지막 AI 메시지 조회
+    private AiMessage getLastAiMessage(AiSession session) {
+        return aiMessageRepository.findTopBySessionAndRoleOrderByCreatedAtDesc(session, Role.AI)
+                .orElseThrow(() -> new AppException(ErrorCode.AI_RESPONSE_INVALID_FORMAT));
+    }
+
+    // AI 메시지를 레시피로 파싱
+    private GeminiRecipeResponseDto parseAiMessageToRecipe(String content) {
+        try {
+            return objectMapper.readValue(content, GeminiRecipeResponseDto.class);
+        } catch (Exception e) {
+            log.error("AI 메시지 파싱 실패", e);
+            throw new AppException(ErrorCode.AI_RESPONSE_PARSE_FAILED);
+        }
+    }
+
+    // 채택된 레시피 저장
+    private AiRecipe saveAdoptedRecipe(AiSession session, GeminiRecipeResponseDto recipe, Long userId) {
+        try {
+            String ingredientsJson = objectMapper.writeValueAsString(recipe.getIngredients());
+            String stepsJson = objectMapper.writeValueAsString(recipe.getSteps());
+            String youtubeUrlJson = objectMapper.writeValueAsString(recipe.getYoutubeReferences());
+
+            AiRecipe aiRecipe = AiRecipe.builder()
+                    .title(recipe.getTitle())
+                    .ingredientsJson(ingredientsJson)
+                    .stepsJson(stepsJson)
+                    .youtubeUrlJson(youtubeUrlJson)
+                    .userId(userId)
+                    .session(session)
+                    .build();
+
+            return aiRecipeRepository.save(aiRecipe);
+        } catch (Exception e) {
+            log.error("채택 레시피 저장 실패", e);
+            throw new AppException(ErrorCode.AI_SEARCH_FAILED);
+        }
+    }
+
+    // 재료 JSON으로 변경
+    private String writeIngredientsAsJson(List<IngredientDetailDto> ingredients) {
+        try {
+            return objectMapper.writeValueAsString(ingredients);
+        } catch (Exception e) {
+            throw new AppException(ErrorCode.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    // 세션에서 재료 복원
+    private List<IngredientDetailDto> readIngredientsFromSession(AiSession session) {
+        try {
+            return objectMapper.readValue(
+                    session.getUserIngredientIds(),
+                    new TypeReference<>() {}
+            );
+        } catch (Exception e) {
+            throw new AppException(ErrorCode.AI_RESPONSE_PARSE_FAILED);
+        }
+    }
+
+    //--------
     private AiSession getOrCreateSession(Long userId, AiRecipeRequestDto request) {
 
         if (request.getSessionId() == null) {
@@ -180,72 +325,6 @@ public class AiRecipeService {
         }
     }
 
-    private void saveUserMessage(AiSession session, MessageType messageType) {
-        aiMessageRepository.save(
-                AiMessage.builder()
-                        .session(session)
-                        .role(Role.USER)
-                        .content(messageType.getDescription())
-                        .build()
-        );
-    }
-
-    private void saveAiMessage(
-            AiSession session,
-            GeminiRecipeResponseDto response
-    ) {
-        try {
-            String json = objectMapper.writeValueAsString(response);
-
-            aiMessageRepository.save(
-                    AiMessage.builder()
-                            .session(session)
-                            .role(Role.AI)
-                            .content(json)
-                            .build()
-            );
-        } catch (Exception e) {
-            log.error("AI 메시지 저장 실패", e);
-            throw new AppException(ErrorCode.AI_SEARCH_FAILED);
-        }
-    }
-
-    private AiMessage getLastAiMessage(AiSession session) {
-        return aiMessageRepository.findTopBySessionAndRoleOrderByCreatedAtDesc(session, Role.AI)
-                .orElseThrow(() -> new AppException(ErrorCode.AI_RESPONSE_INVALID_FORMAT));
-    }
-
-    private GeminiRecipeResponseDto parseAiMessageToRecipe(String content) {
-        try {
-            return objectMapper.readValue(content, GeminiRecipeResponseDto.class);
-        } catch (Exception e) {
-            log.error("AI 메시지 파싱 실패", e);
-            throw new AppException(ErrorCode.AI_RESPONSE_PARSE_FAILED);
-        }
-    }
-
-    private AiRecipe saveAdoptedRecipe(AiSession session, GeminiRecipeResponseDto recipe, Long userId) {
-        try {
-            String ingredientsJson = objectMapper.writeValueAsString(recipe.getIngredients());
-            String stepsJson = objectMapper.writeValueAsString(recipe.getSteps());
-            String youtubeUrlJson = objectMapper.writeValueAsString(recipe.getYoutubeReferences());
-
-            AiRecipe aiRecipe = AiRecipe.builder()
-                    .title(recipe.getTitle())
-                    .ingredientsJson(ingredientsJson)
-                    .stepsJson(stepsJson)
-                    .youtubeUrlJson(youtubeUrlJson)
-                    .userId(userId)
-                    .session(session)
-                    .build();
-
-            return aiRecipeRepository.save(aiRecipe);
-        } catch (Exception e) {
-            log.error("채택 레시피 저장 실패", e);
-            throw new AppException(ErrorCode.AI_SEARCH_FAILED);
-        }
-    }
-
     // 재료 이름 채우기
     private List<IngredientDetailDto> enrichIngredientsWithNames(
             List<IngredientDetailDto> ingredients
@@ -258,7 +337,6 @@ public class AiRecipeService {
     private IngredientDetailDto enrichIngredientWithName(IngredientDetailDto dto) {
         String name = getIngredientName(dto.getType(), dto.getReferenceId());
 
-        // DTO를 불변으로 만들거나, 빌더 패턴 사용
         return IngredientDetailDto.builder()
                 .type(dto.getType())
                 .referenceId(dto.getReferenceId())
@@ -268,6 +346,7 @@ public class AiRecipeService {
                 .build();
     }
 
+    // 재료이름조회
     private String getIngredientName(String type, Long referenceId) {
         if ("DEFAULT".equals(type)) {
             return defaultIngredientRepository.findById(referenceId)
@@ -280,4 +359,7 @@ public class AiRecipeService {
         }
         throw new AppException(ErrorCode.INVALID_INGREDIENT_TYPE);
     }
+
+
+
 }

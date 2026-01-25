@@ -21,7 +21,7 @@ public class AiRecipeController {
     public ResponseEntity<AiRecipeResponseDto> generateRecipe(
             @Valid @RequestBody AiRecipeRequestDto request
     ) {
-        //  ❗️테스트용 userId 하드코딩
+        // 테스트용 userId 하드코딩
         Long testUserId = 1L;
 
         AiRecipeResponseDto response =
