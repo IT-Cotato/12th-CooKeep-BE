@@ -11,9 +11,12 @@ import com.cookeep.cookeep.common.exception.AppException;
 import com.cookeep.cookeep.common.exception.ErrorCode;
 import com.cookeep.cookeep.domain.onboarding.dao.UserFoodPreferenceRepository;
 import com.cookeep.cookeep.domain.onboarding.dao.UserOnboardingRepository;
+import com.cookeep.cookeep.domain.onboarding.dao.WeeklyGoalRepository;
 import com.cookeep.cookeep.domain.onboarding.entity.FoodType;
+import com.cookeep.cookeep.domain.onboarding.entity.GoalActionType;
 import com.cookeep.cookeep.domain.onboarding.entity.UserFoodPreference;
 import com.cookeep.cookeep.domain.onboarding.entity.UserOnboarding;
+import com.cookeep.cookeep.domain.onboarding.entity.WeeklyGoal;
 import com.cookeep.cookeep.domain.user.dao.UserRepository;
 import com.cookeep.cookeep.domain.user.entity.User;
 
@@ -25,6 +28,7 @@ public class OnboardingService {
 	private final UserRepository userRepository;
 	private final UserFoodPreferenceRepository userFoodPreferenceRepository;
 	private final UserOnboardingRepository userOnboardingRepository;
+	private final WeeklyGoalRepository weeklyGoalRepository;
 
 	// 소셜 로그인 회원 대상 약관 동의 여부 저장
 	@Transactional
@@ -55,22 +59,33 @@ public class OnboardingService {
 		User user = userRepository.findById(userId)
 			.orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
 
-		// 유저 온보딩값이 있는지 조회, 없다면 새로 생성
-		// DTO의 값을 그대로 save하는 방식은 동일한 유저가 온보딩값을 두 번 저장하면 409 에러 발생
-		// 예외가 안 나도록 값을 업데이트하는 방식으로 수정하였음
-
 		// 서비스 플로우상 온보딩은 최초 1회만 하게 되지만,
 		// 중복 클릭, 네트워크 재시도 등으로 재요청이 들어오는 경우를 고려하여 업데이트 되도록 처리함
 
-		UserOnboarding userOnboarding = userOnboardingRepository.findById(userId)
-				.orElseGet(() -> UserOnboarding.builder()
-					.user(user)
-					.build());
+		upsertUserOnboarding(userId, user, onboardingRequestDTO);
+		upsertUserFoodPreference(userId, user, onboardingRequestDTO);
+	}
 
-		userOnboarding.update(onboardingRequestDTO.cookingLevel(), onboardingRequestDTO.weeklyGoal());
+	// 온보딩 내 요리 수준을 upsert하는 메서드
+	// 중복 발생시 최신 1개만 저장하도록 함
+	private void upsertUserOnboarding(Long userId, User user, OnboardingRequestDTO onboardingRequestDTO) {
+		// DTO의 값을 그대로 save하는 방식은 동일한 유저가 온보딩값을 두 번 저장하면 409 에러 발생
+		// 예외가 안 나도록 값을 업데이트하는 방식으로 수정하였음
+
+		// 유저 온보딩값이 있는지 조회, 없다면 새로 생성
+		UserOnboarding userOnboarding = userOnboardingRepository.findById(userId)
+			.orElseGet(() -> UserOnboarding.builder()
+				.user(user)
+				.build());
+
+		userOnboarding.update(onboardingRequestDTO.cookingLevel());
 
 		userOnboardingRepository.save(userOnboarding);
+	}
 
+	// 온보딩 내 선호하는 음식을 upsert하는 메서드
+	// 중복 발생시 최신 1개만 저장하도록 함
+	private void upsertUserFoodPreference(Long userId, User user, OnboardingRequestDTO onboardingRequestDTO) {
 		List<FoodType> foodTypes = onboardingRequestDTO.favoriteFoodTypes();
 
 		// 4개 이상의 값이 들어올 경우 선택 가능한 개수를 초과한 것이므로 예외 발생
@@ -86,12 +101,12 @@ public class OnboardingService {
 		}
 
 		onboardingRequestDTO.favoriteFoodTypes().stream()
-				.distinct()
-				.forEach(foodType -> userFoodPreferenceRepository.save(
-					UserFoodPreference.builder()
-						.user(user)
-						.foodType(foodType)
-						.build()
-				));
+			.distinct()
+			.forEach(foodType -> userFoodPreferenceRepository.save(
+				UserFoodPreference.builder()
+					.user(user)
+					.foodType(foodType)
+					.build()
+			));
 	}
 }
