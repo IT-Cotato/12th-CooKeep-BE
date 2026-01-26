@@ -58,6 +58,10 @@ public class OnboardingService {
 		// 유저 온보딩값이 있는지 조회, 없다면 새로 생성
 		// DTO의 값을 그대로 save하는 방식은 동일한 유저가 온보딩값을 두 번 저장하면 409 에러 발생
 		// 예외가 안 나도록 값을 업데이트하는 방식으로 수정하였음
+
+		// 서비스 플로우상 온보딩은 최초 1회만 하게 되지만,
+		// 중복 클릭, 네트워크 재시도 등으로 재요청이 들어오는 경우를 고려하여 업데이트 되도록 처리함
+
 		UserOnboarding userOnboarding = userOnboardingRepository.findById(userId)
 				.orElseGet(() -> UserOnboarding.builder()
 					.user(user)
@@ -77,9 +81,8 @@ public class OnboardingService {
 
 		// userFoodPreferencerk 만약 존재한다면, 테이블 구조가 다르기 때문에 앞과는 다르게
 		// update가 아니라 user의 값을 전체 삭제 후 새롭게 저장
-		if (userFoodPreferenceRepository.existsByUser(user)) {
-			userFoodPreferenceRepository.deleteAllByUser(user);
-			userFoodPreferenceRepository.flush();
+		if (userFoodPreferenceRepository.existsByUser_UserId(userId)) {
+			userFoodPreferenceRepository.deleteAllByUserId(userId);
 		}
 
 		onboardingRequestDTO.favoriteFoodTypes().stream()
