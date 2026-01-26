@@ -64,6 +64,7 @@ public class OnboardingService {
 
 		upsertUserOnboarding(userId, user, onboardingRequestDTO);
 		upsertUserFoodPreference(userId, user, onboardingRequestDTO);
+		appendWeeklyGoal(user, onboardingRequestDTO);
 	}
 
 	// 온보딩 내 요리 수준을 upsert하는 메서드
@@ -71,6 +72,9 @@ public class OnboardingService {
 	private void upsertUserOnboarding(Long userId, User user, OnboardingRequestDTO onboardingRequestDTO) {
 		// DTO의 값을 그대로 save하는 방식은 동일한 유저가 온보딩값을 두 번 저장하면 409 에러 발생
 		// 예외가 안 나도록 값을 업데이트하는 방식으로 수정하였음
+
+		// 요리 수준 선택을 건너뛴 경우
+		if (onboardingRequestDTO.cookingLevel() == null) return;
 
 		// 유저 온보딩값이 있는지 조회, 없다면 새로 생성
 		UserOnboarding userOnboarding = userOnboardingRepository.findById(userId)
@@ -87,6 +91,9 @@ public class OnboardingService {
 	// 중복 발생시 최신 1개만 저장하도록 함
 	private void upsertUserFoodPreference(Long userId, User user, OnboardingRequestDTO onboardingRequestDTO) {
 		List<FoodType> foodTypes = onboardingRequestDTO.favoriteFoodTypes();
+
+		// 선호하는 음식 선택을 건너뛴 경우
+		if (foodTypes == null || foodTypes.isEmpty()) return;
 
 		// 4개 이상의 값이 들어올 경우 선택 가능한 개수를 초과한 것이므로 예외 발생
 		// 질문 건너뛰기가 가능하므로 null은 가능함
@@ -108,5 +115,27 @@ public class OnboardingService {
 					.foodType(foodType)
 					.build()
 			));
+	}
+
+	// 온보딩 내 주간 목표를 저장하는 메서드
+	// 중복 발생시에도 동일하게 저장함
+	private void appendWeeklyGoal(User user, OnboardingRequestDTO onboardingRequestDTO) {
+		// 주간 목표는 히스토리 성격의 데이터이므로 delete & insert 방식 사용 X
+		// 온보딩 플로우 재진입 등 예외 상황에서 기존 목표 데이터가 삭제되는 것을 방지하기 위해
+		// 새로운 값만 추가 저장하는 방식 사용
+
+		// 주간 목표 설정을 건너뛴 경우
+		if (onboardingRequestDTO.goalActionType() == null) return;
+
+		WeeklyGoal weeklyGoal = WeeklyGoal.builder()
+			.user(user)
+			.goalActionType(onboardingRequestDTO.goalActionType())
+			.targetCount(onboardingRequestDTO.targetCount())
+			.build();
+
+		// 주차 시작일 설정
+		weeklyGoal.initWeekStartDate();
+
+		weeklyGoalRepository.save(weeklyGoal);
 	}
 }

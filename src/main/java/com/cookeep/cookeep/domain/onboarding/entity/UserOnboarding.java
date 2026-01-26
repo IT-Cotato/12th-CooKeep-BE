@@ -41,11 +41,7 @@ public class UserOnboarding extends BaseEntity {
 	@Enumerated(EnumType.STRING)
 	private CookingLevel cookingLevel;
 
-	@Column(length = 255)
-	private String weeklyGoal;
-
-	public void update(CookingLevel cookingLevel, String weeklyGoal) {
+	public void update(CookingLevel cookingLevel) {
 		this.cookingLevel = cookingLevel;
-		this.weeklyGoal = weeklyGoal;
 	}
 }
