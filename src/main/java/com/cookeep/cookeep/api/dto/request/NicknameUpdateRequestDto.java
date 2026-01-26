@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
 public class NicknameUpdateRequestDto {
 
     @NotBlank(message = "닉네임은 필수입니다.")
-    @Size(min = 1, max = 10, message = "닉네임은 1자 이상 20자 이하여야 합니다.")
+    @Size(max = 10, message = "닉네임은 1자 이상 10자 이하여야 합니다.")
     @Schema(description = "변경할 닉네임", example = "새로운닉네임", requiredMode = Schema.RequiredMode.REQUIRED)
     private String nickname;
 }
