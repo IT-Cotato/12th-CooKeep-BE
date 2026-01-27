@@ -195,10 +195,10 @@ public class GeminiService {
           "ingredients": {
             "user_ingredients": %s,
             "additional_ingredients": [
-              {"name": "간장", "quantity": 2, "unit": "TABLESPOON"}
+              {"name": "간장", "quantity": 2, "unit": "GRAM"}
             ],
             "optional_ingredients": [
-              {"name": "참기름", "quantity": 1, "unit": "TEASPOON"}
+              {"name": "참기름", "quantity": 1, "unit": "GRAM"}
             ]
           },
           "steps": [
