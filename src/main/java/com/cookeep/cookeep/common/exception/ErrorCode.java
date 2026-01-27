@@ -26,6 +26,7 @@ public enum ErrorCode {
 	INVALID_DIFFICULTY(HttpStatus.BAD_REQUEST, "유효하지 않은 난이도입니다.", "RECIPE-008"),
 	INGREDIENT_QUANTITY_INSUFFICIENT(HttpStatus.BAD_REQUEST, "재료 수량이 부족합니다.", "RECIPE-009"),
 	INGREDIENT_UNIT_MISMATCH(HttpStatus.BAD_REQUEST, "재료 단위가 일치하지 않습니다.", "RECIPE-010"),
+	INVALID_MESSAGE_TYPE(HttpStatus.BAD_REQUEST, "레시피 요청 메시지 타입 오류.", "RECIPE-012"),
 
 	// 401
 	UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "인증에 실패했습니다.", "AUTH-001"),

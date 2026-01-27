@@ -1,6 +1,7 @@
 package com.cookeep.cookeep.domain.recipe.dto;
 
 import com.cookeep.cookeep.domain.recipe.entity.Difficulty;
+import com.cookeep.cookeep.domain.recipe.entity.MessageType;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
@@ -14,9 +15,11 @@ public class AiRecipeRequestDto {
 
     private Long sessionId;
 
+    private MessageType messageType;
+
     @NotNull
     private Difficulty difficulty;
 
     @NotEmpty
-    private List<IngredientDetailDto> ingredients;
+    private List<IngredientSimpleDto> ingredients;
 }
