@@ -1,5 +1,8 @@
 package com.cookeep.cookeep.domain.recipe.application;
 
+import com.cookeep.cookeep.api.dto.request.AiRecipeRequestDto;
+import com.cookeep.cookeep.api.dto.response.AiRecipeAdoptResponseDto;
+import com.cookeep.cookeep.api.dto.response.AiRecipeResponseDto;
 import com.cookeep.cookeep.common.exception.AppException;
 import com.cookeep.cookeep.common.exception.ErrorCode;
 import com.cookeep.cookeep.domain.ingredient.common.Type;
@@ -22,7 +25,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 import static com.cookeep.cookeep.domain.recipe.entity.MessageType.*;
@@ -227,44 +229,6 @@ public class AiRecipeService {
 
         return userIngredient.getUnit().name();
     }
-
-    // user_ingredients 테이블에서 실제 재료 조회 및 이름 채우기
-    private List<IngredientDetailDto> enrichIngredientsFromUserIngredients(
-            Long userId,
-            List<IngredientDetailDto> requestIngredients
-    ) {
-        Map<String, List<IngredientDetailDto>> groupedByType = requestIngredients.stream()
-                .collect(Collectors.groupingBy(IngredientDetailDto::getType));
-
-        return requestIngredients.stream()
-                .map(dto -> {
-                    // user_ingredients에서 실제 재료 확인
-                    UserIngredient userIngredient = findUserIngredient(userId, dto);
-
-                    // 재료 이름 조회
-                    String name = getIngredientName(dto.getType(), dto.getReferenceId());
-
-                    return IngredientDetailDto.builder()
-                            .type(dto.getType())
-                            .referenceId(dto.getReferenceId())
-                            .name(name)
-                            .quantity(dto.getQuantity())
-                            .unit(dto.getUnit())
-                            .build();
-                })
-                .collect(Collectors.toList());
-    }
-
-    // user_ingredients에서 재료 조회
-    private UserIngredient findUserIngredient(Long userId, IngredientDetailDto dto) {
-        return userIngredientRepository.findAll().stream()
-                .filter(ui -> ui.getUser().getUserId().equals(userId))
-                .filter(ui -> ui.getType().name().equals(dto.getType()))
-                .filter(ui -> ui.getReferenceId().equals(dto.getReferenceId()))
-                .findFirst()
-                .orElseThrow(() -> new AppException(ErrorCode.INGREDIENT_NOT_FOUND));
-    }
-
 
     // AI 메시지에서 레시피 제목 추출
     private List<String> extractRecipeTitlesFromMessages(Long sessionId) {
