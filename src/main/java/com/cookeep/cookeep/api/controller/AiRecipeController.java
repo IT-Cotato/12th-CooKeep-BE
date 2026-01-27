@@ -2,6 +2,7 @@ package com.cookeep.cookeep.api.controller;
 
 import com.cookeep.cookeep.common.exception.ErrorCode;
 import com.cookeep.cookeep.config.ApiErrorCodeExamples;
+import com.cookeep.cookeep.config.JwtTokenProvider;
 import com.cookeep.cookeep.domain.recipe.application.AiRecipeService;
 import com.cookeep.cookeep.api.dto.response.AiRecipeAdoptResponseDto;
 import com.cookeep.cookeep.api.dto.request.AiRecipeRequestDto;
@@ -27,6 +28,7 @@ import org.springframework.web.bind.annotation.*;
 public class AiRecipeController {
 
     private final AiRecipeService aiRecipeService;
+    private final JwtTokenProvider jwtTokenProvider;
 
     @Operation(
             summary = "AI 레시피 생성 / 변경",
@@ -62,13 +64,14 @@ public class AiRecipeController {
     })
     @PostMapping
     public ResponseEntity<AiRecipeResponseDto> generateRecipe(
+            @RequestHeader("Authorization") String authorization,
             @Valid @RequestBody AiRecipeRequestDto request
     ) {
-        // 테스트용 userId 하드코딩
-        Long testUserId = 1L;
+        String token = authorization.replace("Bearer ", "");
+        Long userId = jwtTokenProvider.getUserId(token, false);
 
         AiRecipeResponseDto response =
-                aiRecipeService.generateRecipe(testUserId, request);
+                aiRecipeService.generateRecipe(userId, request);
 
         return ResponseEntity.ok(response);
     }
@@ -111,13 +114,14 @@ public class AiRecipeController {
     })
     @PostMapping("/{sessionId}/complete")
     public ResponseEntity<AiRecipeAdoptResponseDto> adoptRecipe(
+            @RequestHeader("Authorization") String authorization,
             @PathVariable Long sessionId
     ) {
-        //  ❗️테스트용 userId 하드코딩
-        Long testUserId = 1L;
+        String token = authorization.replace("Bearer ", "");
+        Long userId = jwtTokenProvider.getUserId(token, false);
 
         AiRecipeAdoptResponseDto response =
-                aiRecipeService.adoptRecipe(testUserId, sessionId);
+                aiRecipeService.adoptRecipe(userId, sessionId);
 
         return ResponseEntity.ok(response);
     }
