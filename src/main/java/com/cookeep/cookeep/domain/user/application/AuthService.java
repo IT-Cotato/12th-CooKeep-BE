@@ -78,8 +78,15 @@ public class AuthService {
 
 		UserStatus userStatus = user.getUserStatus();
 		NextStep nextStep = null;
-		if (userStatus == UserStatus.CREATED) {
-			nextStep = NextStep.TERMS;
+		Boolean marketingConsent = user.getMarketingConsent();
+
+		// 최초 회원가입한 소셜 로그인 유저일 경우
+		if (user.getUserStatus() == UserStatus.CREATED) {
+			// 최초 회원가입인 경우 TERMS 페이지로 이동,
+			// 회원가입 이후 약관 동의까지 마친 경우 ONBOARDING 페이지로 이동
+			nextStep = (user.getMarketingConsent() == null)
+				? NextStep.TERMS
+				: NextStep.ONBOARDING;
 		}
 
 		return new KakaoLoginResponseDTO(
