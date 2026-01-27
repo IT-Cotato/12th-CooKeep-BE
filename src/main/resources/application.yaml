@@ -31,3 +31,12 @@ kakao:
 jwt:
   access-secret: ${JWT_ACCESS_SECRET_KEY}
   refresh-secret: ${JWT_REFRESH_SECRET_KEY}
+
+google:
+  gemini:
+    model: gemini-2.5-flash
+  youtube:
+
+ai:
+  recipe:
+    max-change-count: 5
