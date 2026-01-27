@@ -30,8 +30,8 @@ public class User extends BaseEntity {
 	private Long userId;
 
 	// 닉네임 처리는 추후 값 전달받은 후에 업데이트할 예정
-	//@Column(length = 20, nullable = false, unique = true)
-	@Column(length = 20, unique = true, nullable = true)
+	//@Column(length = 10, nullable = false, unique = true)
+	@Column(length = 10, unique = true, nullable = true)
 	private String nickname;
 
 	// 소셜 로그인은 전화번호를 수집하지 않으므로 nullable
@@ -91,5 +91,13 @@ public class User extends BaseEntity {
 		if (this.isProfileAutoUpdate) {
 			this.profilePlant = userPlant;
 		}
+	}
+
+	public void updateCookieCnt(int amount) {
+		this.cookieCnt += amount;
+	}
+
+	public void updateNickname(String nickname) {
+		this.nickname = nickname;
 	}
 }

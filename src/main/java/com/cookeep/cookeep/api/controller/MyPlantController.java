@@ -1,8 +1,9 @@
 package com.cookeep.cookeep.api.controller;
 
 import com.cookeep.cookeep.api.dto.response.MyPlantResponse;
-import com.cookeep.cookeep.api.dto.user.UserProvider;
 import com.cookeep.cookeep.common.dto.DataResponse;
+import com.cookeep.cookeep.common.util.AuthUtils;
+import com.cookeep.cookeep.config.JwtTokenProvider;
 import com.cookeep.cookeep.domain.plant.application.UserPlantService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -21,15 +22,17 @@ import java.util.List;
 public class MyPlantController {
 
     private final UserPlantService userPlantService;
-    private final UserProvider userProvider;
+    private final JwtTokenProvider jwtTokenProvider;
 
     @Operation(summary = "보유 식물 목록 조회", description = "내가 현재 키우거나 수확한 식물 리스트를 조회합니다.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "조회 성공")
     })
     @GetMapping
-    public DataResponse<List<MyPlantResponse>> getMyPlants() {
-        Long userId = userProvider.getCurrentUserId();
+    public DataResponse<List<MyPlantResponse>> getMyPlants(
+            @RequestHeader("Authorization") String authorization) {
+        String token = AuthUtils.extractBearerToken(authorization);
+        Long userId = jwtTokenProvider.getUserId(token, false);
         return DataResponse.from(userPlantService.getMyPlants(userId));
     }
 
@@ -40,8 +43,10 @@ public class MyPlantController {
     })
     @PostMapping("/{plantId}") // /api/my-plants/{plantId}
     public DataResponse<Void> registerPlant(
+            @RequestHeader("Authorization") String authorization,
             @Parameter(description = "기본 식물 ID") @PathVariable long plantId) {
-        Long userId = userProvider.getCurrentUserId();
+        String token = AuthUtils.extractBearerToken(authorization);
+        Long userId = jwtTokenProvider.getUserId(token, false);
         userPlantService.registerPlant(userId, plantId);
         return DataResponse.from(null);
     }
@@ -54,8 +59,10 @@ public class MyPlantController {
     })
     @PatchMapping("/{userPlantId}/profile") // /api/my-plants/{userPlantId}/profile
     public DataResponse<Void> updateProfilePlant(
+            @RequestHeader("Authorization") String authorization,
             @Parameter(description = "유저 보유 식물 ID (user_plant_id)") @PathVariable long userPlantId) {
-        Long userId = userProvider.getCurrentUserId();
+        String token = AuthUtils.extractBearerToken(authorization);
+        Long userId = jwtTokenProvider.getUserId(token, false);
         userPlantService.updateProfilePlant(userId, userPlantId);
         return DataResponse.from(null);
     }
@@ -69,8 +76,10 @@ public class MyPlantController {
     })
     @DeleteMapping("/{userPlantId}")
     public DataResponse<Void> abandonPlant(
+            @RequestHeader("Authorization") String authorization,
             @Parameter(description = "포기할 보유 식물 ID") @PathVariable Long userPlantId) {
-        Long userId = userProvider.getCurrentUserId();
+        String token = AuthUtils.extractBearerToken(authorization);
+        Long userId = jwtTokenProvider.getUserId(token, false);
         userPlantService.abandonPlant(userId, userPlantId);
         return DataResponse.from(null);
     }
@@ -83,8 +92,11 @@ public class MyPlantController {
             @ApiResponse(responseCode = "404", description = "식물을 찾을 수 없음")
     })
     @PostMapping("/{userPlantId}/water")
-    public DataResponse<Void> giveWater(@PathVariable Long userPlantId) {
-        Long userId = userProvider.getCurrentUserId();
+    public DataResponse<Void> giveWater(
+            @RequestHeader("Authorization") String authorization,
+            @PathVariable Long userPlantId) {
+        String token = AuthUtils.extractBearerToken(authorization);
+        Long userId = jwtTokenProvider.getUserId(token, false);
         userPlantService.giveWater(userId, userPlantId);
         return DataResponse.from(null);
     }
@@ -98,8 +110,10 @@ public class MyPlantController {
     })
     @PostMapping("/{userPlantId}/revive")
     public DataResponse<Void> revivePlant(
+            @RequestHeader("Authorization") String authorization,
             @Parameter(description = "다시 살릴 보유 식물 ID") @PathVariable Long userPlantId) {
-        Long userId = userProvider.getCurrentUserId();
+        String token = AuthUtils.extractBearerToken(authorization);
+        Long userId = jwtTokenProvider.getUserId(token, false);
         userPlantService.revivePlant(userId, userPlantId);
         return DataResponse.from(null);
     }
