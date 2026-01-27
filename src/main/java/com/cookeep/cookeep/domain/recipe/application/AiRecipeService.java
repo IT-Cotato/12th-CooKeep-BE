@@ -50,11 +50,6 @@ public class AiRecipeService {
     public AiRecipeResponseDto generateRecipe(Long userId, AiRecipeRequestDto request) {
         validateRequest(request);
 
-        // MessageType이 ADOPT_RECIPE면 에러 (채택은 별도 엔드포인트)
-        if (request.getMessageType() == MessageType.ADOPT_RECIPE) {
-            throw new AppException(ErrorCode.INVALID_MESSAGE_TYPE);
-        }
-
         // sessionId가 null이면 신규 생성 (INITIAL_REQUEST)
         if (request.getSessionId() == null) {
             return generateInitialRecipe(userId, request);

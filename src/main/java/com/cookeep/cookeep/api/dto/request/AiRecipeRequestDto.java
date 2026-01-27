@@ -25,15 +25,6 @@ public class AiRecipeRequestDto {
     )
     private Long sessionId;
 
-    @NotNull(message = "메시지 타입은 필수입니다.")
-    @Schema(
-            description = "요청 메시지 타입 (신규 요청 / 재요청 등)",
-            example = "INITIAL_REQUEST",
-            allowableValues = {"INITIAL_REQUEST", "RETRY_REQUEST", "ADOPT_RECIPE"},
-            requiredMode = Schema.RequiredMode.REQUIRED
-    )
-    private MessageType messageType;
-
     @Schema(
             description = "레시피 난이도 (신규 요청 시 필수)",
             example = "EASY",
