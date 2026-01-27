@@ -183,7 +183,7 @@ public class AiRecipeService {
         // 신규 요청 (sessionId가 null)인 경우에만 재료와 난이도 검증
         if (request.getSessionId() == null) {
             if (request.getIngredients() == null || request.getIngredients().isEmpty()) {
-                throw new AppException(ErrorCode.INGREDIENTS_REQUIRED);
+                throw new AppException(ErrorCode.RECIPE_INGREDIENTS_REQUIRED);
             }
             if (request.getDifficulty() == null) {
                 throw new AppException(ErrorCode.INVALID_DIFFICULTY);
