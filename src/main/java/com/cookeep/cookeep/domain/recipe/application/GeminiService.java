@@ -180,7 +180,7 @@ public class GeminiService {
         
         [규칙]
         1. 제공된 재료의 단위를 반드시 사용하세요.
-        2. 각 재료의 적절한 수량(quantity)을 생성하세요.
+        2. 각 재료의 적절한 수량(quantity)을 생성하세요. 수량은 0개 이상이어야 하며, 소수점 첫 번째 자리까지 표현 가능합니다.
         3. user_ingredients에는 type, referenceId, name, quantity, unit을 모두 포함하세요.
         4. 추가로 필요한 재료가 있다면 additional_ingredients에 포함하세요.
         5. 생략 가능하거나 대체 가능한 재료는 optional_ingredients에 포함하세요.

@@ -180,12 +180,16 @@ public class AiRecipeService {
 
     // 요청 검증
     private void validateRequest(AiRecipeRequestDto request) {
-        if (request.getIngredients() == null || request.getIngredients().isEmpty()) {
-            throw new AppException(ErrorCode.INGREDIENTS_REQUIRED);
+        // 신규 요청 (sessionId가 null)인 경우에만 재료와 난이도 검증
+        if (request.getSessionId() == null) {
+            if (request.getIngredients() == null || request.getIngredients().isEmpty()) {
+                throw new AppException(ErrorCode.INGREDIENTS_REQUIRED);
+            }
+            if (request.getDifficulty() == null) {
+                throw new AppException(ErrorCode.INVALID_DIFFICULTY);
+            }
         }
-        if (request.getDifficulty() == null) {
-            throw new AppException(ErrorCode.INVALID_DIFFICULTY);
-        }
+        // 재요청은 기존 세션에서 정보 가져옴
     }
 
     // 요청바디에 입력한 타입,아이디로 db에서 재료 단위/이름 조회 & 수량은 AI가 생성

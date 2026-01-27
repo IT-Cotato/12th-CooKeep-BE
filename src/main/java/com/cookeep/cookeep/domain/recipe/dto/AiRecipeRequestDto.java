@@ -17,9 +17,7 @@ public class AiRecipeRequestDto {
 
     private MessageType messageType;
 
-    @NotNull
     private Difficulty difficulty;
 
-    @NotEmpty
     private List<IngredientSimpleDto> ingredients;
 }
