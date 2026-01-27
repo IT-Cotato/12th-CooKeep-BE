@@ -74,7 +74,7 @@ public class AiRecipeService {
                 .difficulty(request.getDifficulty())
                 .attemptNumber(1)
                 .isCompleted(false)
-                .userIngredientIds(writeIngredientsAsJson(enrichedIngredients)) // ✅ type, refId, name, unit 저장
+                .userIngredientIds(writeIngredientsAsJson(enrichedIngredients))
                 .build();
         aiSessionRepository.save(session);
 
