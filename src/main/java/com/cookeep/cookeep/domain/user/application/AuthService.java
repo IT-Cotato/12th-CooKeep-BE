@@ -12,6 +12,7 @@ import com.cookeep.cookeep.api.dto.request.TokenRefreshRequestDTO;
 import com.cookeep.cookeep.api.dto.response.KakaoLoginResponseDTO;
 import com.cookeep.cookeep.api.dto.response.TokenRefreshResponseDTO;
 import com.cookeep.cookeep.config.JwtTokenProvider;
+import com.cookeep.cookeep.domain.onboarding.entity.UserOnboarding;
 import com.cookeep.cookeep.domain.user.dao.UserAuthRepository;
 import com.cookeep.cookeep.domain.user.dao.UserRepository;
 import com.cookeep.cookeep.domain.user.dao.UserSessionRepository;
@@ -119,13 +120,14 @@ public class AuthService {
 		String accessToken = jwtTokenProvider.createAccessToken(user.getUserId());
 		String refreshToken = jwtTokenProvider.createRefreshToken(user.getUserId());
 
-		userSessionRepository.save(
-			UserSession.builder()
+		UserSession userSession = userSessionRepository.findByUser(user)
+			.orElseGet(() -> UserSession.builder()
 				.user(user)
-				.refreshToken(refreshToken)
-				.expiresAt(LocalDateTime.now().plusDays(14))
-				.build()
-		);
+				.build());
+
+		userSession.update(refreshToken, LocalDateTime.now().plusDays(14));
+
+		userSessionRepository.save(userSession);
 
 		UserStatus userStatus = user.getUserStatus();
 		NextStep nextStep = null;
