@@ -17,6 +17,7 @@ import com.cookeep.cookeep.domain.onboarding.entity.GoalActionType;
 import com.cookeep.cookeep.domain.onboarding.entity.UserFoodPreference;
 import com.cookeep.cookeep.domain.onboarding.entity.UserOnboarding;
 import com.cookeep.cookeep.domain.onboarding.entity.WeeklyGoal;
+import com.cookeep.cookeep.domain.user.application.UserReader;
 import com.cookeep.cookeep.domain.user.dao.UserRepository;
 import com.cookeep.cookeep.domain.user.entity.User;
 
@@ -29,12 +30,12 @@ public class OnboardingService {
 	private final UserFoodPreferenceRepository userFoodPreferenceRepository;
 	private final UserOnboardingRepository userOnboardingRepository;
 	private final WeeklyGoalRepository weeklyGoalRepository;
+	private final UserReader userReader;
 
 	// 소셜 로그인 회원 대상 약관 동의 여부 저장
 	@Transactional
 	public void saveAgreement(AgreementRequestDTO agreementRequestDTO, Long userId) {
-		User user = userRepository.findById(userId)
-			.orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+		User user = userReader.readById(userId);
 
 		// // 이미 마케팅 활용에 동의했는데 동일한 페이지에 재진입한 경우
 		// if (user.getMarketingConsent() != null) {
@@ -47,8 +48,7 @@ public class OnboardingService {
 	// 온보딩 과정에서 알림 켜기를 선택한 경우
 	@Transactional
 	public void agreeMarketingPush(Long userId) {
-		User user = userRepository.findById(userId)
-			.orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+		User user = userReader.readById(userId);
 
 		// 알림 켜기 버튼을 누른 사용자만 해당 api 경로로 진입하므로 true로 설정
 		user.setMarketingPush(true);
@@ -56,8 +56,7 @@ public class OnboardingService {
 
 	@Transactional
 	public void saveOnboarding(Long userId, OnboardingRequestDTO onboardingRequestDTO) {
-		User user = userRepository.findById(userId)
-			.orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+		User user = userReader.readById(userId);
 
 		// 서비스 플로우상 온보딩은 최초 1회만 하게 되지만,
 		// 중복 클릭, 네트워크 재시도 등으로 재요청이 들어오는 경우를 고려하여 업데이트 되도록 처리함

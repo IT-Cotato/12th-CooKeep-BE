@@ -38,6 +38,7 @@ public class AuthService {
 	private final UserAuthRepository userAuthRepository;
 	private final UserSessionRepository userSessionRepository;
 	private final JwtTokenProvider jwtTokenProvider;
+	private final UserReader userReader;
 
 	@Transactional
 	public TokenRefreshResponseDTO tokenRefresh(TokenRefreshRequestDTO tokenRefreshRequestDTO) {
@@ -55,9 +56,7 @@ public class AuthService {
 			throw new AppException(ErrorCode.INVALID_REFRESH_TOKEN);
 		}
 
-		// 유저 존재하는지 검증
-		User user = userRepository.findById(userId)
-			.orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+		User user = userReader.readById(userId);
 
 		// 새로운 액세스토큰 발급
 		String accessToken = jwtTokenProvider.createAccessToken(user.getUserId());
