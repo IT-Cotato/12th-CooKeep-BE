@@ -39,6 +39,9 @@ dependencies {
 
 	// JSON 처리
 	implementation 'com.google.code.gson:gson:2.10.1'
+
+	implementation 'org.springframework.boot:spring-boot-starter-security'
+	testImplementation 'org.springframework.security:spring-security-test'
 }
 
 tasks.named('test') {
