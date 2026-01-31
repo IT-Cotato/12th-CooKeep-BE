@@ -10,9 +10,11 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.cookeep.cookeep.api.dto.request.LoginRequestDTO;
 import com.cookeep.cookeep.api.dto.request.SignupRequestDTO;
 import com.cookeep.cookeep.api.dto.request.TokenRefreshRequestDTO;
 import com.cookeep.cookeep.api.dto.response.KakaoLoginResponseDTO;
+import com.cookeep.cookeep.api.dto.response.LoginResponseDTO;
 import com.cookeep.cookeep.api.dto.response.SignUpResponseDTO;
 import com.cookeep.cookeep.api.dto.response.TokenRefreshResponseDTO;
 import com.cookeep.cookeep.domain.user.dto.TokenPair;
@@ -223,4 +225,26 @@ public class AuthService {
 		throw new AppException(ErrorCode.USER_EMAIL_REGISTERED_WITH_SOCIAL);
 	}
 
+	@Transactional
+	public LoginResponseDTO login(LoginRequestDTO loginRequestDTO) {
+		String phoneNumber = loginRequestDTO.phoneNumber();
+		String password = loginRequestDTO.password();
+
+		// 전화번호 기반으로 유저 조회, 없을 경우 AUTH_PHONE_NOT_REGISTERED
+		User user = userRepository.findByPhoneNumber(phoneNumber)
+			.orElseThrow(() -> new AppException(ErrorCode.AUTH_PHONE_NOT_REGISTERED));
+
+		// 비밀번호가 틀렸을 경우
+		if (!passwordEncoder.matches(password, user.getPassword())) {
+			throw new AppException(ErrorCode.AUTH_PASSWORD_MISMATCH);
+		}
+
+		TokenPair tokenPair = issueTokensAndUpsertSession(user);
+
+		UserStatus userStatus = user.getUserStatus();
+
+		return new LoginResponseDTO(
+			user.getUserId(), tokenPair.accessToken(), tokenPair.refreshToken(), userStatus
+		);
+	}
 }

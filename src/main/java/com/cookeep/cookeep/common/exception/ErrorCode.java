@@ -38,6 +38,7 @@ public enum ErrorCode {
 	// 401 UNAUTHORIZED (인증 관련)
 	UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "인증에 실패했습니다.", "AUTH-001"),
 	INVALID_REFRESH_TOKEN(HttpStatus.UNAUTHORIZED, "유효하지 않은 리프레쉬 토큰입니다.", "AUTH-002"),
+	AUTH_PASSWORD_MISMATCH (HttpStatus.UNAUTHORIZED, "비밀번호가 올바르지 않습니다.", "AUTH-003"),
 
 	// 403 FORBIDDEN (권한 관련)
 	FORBIDDEN(HttpStatus.FORBIDDEN, "접근 권한이 없습니다.", "COMMON-003"),
@@ -50,6 +51,7 @@ public enum ErrorCode {
 	INGREDIENT_REFERENCE_NOT_FOUND(HttpStatus.NOT_FOUND, "해당 식재료를 찾을 수 없습니다.", "INGREDIENT-006"),
 	AI_SESSION_NOT_FOUND(HttpStatus.NOT_FOUND, "해당 AI 세션을 찾을 수 없습니다.", "RECIPE-010"),
 	INGREDIENT_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 재료입니다.", "RECIPE-011"),
+	AUTH_PHONE_NOT_REGISTERED (HttpStatus.NOT_FOUND, "가입되지 않은 전화번호입니다.", "AUTH-004"),
 
 	// 409
 	DUPLICATE_CUSTOM_INGREDIENT(HttpStatus.CONFLICT, "이미 등록된 식재료 입니다.", "INGREDIENT-007"),

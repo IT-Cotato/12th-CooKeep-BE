@@ -40,9 +40,7 @@ public class SecurityConfig {
 				.requestMatchers(
 					// 아래 경로들은 로그인하지 않아도 접근 가능
 					// 나머지 경로는 모두 로그인해야 접근 가능함
-					"/api/auth/login/kakao",
-					"/api/auth/signup",
-					"/api/auth/refresh",
+					"/api/auth/**",
 					"/swagger-ui/**",
 					"/v3/api-docs/**",
 					"/swagger-resources/**",

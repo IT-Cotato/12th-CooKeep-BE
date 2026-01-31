@@ -8,9 +8,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.cookeep.cookeep.api.dto.request.LoginRequestDTO;
 import com.cookeep.cookeep.api.dto.request.SignupRequestDTO;
 import com.cookeep.cookeep.api.dto.request.TokenRefreshRequestDTO;
 import com.cookeep.cookeep.api.dto.response.KakaoLoginResponseDTO;
+import com.cookeep.cookeep.api.dto.response.LoginResponseDTO;
 import com.cookeep.cookeep.api.dto.response.SignUpResponseDTO;
 import com.cookeep.cookeep.api.dto.response.TokenRefreshResponseDTO;
 import com.cookeep.cookeep.common.dto.DataResponse;
@@ -44,5 +46,11 @@ public class AuthController {
 	@PostMapping("/signup")
 	public ResponseEntity<DataResponse<SignUpResponseDTO>> signup(@Valid @RequestBody SignupRequestDTO signupRequestDTO) {
 		return ResponseEntity.ok(DataResponse.from(authService.signUp(signupRequestDTO)));
+	}
+
+	@Operation(summary = "전화번호 로그인 API")
+	@PostMapping("/login")
+	public ResponseEntity<DataResponse<LoginResponseDTO>> login(@Valid @RequestBody LoginRequestDTO loginRequestDTO) {
+		return ResponseEntity.ok(DataResponse.from(authService.login(loginRequestDTO)));
 	}
 }

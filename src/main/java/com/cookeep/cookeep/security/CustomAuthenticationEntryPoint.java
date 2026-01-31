@@ -10,6 +10,7 @@ import org.springframework.stereotype.Component;
 import com.cookeep.cookeep.common.dto.ErrorResponse;
 import com.cookeep.cookeep.common.exception.ErrorCode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -33,6 +34,10 @@ public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint 
 		response.setStatus(errorCode.getHttpStatus().value());
 		response.setContentType(MediaType.APPLICATION_JSON_VALUE);
 		response.setCharacterEncoding("UTF-8");
-		response.getWriter().write(objectMapper.writeValueAsString(body));
+		response.getWriter().write(
+			objectMapper.copy()
+				.registerModule(new JavaTimeModule())
+				.writeValueAsString(body)
+		);
 	}
 }
