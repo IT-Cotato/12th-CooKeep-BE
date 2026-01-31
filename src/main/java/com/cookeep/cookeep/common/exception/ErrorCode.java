@@ -54,6 +54,9 @@ public enum ErrorCode {
 	// 409
 	DUPLICATE_CUSTOM_INGREDIENT(HttpStatus.CONFLICT, "이미 등록된 식재료 입니다.", "INGREDIENT-007"),
 	DUPLICATE_NICKNAME(HttpStatus.CONFLICT, "이미 사용 중인 닉네임입니다.", "USER-001"),
+	USER_PHONE_ALREADY_EXISTS(HttpStatus.CONFLICT, "이미 사용 중인 전화번호입니다.", "USER-002"),
+	USER_EMAIL_ALREADY_EXISTS(HttpStatus.CONFLICT, "이미 사용 중인 이메일입니다.", "USER-003"),
+	USER_EMAIL_REGISTERED_WITH_SOCIAL(HttpStatus.CONFLICT,"이미 소셜로 등록된 이메일입니다.", "USER-004"),
 
 	//500
 	AI_SEARCH_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "AI 요청 또는 저장 처리에 실패했습니다.","RECIPE-012"),
