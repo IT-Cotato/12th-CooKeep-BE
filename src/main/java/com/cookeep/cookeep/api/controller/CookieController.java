@@ -2,7 +2,7 @@ package com.cookeep.cookeep.api.controller;
 
 import com.cookeep.cookeep.common.dto.DataResponse;
 import com.cookeep.cookeep.common.util.AuthUtils;
-import com.cookeep.cookeep.config.JwtTokenProvider;
+import com.cookeep.cookeep.security.JwtTokenProvider;
 import com.cookeep.cookeep.domain.cookie.application.CookieService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;

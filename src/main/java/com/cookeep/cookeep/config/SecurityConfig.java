@@ -9,6 +9,9 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
+import com.cookeep.cookeep.security.JwtAuthenticationFilter;
+import com.cookeep.cookeep.security.JwtTokenProvider;
+
 @Configuration
 @EnableWebSecurity
 @RequiredArgsConstructor

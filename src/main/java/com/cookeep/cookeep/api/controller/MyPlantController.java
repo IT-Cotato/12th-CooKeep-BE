@@ -3,7 +3,7 @@ package com.cookeep.cookeep.api.controller;
 import com.cookeep.cookeep.api.dto.response.MyPlantResponse;
 import com.cookeep.cookeep.common.dto.DataResponse;
 import com.cookeep.cookeep.common.util.AuthUtils;
-import com.cookeep.cookeep.config.JwtTokenProvider;
+import com.cookeep.cookeep.security.JwtTokenProvider;
 import com.cookeep.cookeep.domain.plant.application.UserPlantService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;

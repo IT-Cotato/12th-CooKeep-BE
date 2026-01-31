@@ -3,7 +3,7 @@ package com.cookeep.cookeep.api.controller;
 import com.cookeep.cookeep.common.dto.DataResponse;
 import com.cookeep.cookeep.common.exception.ErrorCode;
 import com.cookeep.cookeep.config.ApiErrorCodeExamples;
-import com.cookeep.cookeep.config.JwtTokenProvider;
+import com.cookeep.cookeep.security.JwtTokenProvider;
 import com.cookeep.cookeep.domain.ingredient.customingredient.application.CustomIngredientService;
 import com.cookeep.cookeep.api.dto.request.CustomIngredientCreateRequestDto;
 import com.cookeep.cookeep.api.dto.response.CustomIngredientCreateResponseDto;

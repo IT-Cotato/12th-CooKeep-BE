@@ -10,9 +10,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.cookeep.cookeep.api.dto.request.AgreementRequestDTO;
 import com.cookeep.cookeep.api.dto.request.OnboardingRequestDTO;
-import com.cookeep.cookeep.api.dto.user.UserProvider;
 import com.cookeep.cookeep.common.dto.DataResponse;
-import com.cookeep.cookeep.config.UserPrincipal;
+import com.cookeep.cookeep.security.UserPrincipal;
 import com.cookeep.cookeep.domain.onboarding.application.OnboardingService;
 
 import io.swagger.v3.oas.annotations.Operation;
