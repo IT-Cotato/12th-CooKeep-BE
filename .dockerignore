@@ -1,0 +1,13 @@
+.git
+.github
+.idea
+.vscode
+build
+bin
+out
+*.md
+.env
+.env.*
+application-local.yml
+application-secret.yaml
+application-secret.yml
