@@ -35,9 +35,9 @@ public enum ErrorCode {
 	INVALID_WEEKLY_GOAL_TARGET_COUNT(HttpStatus.BAD_REQUEST, "주간 목표가 설정된 경우 목표 횟수를 필수로 입력해야 합니다.", "ONBOARDING-002"),
 	INVALID_TARGET_COUNT(HttpStatus.BAD_REQUEST, "목표 횟수는 1에서 10 사이의 정수여야 합니다.", "ONBOARDING-003"),
 
-
 	// 401 UNAUTHORIZED (인증 관련)
 	UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "인증에 실패했습니다.", "AUTH-001"),
+	INVALID_REFRESH_TOKEN(HttpStatus.UNAUTHORIZED, "유효하지 않은 리프레쉬 토큰입니다.", "AUTH-002"),
 
 	// 403 FORBIDDEN (권한 관련)
 	NOT_MY_PLANT(HttpStatus.FORBIDDEN, "해당 식물에 대한 권한이 없습니다.", "PLANT-001"),

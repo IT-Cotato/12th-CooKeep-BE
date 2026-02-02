@@ -8,8 +8,11 @@ import java.util.Optional;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.cookeep.cookeep.api.dto.request.TokenRefreshRequestDTO;
 import com.cookeep.cookeep.api.dto.response.KakaoLoginResponseDTO;
+import com.cookeep.cookeep.api.dto.response.TokenRefreshResponseDTO;
 import com.cookeep.cookeep.config.JwtTokenProvider;
+import com.cookeep.cookeep.domain.onboarding.entity.UserOnboarding;
 import com.cookeep.cookeep.domain.user.dao.UserAuthRepository;
 import com.cookeep.cookeep.domain.user.dao.UserRepository;
 import com.cookeep.cookeep.domain.user.dao.UserSessionRepository;
@@ -19,6 +22,8 @@ import com.cookeep.cookeep.domain.user.entity.User;
 import com.cookeep.cookeep.domain.user.entity.UserAuth;
 import com.cookeep.cookeep.domain.user.entity.UserSession;
 import com.cookeep.cookeep.domain.user.entity.UserStatus;
+import com.cookeep.cookeep.common.exception.AppException;
+import com.cookeep.cookeep.common.exception.ErrorCode;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -33,6 +38,52 @@ public class AuthService {
 	private final UserAuthRepository userAuthRepository;
 	private final UserSessionRepository userSessionRepository;
 	private final JwtTokenProvider jwtTokenProvider;
+	private final UserReader userReader;
+
+	@Transactional
+	public TokenRefreshResponseDTO tokenRefresh(TokenRefreshRequestDTO tokenRefreshRequestDTO) {
+		String refreshToken = tokenRefreshRequestDTO.refreshToken();
+
+		validateRefreshToken(refreshToken);
+
+		Long userId = extractUserIdFromRefreshToken(refreshToken);
+
+		UserSession userSession = userSessionRepository.findByUser_UserId(userId)
+			.orElseThrow(() -> new AppException(ErrorCode.INVALID_REFRESH_TOKEN));
+
+		// request로 들어온 리프레쉬 토큰이 DB에 저장되어있는 리프레쉬 토큰과 동일한지 검증
+		if (!userSession.getRefreshToken().equals(refreshToken)) {
+			throw new AppException(ErrorCode.INVALID_REFRESH_TOKEN);
+		}
+
+		User user = userReader.readById(userId);
+
+		// 새로운 액세스토큰 발급
+		String accessToken = jwtTokenProvider.createAccessToken(user.getUserId());
+
+		return new TokenRefreshResponseDTO(accessToken);
+	}
+
+	private void validateRefreshToken(String refreshToken) {
+		// 위조/서명오류/만료된 리프레쉬 토큰인지 검증
+		boolean valid = jwtTokenProvider.validateToken(refreshToken, true);
+
+		if (!valid) {
+			throw new AppException(ErrorCode.INVALID_REFRESH_TOKEN); // 만료/위조/서명오류
+		}
+	}
+
+
+	private Long extractUserIdFromRefreshToken(String refreshToken) {
+		// 리프레쉬 토큰에서 UserId 추출
+		try {
+			return jwtTokenProvider.getUserId(refreshToken, true);
+		} catch (Exception e) {
+			throw new AppException(ErrorCode.INVALID_REFRESH_TOKEN);
+		}
+	}
+
+
 
 	// 카카오 로그인
 	@Transactional
@@ -68,13 +119,14 @@ public class AuthService {
 		String accessToken = jwtTokenProvider.createAccessToken(user.getUserId());
 		String refreshToken = jwtTokenProvider.createRefreshToken(user.getUserId());
 
-		userSessionRepository.save(
-			UserSession.builder()
+		UserSession userSession = userSessionRepository.findByUser(user)
+			.orElseGet(() -> UserSession.builder()
 				.user(user)
-				.refreshToken(refreshToken)
-				.expiresAt(LocalDateTime.now().plusDays(14))
-				.build()
-		);
+				.build());
+
+		userSession.update(refreshToken, LocalDateTime.now().plusDays(14));
+
+		userSessionRepository.save(userSession);
 
 		UserStatus userStatus = user.getUserStatus();
 		NextStep nextStep = null;

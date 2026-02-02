@@ -1,6 +1,7 @@
 package com.cookeep.cookeep.api.controller;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -11,6 +12,7 @@ import com.cookeep.cookeep.api.dto.request.AgreementRequestDTO;
 import com.cookeep.cookeep.api.dto.request.OnboardingRequestDTO;
 import com.cookeep.cookeep.api.dto.user.UserProvider;
 import com.cookeep.cookeep.common.dto.DataResponse;
+import com.cookeep.cookeep.config.UserPrincipal;
 import com.cookeep.cookeep.domain.onboarding.application.OnboardingService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -25,7 +27,6 @@ import lombok.RequiredArgsConstructor;
 public class OnboardingController {
 
 	private final OnboardingService onboardingService;
-	private final UserProvider userProvider;
 
 	@Operation(summary = "약관 동의 여부 저장", description = "소셜로그인 회원을 대상으로 약관 동의 여부를 저장합니다.")
 	@ApiResponses(value = {
@@ -35,9 +36,10 @@ public class OnboardingController {
 	})
 	@PatchMapping("/agreements")
 	public ResponseEntity<DataResponse<Void>> saveAgreement(
+		@AuthenticationPrincipal UserPrincipal principal,
 		@RequestBody AgreementRequestDTO agreementRequestDTO
 		) {
-		Long userId = userProvider.getCurrentUserId();
+		Long userId = principal.userId();
 		onboardingService.saveAgreement(agreementRequestDTO, userId);
 		return ResponseEntity.ok(DataResponse.ok());
 	}
@@ -49,8 +51,10 @@ public class OnboardingController {
 		@ApiResponse(responseCode = "401", description = "회원 인증 실패, AccessToken이 없거나 유효하지 않음"),
 		@ApiResponse(responseCode = "404", description = "사용자를 찾을 수 없음")
 	})
-	public ResponseEntity<DataResponse<Void>> agreeMarketingPush() {
-		Long userId = userProvider.getCurrentUserId();
+	public ResponseEntity<DataResponse<Void>> agreeMarketingPush(
+		@AuthenticationPrincipal UserPrincipal principal
+	) {
+		Long userId = principal.userId();
 		onboardingService.agreeMarketingPush(userId);
 		return ResponseEntity.ok(DataResponse.ok());
 	}
@@ -64,9 +68,10 @@ public class OnboardingController {
 	})
 	@PostMapping("/onboarding")
 	public ResponseEntity<DataResponse<Void>> saveOnboarding(
+		@AuthenticationPrincipal UserPrincipal principal,
 		@Valid @RequestBody OnboardingRequestDTO onboardingRequestDTO
 	) {
-		Long userId = userProvider.getCurrentUserId();
+		Long userId = principal.userId();
 		onboardingService.saveOnboarding(userId, onboardingRequestDTO);
 		return ResponseEntity.ok(DataResponse.ok());
 	}
