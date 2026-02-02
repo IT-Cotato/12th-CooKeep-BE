@@ -131,7 +131,7 @@ public class AiRecipeController {
     }
 
     @Operation(
-            summary = "(MAIN06-01) AI 레시피 대화 세션 목록 조회",
+            summary = "(MAIN06-1) AI 레시피 대화 세션 목록 조회",
             description = "사용자의 모든 AI 레시피 대화 세션 조회 (즐겨찾기 분리, 최신순 정렬)"
     )
     @SecurityRequirements
@@ -151,7 +151,7 @@ public class AiRecipeController {
     }
 
     @Operation(
-            summary = "AI 레시피 대화 세션 상세 조회",
+            summary = "(MAIN06-2)AI 레시피 대화 세션 상세 조회",
             description = "특정 세션의 모든 대화 내역 조회 (AI 응답만)"
     )
     @SecurityRequirements
@@ -176,5 +176,35 @@ public class AiRecipeController {
         AiSessionDetailResponseDto response = aiRecipeService.getSessionDetail(userId, sessionId);
 
         return ResponseEntity.ok(DataResponse.from(response));
+    }
+
+    @Operation(
+            summary = "(MAIN06-3)AI 레시피 대화 세션 삭제",
+            description = "특정 세션과 관련 메시지 모두 삭제"
+    )
+    @SecurityRequirements
+    @ApiErrorCodeExamples({
+            ErrorCode.UNAUTHORIZED,
+            ErrorCode.AI_SESSION_NOT_FOUND,
+            ErrorCode.AI_SESSION_FORBIDDEN
+    })
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "세션 삭제 성공"),
+            @ApiResponse(responseCode = "401", description = "인증 실패", content = @Content),
+            @ApiResponse(responseCode = "403", description = "본인의 대화 세션이 아님", content = @Content),
+            @ApiResponse(responseCode = "404", description = "세션을 찾을 수 없음", content = @Content)
+    })
+    @DeleteMapping("/sessions/{sessionId}")
+    public ResponseEntity<DataResponse<Void>> deleteSession(
+            @RequestHeader("Authorization") String authorization,
+            @Parameter(description = "세션 ID", required = true)
+            @PathVariable Long sessionId
+    ) {
+        String token = authorization.replace("Bearer ", "");
+        Long userId = jwtTokenProvider.getUserId(token, false);
+
+        aiRecipeService.deleteSession(userId, sessionId);
+
+        return ResponseEntity.ok(DataResponse.ok());
     }
 }

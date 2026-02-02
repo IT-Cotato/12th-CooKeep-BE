@@ -200,7 +200,7 @@ public class AiRecipeService {
                 .build();
     }
 
-    // (MAIN06-1) AI 대화 상세 내역 전체 조회
+    // (MAIN06-2) AI 대화 상세 내역 전체 조회
     @Transactional(readOnly = true)
     public AiSessionDetailResponseDto getSessionDetail(Long userId, Long sessionId) {
         // 1. 세션 조회 및 권한 검증
@@ -237,6 +237,24 @@ public class AiRecipeService {
                 .sessionId(sessionId)
                 .conversations(conversations)
                 .build();
+    }
+
+    // (MAIN06-3) AI 대화 상세 내역 전체 조회
+    public void deleteSession(Long userId, Long sessionId) {
+        // 1. 세션 조회
+        AiSession session = aiSessionRepository.findById(sessionId)
+                .orElseThrow(() -> new AppException(ErrorCode.AI_SESSION_NOT_FOUND));
+
+        // 2. 본인 세션인지 확인
+        if (!session.getUserId().equals(userId)) {
+            throw new AppException(ErrorCode.AI_SESSION_FORBIDDEN);
+        }
+
+        // 3. 연관 메시지 삭제
+        aiMessageRepository.deleteBySessionId(sessionId);
+
+        // 4. 세션 삭제
+        aiSessionRepository.delete(session);
     }
 
     // --- 내부 메서드 ---
