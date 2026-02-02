@@ -20,6 +20,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @Tag(
@@ -68,11 +69,9 @@ public class AiRecipeController {
     })
     @PostMapping
     public ResponseEntity<AiRecipeResponseDto> generateRecipe(
-            @RequestHeader("Authorization") String authorization,
+            @AuthenticationPrincipal(expression = "userId") Long userId,
             @Valid @RequestBody AiRecipeRequestDto request
     ) {
-        String token = authorization.replace("Bearer ", "");
-        Long userId = jwtTokenProvider.getUserId(token, false);
 
         AiRecipeResponseDto response =
                 aiRecipeService.generateRecipe(userId, request);
@@ -118,11 +117,9 @@ public class AiRecipeController {
     })
     @PostMapping("/{sessionId}/complete")
     public ResponseEntity<AiRecipeAdoptResponseDto> adoptRecipe(
-            @RequestHeader("Authorization") String authorization,
+            @AuthenticationPrincipal(expression = "userId") Long userId,
             @PathVariable Long sessionId
     ) {
-        String token = authorization.replace("Bearer ", "");
-        Long userId = jwtTokenProvider.getUserId(token, false);
 
         AiRecipeAdoptResponseDto response =
                 aiRecipeService.adoptRecipe(userId, sessionId);
@@ -140,10 +137,8 @@ public class AiRecipeController {
     })
     @GetMapping("/sessions")
     public ResponseEntity<DataResponse<AiSessionListResponseDto>> getAllSessions(
-            @RequestHeader("Authorization") String authorization
+            @AuthenticationPrincipal(expression = "userId") Long userId
     ) {
-        String token = authorization.replace("Bearer ", "");
-        Long userId = jwtTokenProvider.getUserId(token, false);
 
         AiSessionListResponseDto response = aiRecipeService.getAllSessions(userId);
 
@@ -166,12 +161,10 @@ public class AiRecipeController {
     })
     @GetMapping("/sessions/{sessionId}")
     public ResponseEntity<DataResponse<AiSessionDetailResponseDto>> getSessionDetail(
-            @RequestHeader("Authorization") String authorization,
+            @AuthenticationPrincipal(expression = "userId") Long userId,
             @Parameter(description = "세션 ID", required = true)
             @PathVariable Long sessionId
     ) {
-        String token = authorization.replace("Bearer ", "");
-        Long userId = jwtTokenProvider.getUserId(token, false);
 
         AiSessionDetailResponseDto response = aiRecipeService.getSessionDetail(userId, sessionId);
 
@@ -196,12 +189,10 @@ public class AiRecipeController {
     })
     @DeleteMapping("/sessions/{sessionId}")
     public ResponseEntity<DataResponse<Void>> deleteSession(
-            @RequestHeader("Authorization") String authorization,
+            @AuthenticationPrincipal(expression = "userId") Long userId,
             @Parameter(description = "세션 ID", required = true)
             @PathVariable Long sessionId
     ) {
-        String token = authorization.replace("Bearer ", "");
-        Long userId = jwtTokenProvider.getUserId(token, false);
 
         aiRecipeService.deleteSession(userId, sessionId);
 
