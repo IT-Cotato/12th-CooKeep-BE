@@ -21,10 +21,7 @@ public interface AiMessageRepository extends JpaRepository<AiMessage, Long> {
     List<AiMessage> findAllBySessionIdAndRoleAi(@Param("sessionId") Long sessionId);
 
     // 세션 내 모든 메시지 조회
-    @Query("SELECT m FROM AiMessage m " +
-            "WHERE m.session.id = :sessionId " +
-            "ORDER BY m.createdAt ASC")
-    List<AiMessage> findAllBySessionIdOrderByCreatedAt(@Param("sessionId") Long sessionId);
+    List<AiMessage> findAllBySessionIdOrderByCreatedAtAsc(Long sessionId);
 
     // 세션 삭제 시 메시지 삭제
     void deleteBySessionId(Long sessionId);

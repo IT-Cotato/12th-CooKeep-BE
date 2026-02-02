@@ -77,6 +77,8 @@ public class AiRecipeService {
                 .userIngredientIds(writeIngredientsAsJson(enrichedIngredients))
                 .build();
         aiSessionRepository.save(session);
+        // 메시지 db에 저장
+        saveInitialUserMessage(session, enrichedIngredients);
 
         // 3. AI 레시피 생성 (이름 + 단위만 전달, AI가 quantity 생성)
         GeminiRecipeResponseDto aiResponse = geminiService.generateRecipe(
@@ -115,20 +117,23 @@ public class AiRecipeService {
         // 3. 이전 레시피 제목 목록 조회
         List<String> excludedTitles = extractRecipeTitlesFromMessages(sessionId);
 
-        // 4. AI 호출 (제외 리스트 포함)
+        // 4. 재요청 메시지 저장 (role=USER, RETRY_REQUEST)
+        saveSimpleUserMessage(session, MessageType.RETRY_REQUEST);
+
+        // 5. AI 호출 (제외 리스트 포함)
         GeminiRecipeResponseDto aiResponse = geminiService.generateRecipeWithExclusion(
                 ingredients,
                 session.getDifficulty(),
                 excludedTitles
         );
 
-        // 5. 재요청 메시지 저장
+        // 6. 재요청 메시지 저장
         saveAiMessage(session, aiResponse, RETRY_REQUEST);
 
-        // 6. 시도 횟수 증가
+        // 7. 시도 횟수 증가
         session.increaseAttempt();
 
-        // 7. 응답 반환
+        // 8. 응답 반환
         return AiRecipeResponseDto.builder()
                 .sessionId(session.getId())
                 .changeCount(session.getAttemptNumber())
@@ -157,7 +162,7 @@ public class AiRecipeService {
         AiRecipe savedRecipe = saveAdoptedRecipe(session, recipe, userId);
 
         // 6. USER 채택 메시지 저장
-        saveUserMessage(session, ADOPT_RECIPE);
+        saveSimpleUserMessage(session, MessageType.ADOPT_RECIPE);
 
         // 7. 세션 완료 처리
         session.complete();
@@ -207,35 +212,14 @@ public class AiRecipeService {
         AiSession session = aiSessionRepository.findByIdAndUserId(sessionId, userId)
                 .orElseThrow(() -> new AppException(ErrorCode.AI_SESSION_NOT_FOUND));
 
-        // 2. AI 메시지만 조회 (턴별 레시피)
-        List<AiMessage> aiMessages = aiMessageRepository.findAllBySessionIdAndRoleAi(sessionId);
-
-        // 3. 대화 턴으로 변환
-        List<AiSessionDetailResponseDto.ConversationTurn> conversations = new ArrayList<>();
-        int turn = 1;
-
-        for (AiMessage message : aiMessages) {
-            try {
-                GeminiRecipeResponseDto recipe = objectMapper.readValue(
-                        message.getContent(),
-                        GeminiRecipeResponseDto.class
-                );
-
-                conversations.add(
-                        AiSessionDetailResponseDto.ConversationTurn.builder()
-                                .turn(turn++)
-                                .recipe(AiSessionDetailResponseDto.RecipeInfo.from(recipe))
-                                .createdAt(message.getCreatedAt())
-                                .build()
-                );
-            } catch (Exception e) {
-                log.warn("레시피 파싱 실패: messageId={}", message.getId());
-            }
-        }
+        // 2. 세션 내 모든 메시지 조회
+        List<AiMessage> messages = aiMessageRepository.findAllBySessionIdOrderByCreatedAtAsc(sessionId);
 
         return AiSessionDetailResponseDto.builder()
-                .sessionId(sessionId)
-                .conversations(conversations)
+                .sessionId(session.getId())
+                .messages(messages.stream()
+                        .map(AiSessionDetailResponseDto.MessageItem::from)
+                        .toList())
                 .build();
     }
 
@@ -343,9 +327,6 @@ public class AiRecipeService {
 
             aiMessageRepository.save(message);
 
-            // USER 메시지도 함께 저장 (대화 흐름 추적)
-            saveUserMessage(session, type);
-
         } catch (Exception e) {
             log.error("AI 메시지 저장 실패", e);
             throw new AppException(ErrorCode.AI_SEARCH_FAILED);
@@ -435,6 +416,36 @@ public class AiRecipeService {
         } catch (Exception e) {
             throw new AppException(ErrorCode.AI_RESPONSE_PARSE_FAILED);
         }
+    }
+
+    // 유저 메시지 저장 (초기메시지)
+    private void saveInitialUserMessage(AiSession session, List<IngredientDetailDto> enrichedIngredients) {
+        try {
+            // USER 메시지 content에 재료 + 타입 설명 저장 (요구사항 충족)
+            var payload = new java.util.LinkedHashMap<String, Object>();
+            payload.put("type", MessageType.INITIAL_REQUEST.name());
+            payload.put("message", MessageType.INITIAL_REQUEST.getDescription());
+            payload.put("ingredients", enrichedIngredients);
+
+            String content = objectMapper.writeValueAsString(payload);
+
+            AiMessage userMsg = AiMessage.userMessage(session, MessageType.INITIAL_REQUEST, content);
+            aiMessageRepository.save(userMsg);
+            // flush해서 유저 메시지 먼저 저장
+            aiMessageRepository.flush();
+
+        } catch (Exception e) {
+            throw new AppException(ErrorCode.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    // 유저 메시지 저장 (재요청/채택 메시지)
+    private void saveSimpleUserMessage(AiSession session, MessageType type) {
+        String content = type.getDescription();
+        AiMessage userMsg = AiMessage.userMessage(session, type, content);
+        aiMessageRepository.save(userMsg);
+        // flush해서 유저 메시지 먼저 저장
+        aiMessageRepository.flush();
     }
 
 }

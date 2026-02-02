@@ -29,6 +29,10 @@ public class AiMessage {
     @Column(name = "role")
     private Role role;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "message_type")
+    private MessageType messageType;
+
     @Lob
     @Column(name = "content", columnDefinition = "TEXT")
     private String content;
@@ -45,10 +49,20 @@ public class AiMessage {
             return AiMessage.builder()
                     .session(session)
                     .role(Role.AI)
+                    .messageType(type)
                     .content(json)
                     .build();
         } catch (Exception e) {
             throw new RuntimeException("AI 메시지 생성 실패", e);
         }
+    }
+
+    public static AiMessage userMessage(AiSession session, MessageType type, String content) {
+        return AiMessage.builder()
+                .session(session)
+                .role(Role.USER)
+                .messageType(type)
+                .content(content)
+                .build();
     }
 }
