@@ -3,6 +3,7 @@ package com.cookeep.cookeep.domain.recipe.application;
 import com.cookeep.cookeep.api.dto.request.AiRecipeRequestDto;
 import com.cookeep.cookeep.api.dto.response.AiRecipeAdoptResponseDto;
 import com.cookeep.cookeep.api.dto.response.AiRecipeResponseDto;
+import com.cookeep.cookeep.api.dto.response.AiSessionDetailResponseDto;
 import com.cookeep.cookeep.api.dto.response.AiSessionListResponseDto;
 import com.cookeep.cookeep.common.exception.AppException;
 import com.cookeep.cookeep.common.exception.ErrorCode;
@@ -25,6 +26,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -195,6 +197,45 @@ public class AiRecipeService {
         return AiSessionListResponseDto.builder()
                 .pinned(pinned)
                 .sessions(sessions)
+                .build();
+    }
+
+    // (MAIN06-1) AI 대화 상세 내역 전체 조회
+    @Transactional(readOnly = true)
+    public AiSessionDetailResponseDto getSessionDetail(Long userId, Long sessionId) {
+        // 1. 세션 조회 및 권한 검증
+        AiSession session = aiSessionRepository.findByIdAndUserId(sessionId, userId)
+                .orElseThrow(() -> new AppException(ErrorCode.AI_SESSION_NOT_FOUND));
+
+        // 2. AI 메시지만 조회 (턴별 레시피)
+        List<AiMessage> aiMessages = aiMessageRepository.findAllBySessionIdAndRoleAi(sessionId);
+
+        // 3. 대화 턴으로 변환
+        List<AiSessionDetailResponseDto.ConversationTurn> conversations = new ArrayList<>();
+        int turn = 1;
+
+        for (AiMessage message : aiMessages) {
+            try {
+                GeminiRecipeResponseDto recipe = objectMapper.readValue(
+                        message.getContent(),
+                        GeminiRecipeResponseDto.class
+                );
+
+                conversations.add(
+                        AiSessionDetailResponseDto.ConversationTurn.builder()
+                                .turn(turn++)
+                                .recipe(AiSessionDetailResponseDto.RecipeInfo.from(recipe))
+                                .createdAt(message.getCreatedAt())
+                                .build()
+                );
+            } catch (Exception e) {
+                log.warn("레시피 파싱 실패: messageId={}", message.getId());
+            }
+        }
+
+        return AiSessionDetailResponseDto.builder()
+                .sessionId(sessionId)
+                .conversations(conversations)
                 .build();
     }
 

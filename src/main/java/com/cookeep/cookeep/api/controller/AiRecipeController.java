@@ -1,5 +1,6 @@
 package com.cookeep.cookeep.api.controller;
 
+import com.cookeep.cookeep.api.dto.response.AiSessionDetailResponseDto;
 import com.cookeep.cookeep.api.dto.response.AiSessionListResponseDto;
 import com.cookeep.cookeep.common.dto.DataResponse;
 import com.cookeep.cookeep.common.exception.ErrorCode;
@@ -10,6 +11,7 @@ import com.cookeep.cookeep.api.dto.response.AiRecipeAdoptResponseDto;
 import com.cookeep.cookeep.api.dto.request.AiRecipeRequestDto;
 import com.cookeep.cookeep.api.dto.response.AiRecipeResponseDto;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -148,4 +150,31 @@ public class AiRecipeController {
         return ResponseEntity.ok(DataResponse.from(response));
     }
 
+    @Operation(
+            summary = "AI 레시피 대화 세션 상세 조회",
+            description = "특정 세션의 모든 대화 내역 조회 (AI 응답만)"
+    )
+    @SecurityRequirements
+    @ApiErrorCodeExamples({
+            ErrorCode.UNAUTHORIZED,
+            ErrorCode.AI_SESSION_NOT_FOUND
+    })
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "세션 상세 조회 성공"),
+            @ApiResponse(responseCode = "401", description = "인증 실패", content = @Content),
+            @ApiResponse(responseCode = "404", description = "세션을 찾을 수 없음", content = @Content)
+    })
+    @GetMapping("/sessions/{sessionId}")
+    public ResponseEntity<DataResponse<AiSessionDetailResponseDto>> getSessionDetail(
+            @RequestHeader("Authorization") String authorization,
+            @Parameter(description = "세션 ID", required = true)
+            @PathVariable Long sessionId
+    ) {
+        String token = authorization.replace("Bearer ", "");
+        Long userId = jwtTokenProvider.getUserId(token, false);
+
+        AiSessionDetailResponseDto response = aiRecipeService.getSessionDetail(userId, sessionId);
+
+        return ResponseEntity.ok(DataResponse.from(response));
+    }
 }
