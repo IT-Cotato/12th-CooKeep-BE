@@ -78,7 +78,7 @@ public class AiRecipeService {
                 .build();
         aiSessionRepository.save(session);
         // 메시지 db에 저장
-        saveInitialUserMessage(session, enrichedIngredients);
+        saveInitialUserMessage(session, request);
 
         // 3. AI 레시피 생성 (이름 + 단위만 전달, AI가 quantity 생성)
         GeminiRecipeResponseDto aiResponse = geminiService.generateRecipe(
@@ -414,13 +414,13 @@ public class AiRecipeService {
     }
 
     // 유저 메시지 저장 (초기메시지)
-    private void saveInitialUserMessage(AiSession session, List<IngredientDetailDto> enrichedIngredients) {
+    private void saveInitialUserMessage(AiSession session, AiRecipeRequestDto request) {
         try {
             // USER 메시지 content에 재료 + 타입 설명 저장 (요구사항 충족)
             var payload = new java.util.LinkedHashMap<String, Object>();
             payload.put("type", MessageType.INITIAL_REQUEST.name());
             payload.put("message", MessageType.INITIAL_REQUEST.getDescription());
-            payload.put("ingredients", enrichedIngredients);
+            payload.put("ingredients", request.getIngredients());
 
             String content = objectMapper.writeValueAsString(payload);
 
@@ -453,6 +453,5 @@ public class AiRecipeService {
         session.setTitle(aiResponse.getTitle());
         aiSessionRepository.save(session);
     }
-
 
 }
