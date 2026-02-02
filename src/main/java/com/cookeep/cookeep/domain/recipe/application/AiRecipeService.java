@@ -101,8 +101,12 @@ public class AiRecipeService {
     }
 
     // 2. 레시피 재요청
-    private AiRecipeResponseDto regenerateRecipe(Long userId, Long sessionId) {
+    public AiRecipeResponseDto regenerateRecipe(Long userId, Long sessionId) {
         // 1. 세션 조회 및 검증
+        if (sessionId == null) {
+            throw new AppException(ErrorCode.RECIPE_INGREDIENTS_REQUIRED);
+        }
+
         AiSession session = aiSessionRepository.findByIdAndUserId(sessionId, userId)
                 .orElseThrow(() -> new AppException(ErrorCode.AI_SESSION_NOT_FOUND));
 
@@ -133,8 +137,9 @@ public class AiRecipeService {
         // 6. 재요청 메시지 저장
         saveAiMessage(session, aiResponse, RETRY_REQUEST);
 
-        // 7. 시도 횟수 증가
+        // 7. 시도 횟수 증가 및 저장
         session.increaseAttempt();
+        aiSessionRepository.save(session);
 
         // 8. 세션 제목 업데이트
         updateSessionTitle(session, aiResponse);
