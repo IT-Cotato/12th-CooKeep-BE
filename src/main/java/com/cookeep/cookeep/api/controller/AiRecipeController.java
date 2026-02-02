@@ -48,7 +48,6 @@ public class AiRecipeController {
                     - INVALID_MESSAGE_TYPE: 허용되지 않은 메시지 타입입니다.
                     - RECIPE_INGREDIENTS_REQUIRED: 레시피 생성을 위한 재료가 필요합니다.
                     - INVALID_DIFFICULTY: 유효하지 않은 난이도입니다.
-                    - AI_RECIPE_CHANGE_LIMIT_EXCEEDED: 레시피 변경 횟수를 초과했습니다.
                     - INVALID_INGREDIENT_TYPE: 유효하지 않은 재료 타입입니다.
                     """, content = @Content),
             @ApiResponse(responseCode = "401", description = """
@@ -57,7 +56,6 @@ public class AiRecipeController {
                     """, content = @Content),
             @ApiResponse(responseCode = "404", description = """
                     리소스를 찾을 수 없습니다. 다음 오류가 발생할 수 있습니다:
-                    - AI_SESSION_NOT_FOUND: AI 레시피 세션을 찾을 수 없습니다.
                     - INGREDIENT_NOT_FOUND: 유저가 보유한 재료를 찾을 수 없습니다.
                     """, content = @Content),
             @ApiResponse(responseCode = "500", description = """
@@ -90,10 +88,7 @@ public class AiRecipeController {
             @ApiResponse(responseCode = "400", description = """
                     잘못된 요청입니다. 다음 오류가 발생할 수 있습니다:
                     - INVALID_MESSAGE_TYPE: 허용되지 않은 메시지 타입입니다.
-                    - RECIPE_INGREDIENTS_REQUIRED: 레시피 생성을 위한 재료가 필요합니다.
-                    - INVALID_DIFFICULTY: 유효하지 않은 난이도입니다.
                     - AI_RECIPE_CHANGE_LIMIT_EXCEEDED: 레시피 변경 횟수를 초과했습니다.
-                    - INVALID_INGREDIENT_TYPE: 유효하지 않은 재료 타입입니다.
                     """, content = @Content),
             @ApiResponse(responseCode = "401", description = """
                     인증 실패입니다.
@@ -102,7 +97,8 @@ public class AiRecipeController {
             @ApiResponse(responseCode = "404", description = """
                     리소스를 찾을 수 없습니다. 다음 오류가 발생할 수 있습니다:
                     - AI_SESSION_NOT_FOUND: AI 레시피 세션을 찾을 수 없습니다.
-                    - INGREDIENT_NOT_FOUND: 유저가 보유한 재료를 찾을 수 없습니다.
+                    - SESSION_DIFFICULTY_NOT_FOUND: 세션의 난이도 정보를 찾을 수 없습니다.
+                    - SESSION_INGREDIENTS_NOT_FOUND: 세션의 재료 정보를 찾을 수 없습니다.
                     """, content = @Content),
             @ApiResponse(responseCode = "500", description = """
                     서버 오류입니다. 다음 오류가 발생할 수 있습니다:

@@ -1,6 +1,5 @@
 package com.cookeep.cookeep.api.dto.response;
 
-import com.cookeep.cookeep.domain.recipe.dto.GeminiRecipeResponseDto;
 import com.cookeep.cookeep.domain.recipe.entity.AiMessage;
 import com.cookeep.cookeep.domain.recipe.entity.MessageType;
 import com.cookeep.cookeep.domain.recipe.entity.Role;

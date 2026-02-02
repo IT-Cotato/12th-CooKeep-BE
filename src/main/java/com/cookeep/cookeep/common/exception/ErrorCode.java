@@ -34,6 +34,9 @@ public enum ErrorCode {
 	INVALID_FOOD_TYPE_COUNT(HttpStatus.BAD_REQUEST, "선호하는 음식 종류는 3개까지만 선택 가능합니다.", "ONBOARDING-001"),
 	INVALID_WEEKLY_GOAL_TARGET_COUNT(HttpStatus.BAD_REQUEST, "주간 목표가 설정된 경우 목표 횟수를 필수로 입력해야 합니다.", "ONBOARDING-002"),
 	INVALID_TARGET_COUNT(HttpStatus.BAD_REQUEST, "목표 횟수는 1에서 10 사이의 정수여야 합니다.", "ONBOARDING-003"),
+	RECIPE_SESSIONID_REQUIRED(HttpStatus.BAD_REQUEST, "레시피 요청에 필요한 값이 누락되었습니다.", "RECIPE-016"),
+	SESSION_DIFFICULTY_NOT_FOUND(HttpStatus.BAD_REQUEST, "세션의 난이도 정보를 찾을 수 없습니다.", "RECIPE-017"),
+	SESSION_INGREDIENTS_NOT_FOUND(HttpStatus.BAD_REQUEST, "세션의 재료 정보를 찾을 수 없습니다.", "RECIPE-018"),
 
 	// 401 UNAUTHORIZED (인증 관련)
 	UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "인증에 실패했습니다.", "AUTH-001"),

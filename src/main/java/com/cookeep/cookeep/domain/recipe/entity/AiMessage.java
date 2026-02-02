@@ -1,5 +1,6 @@
 package com.cookeep.cookeep.domain.recipe.entity;
 
+import com.cookeep.cookeep.common.entity.BaseEntity;
 import com.cookeep.cookeep.domain.recipe.dto.GeminiRecipeResponseDto;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.*;
@@ -14,7 +15,7 @@ import java.time.LocalDateTime;
 @Builder
 @Entity
 @Table(name = "ai_messages")
-public class AiMessage {
+public class AiMessage extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -37,9 +38,6 @@ public class AiMessage {
     @Column(name = "content", columnDefinition = "TEXT")
     private String content;
 
-    @CreationTimestamp
-    @Column(name = "created_at", updatable = false)
-    private LocalDateTime createdAt;
 
     public static AiMessage from(AiSession session, GeminiRecipeResponseDto response, MessageType type) {
         try {

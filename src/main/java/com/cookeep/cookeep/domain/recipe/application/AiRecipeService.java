@@ -64,9 +64,25 @@ public class AiRecipeService {
 
     // 1. 새 레시피 요청
     private AiRecipeResponseDto generateInitialRecipe(Long userId, AiRecipeRequestDto request) {
+
+        // 필수 입력 필드 검증
+        if (request == null || request.getIngredients() == null || request.getIngredients().isEmpty()) {
+            throw new AppException(ErrorCode.RECIPE_INGREDIENTS_REQUIRED);
+        }
+
+        if (request.getDifficulty() == null) {
+            throw new AppException(ErrorCode.INVALID_DIFFICULTY);
+        }
+
         // 1. 재료 정보 enrichment (이름 + 단위 조회)
         List<IngredientDetailDto> enrichedIngredients =
                 enrichIngredientsForAI(userId, request.getIngredients());
+
+        for (IngredientSimpleDto dto : request.getIngredients()) {
+            if (dto.getType() == null) {
+                throw new AppException(ErrorCode.INVALID_INGREDIENT_TYPE);
+            }
+        }
 
         // 2. 세션 생성
         AiSession session = AiSession.builder()
@@ -104,7 +120,7 @@ public class AiRecipeService {
     public AiRecipeResponseDto regenerateRecipe(Long userId, Long sessionId) {
         // 1. 세션 조회 및 검증
         if (sessionId == null) {
-            throw new AppException(ErrorCode.RECIPE_INGREDIENTS_REQUIRED);
+            throw new AppException(ErrorCode.RECIPE_SESSIONID_REQUIRED);
         }
 
         AiSession session = aiSessionRepository.findByIdAndUserId(sessionId, userId)
@@ -118,8 +134,15 @@ public class AiRecipeService {
             throw new AppException(ErrorCode.AI_RECIPE_CHANGE_LIMIT_EXCEEDED);
         }
 
+        if (session.getDifficulty() == null) {
+            throw new AppException(ErrorCode.SESSION_DIFFICULTY_NOT_FOUND);
+        }
+
         // 2. 이전 재료 복원 (이미 이름 + 단위 포함)
         List<IngredientDetailDto> ingredients = readIngredientsFromSession(session);
+        if (ingredients == null || ingredients.isEmpty()) {
+            throw new AppException(ErrorCode.SESSION_INGREDIENTS_NOT_FOUND);
+        }
 
         // 3. 이전 레시피 제목 목록 조회
         List<String> excludedTitles = extractRecipeTitlesFromMessages(sessionId);
