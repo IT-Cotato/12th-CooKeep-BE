@@ -3,6 +3,7 @@ package com.cookeep.cookeep.domain.recipe.application;
 import com.cookeep.cookeep.api.dto.request.AiRecipeRequestDto;
 import com.cookeep.cookeep.api.dto.response.AiRecipeAdoptResponseDto;
 import com.cookeep.cookeep.api.dto.response.AiRecipeResponseDto;
+import com.cookeep.cookeep.api.dto.response.AiSessionListResponseDto;
 import com.cookeep.cookeep.common.exception.AppException;
 import com.cookeep.cookeep.common.exception.ErrorCode;
 import com.cookeep.cookeep.domain.ingredient.common.Type;
@@ -170,6 +171,30 @@ public class AiRecipeService {
                 .recipeId(savedRecipe.getId())
                 .message("레시피가 성공적으로 채택되었습니다.")
                 .completedAt(session.getCompletedAt())
+                .build();
+    }
+
+    // (MAIN06-1) AI 대화 목록 전체 조회
+    @Transactional(readOnly = true)
+    public AiSessionListResponseDto getAllSessions(Long userId) {
+        List<AiSession> allSessions = aiSessionRepository
+                .findAllByUserIdOrderByIsPinnedDescUpdatedAtDesc(userId);
+
+        // 즐겨찾기 대화 별도 정렬
+        List<AiSessionListResponseDto.SessionSummary> pinned = allSessions.stream()
+                .filter(session -> Boolean.TRUE.equals(session.getIsPinned()))
+                .map(AiSessionListResponseDto.SessionSummary::from)
+                .collect(Collectors.toList());
+
+        // 일반 대화 정렬
+        List<AiSessionListResponseDto.SessionSummary> sessions = allSessions.stream()
+                .filter(session -> !Boolean.TRUE.equals(session.getIsPinned()))
+                .map(AiSessionListResponseDto.SessionSummary::from)
+                .collect(Collectors.toList());
+
+        return AiSessionListResponseDto.builder()
+                .pinned(pinned)
+                .sessions(sessions)
                 .build();
     }
 

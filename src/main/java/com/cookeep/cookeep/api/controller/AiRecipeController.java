@@ -1,5 +1,7 @@
 package com.cookeep.cookeep.api.controller;
 
+import com.cookeep.cookeep.api.dto.response.AiSessionListResponseDto;
+import com.cookeep.cookeep.common.dto.DataResponse;
 import com.cookeep.cookeep.common.exception.ErrorCode;
 import com.cookeep.cookeep.config.ApiErrorCodeExamples;
 import com.cookeep.cookeep.config.JwtTokenProvider;
@@ -19,8 +21,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @Tag(
-        name = "(MAIN05) 레시피검색",
-        description = "AI를 이용한 레시피 생성 및 채택 API"
+        name = "(MAIN05, 06) AI 레시피",
+        description = "AI를 이용한 레시피 생성/채택/조회 API"
 )
 @RestController
 @RequestMapping("/api/users/me/ai/recipes")
@@ -31,7 +33,7 @@ public class AiRecipeController {
     private final JwtTokenProvider jwtTokenProvider;
 
     @Operation(
-            summary = "AI 레시피 생성 / 변경",
+            summary = "(MAIN05-01)AI 레시피 생성 / 변경",
             description = "유저의 식재료 및 조건을 기반으로 AI에게 레시피를 요청하거나 기존 요청을 변경합니다."
     )
     @SecurityRequirements
@@ -77,7 +79,7 @@ public class AiRecipeController {
     }
 
     @Operation(
-            summary = "AI 레시피 채택",
+            summary = "(MAIN05-02)AI 레시피 채택",
             description = "생성된 AI 레시피 중 하나를 최종 레시피로 채택하고 세션을 완료 처리합니다."
     )
     @SecurityRequirements
@@ -125,4 +127,25 @@ public class AiRecipeController {
 
         return ResponseEntity.ok(response);
     }
+
+    @Operation(
+            summary = "(MAIN06-01) AI 레시피 대화 세션 목록 조회",
+            description = "사용자의 모든 AI 레시피 대화 세션 조회 (즐겨찾기 분리, 최신순 정렬)"
+    )
+    @SecurityRequirements
+    @ApiErrorCodeExamples({
+            ErrorCode.UNAUTHORIZED
+    })
+    @GetMapping("/sessions")
+    public ResponseEntity<DataResponse<AiSessionListResponseDto>> getAllSessions(
+            @RequestHeader("Authorization") String authorization
+    ) {
+        String token = authorization.replace("Bearer ", "");
+        Long userId = jwtTokenProvider.getUserId(token, false);
+
+        AiSessionListResponseDto response = aiRecipeService.getAllSessions(userId);
+
+        return ResponseEntity.ok(DataResponse.from(response));
+    }
+
 }
