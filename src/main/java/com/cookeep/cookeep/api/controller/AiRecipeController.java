@@ -41,6 +41,18 @@ public class AiRecipeController {
             description = "유저의 식재료 및 조건을 기반으로 AI에게 레시피를 요청합니다."
     )
     @SecurityRequirements
+    @ApiErrorCodeExamples({
+            ErrorCode.INVALID_MESSAGE_TYPE,
+            ErrorCode.RECIPE_INGREDIENTS_REQUIRED,
+            ErrorCode.INVALID_DIFFICULTY,
+            ErrorCode.INVALID_INGREDIENT_TYPE,
+            ErrorCode.INGREDIENT_NOT_FOUND,
+            ErrorCode.AI_SEARCH_FAILED,
+            ErrorCode.AI_RESPONSE_PARSE_FAILED,
+            ErrorCode.AI_RESPONSE_INVALID_FORMAT,
+            ErrorCode.INTERNAL_SERVER_ERROR,
+            ErrorCode.UNAUTHORIZED
+    })
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "AI 레시피 생성 성공"),
             @ApiResponse(responseCode = "400", description = """
@@ -83,6 +95,18 @@ public class AiRecipeController {
             description = "기존 세션의 식재료 및 조건을 기반으로 AI에게 레시피를 재요청합니다."
     )
     @SecurityRequirements
+    @ApiErrorCodeExamples({
+            ErrorCode.INVALID_MESSAGE_TYPE,
+            ErrorCode.AI_RECIPE_CHANGE_LIMIT_EXCEEDED,
+            ErrorCode.AI_SESSION_NOT_FOUND,
+            ErrorCode.SESSION_DIFFICULTY_NOT_FOUND,
+            ErrorCode.SESSION_INGREDIENTS_NOT_FOUND,
+            ErrorCode.AI_SEARCH_FAILED,
+            ErrorCode.AI_RESPONSE_PARSE_FAILED,
+            ErrorCode.AI_RESPONSE_INVALID_FORMAT,
+            ErrorCode.INTERNAL_SERVER_ERROR,
+            ErrorCode.UNAUTHORIZED
+    })
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "AI 레시피 재생성 성공"),
             @ApiResponse(responseCode = "400", description = """
