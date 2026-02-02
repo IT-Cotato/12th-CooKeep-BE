@@ -89,7 +89,10 @@ public class AiRecipeService {
         // 4. AI 메시지 저장
         saveAiMessage(session, aiResponse, MessageType.INITIAL_REQUEST);
 
-        // 5. 응답 반환
+        // 5. 세션 제목 업데이트
+        updateSessionTitle(session, aiResponse);
+
+        // 6. 응답 반환
         return AiRecipeResponseDto.builder()
                 .sessionId(session.getId())
                 .changeCount(session.getAttemptNumber())
@@ -133,7 +136,10 @@ public class AiRecipeService {
         // 7. 시도 횟수 증가
         session.increaseAttempt();
 
-        // 8. 응답 반환
+        // 8. 세션 제목 업데이트
+        updateSessionTitle(session, aiResponse);
+
+        // 9. 응답 반환
         return AiRecipeResponseDto.builder()
                 .sessionId(session.getId())
                 .changeCount(session.getAttemptNumber())
@@ -333,17 +339,6 @@ public class AiRecipeService {
         }
     }
 
-    // 유저 메시지 저장
-    private void saveUserMessage(AiSession session, MessageType messageType) {
-        aiMessageRepository.save(
-                AiMessage.builder()
-                        .session(session)
-                        .role(Role.USER)
-                        .content(messageType.getDescription())
-                        .build()
-        );
-    }
-
     // 마지막 AI 메시지 조회
     private AiMessage getLastAiMessage(AiSession session) {
         return aiMessageRepository.findTopBySessionAndRoleOrderByCreatedAtDesc(session, Role.AI)
@@ -447,5 +442,17 @@ public class AiRecipeService {
         // flush해서 유저 메시지 먼저 저장
         aiMessageRepository.flush();
     }
+
+    // 세션 제목 업데이트
+    private void updateSessionTitle(AiSession session, GeminiRecipeResponseDto aiResponse) {
+        if (aiResponse == null || aiResponse.getTitle() == null) {
+            return;
+            // TODO: add ErrorCode
+        }
+
+        session.setTitle(aiResponse.getTitle());
+        aiSessionRepository.save(session);
+    }
+
 
 }
