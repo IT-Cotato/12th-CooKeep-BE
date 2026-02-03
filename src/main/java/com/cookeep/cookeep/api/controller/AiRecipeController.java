@@ -42,7 +42,6 @@ public class AiRecipeController {
     )
     @SecurityRequirements
     @ApiErrorCodeExamples({
-            ErrorCode.INVALID_MESSAGE_TYPE,
             ErrorCode.RECIPE_INGREDIENTS_REQUIRED,
             ErrorCode.INVALID_DIFFICULTY,
             ErrorCode.INVALID_INGREDIENT_TYPE,
@@ -57,7 +56,6 @@ public class AiRecipeController {
             @ApiResponse(responseCode = "200", description = "AI 레시피 생성 성공"),
             @ApiResponse(responseCode = "400", description = """
                     잘못된 요청입니다. 다음 오류가 발생할 수 있습니다:
-                    - INVALID_MESSAGE_TYPE: 허용되지 않은 메시지 타입입니다.
                     - RECIPE_INGREDIENTS_REQUIRED: 레시피 생성을 위한 재료가 필요합니다.
                     - INVALID_DIFFICULTY: 유효하지 않은 난이도입니다.
                     - INVALID_INGREDIENT_TYPE: 유효하지 않은 재료 타입입니다.
@@ -96,14 +94,16 @@ public class AiRecipeController {
     )
     @SecurityRequirements
     @ApiErrorCodeExamples({
-            ErrorCode.INVALID_MESSAGE_TYPE,
-            ErrorCode.AI_RECIPE_CHANGE_LIMIT_EXCEEDED,
+            ErrorCode.RECIPE_SESSIONID_REQUIRED,
             ErrorCode.AI_SESSION_NOT_FOUND,
+            ErrorCode.SESSION_ALREADY_COMPLETED,
+            ErrorCode.AI_RECIPE_CHANGE_LIMIT_EXCEEDED,
             ErrorCode.SESSION_DIFFICULTY_NOT_FOUND,
             ErrorCode.SESSION_INGREDIENTS_NOT_FOUND,
+            ErrorCode.RECIPE_TITLE_PARSE_FAILED,
             ErrorCode.AI_SEARCH_FAILED,
+            ErrorCode.AI_RECIPE_TITLE_MISSING,
             ErrorCode.AI_RESPONSE_PARSE_FAILED,
-            ErrorCode.AI_RESPONSE_INVALID_FORMAT,
             ErrorCode.INTERNAL_SERVER_ERROR,
             ErrorCode.UNAUTHORIZED
     })
@@ -111,8 +111,11 @@ public class AiRecipeController {
             @ApiResponse(responseCode = "200", description = "AI 레시피 재생성 성공"),
             @ApiResponse(responseCode = "400", description = """
                     잘못된 요청입니다. 다음 오류가 발생할 수 있습니다:
-                    - INVALID_MESSAGE_TYPE: 허용되지 않은 메시지 타입입니다.
+                    - RECIPE_SESSIONID_REQUIRED: 레시피 요청에 필요한 값이 누락되었습니다.
+                    - SESSION_ALREADY_COMPLETED: 이미 완료된 세션입니다.
                     - AI_RECIPE_CHANGE_LIMIT_EXCEEDED: 레시피 변경 횟수를 초과했습니다.
+                    - SESSION_DIFFICULTY_NOT_FOUND: 세션의 난이도 정보를 찾을 수 없습니다.
+                    - SESSION_INGREDIENTS_NOT_FOUND: 세션의 재료 정보를 찾을 수 없습니다.
                     """, content = @Content),
             @ApiResponse(responseCode = "401", description = """
                     인증 실패입니다.
@@ -121,14 +124,13 @@ public class AiRecipeController {
             @ApiResponse(responseCode = "404", description = """
                     리소스를 찾을 수 없습니다. 다음 오류가 발생할 수 있습니다:
                     - AI_SESSION_NOT_FOUND: AI 레시피 세션을 찾을 수 없습니다.
-                    - SESSION_DIFFICULTY_NOT_FOUND: 세션의 난이도 정보를 찾을 수 없습니다.
-                    - SESSION_INGREDIENTS_NOT_FOUND: 세션의 재료 정보를 찾을 수 없습니다.
+                    - AI_RECIPE_TITLE_MISSING: AI 응답에 레시피 제목이 존재하지 않습니다.
                     """, content = @Content),
             @ApiResponse(responseCode = "500", description = """
                     서버 오류입니다. 다음 오류가 발생할 수 있습니다:
                     - AI_SEARCH_FAILED: AI 요청 또는 저장 처리에 실패했습니다.
                     - AI_RESPONSE_PARSE_FAILED: AI 응답 파싱에 실패했습니다.
-                    - AI_RESPONSE_INVALID_FORMAT: AI 응답 형식이 올바르지 않습니다.
+                    - RECIPE_TITLE_PARSE_FAILED: 레시피 제목 파싱에 실패했습니다.
                     - INTERNAL_SERVER_ERROR: 서버 내부 오류가 발생했습니다.
                     """, content = @Content)
     })
