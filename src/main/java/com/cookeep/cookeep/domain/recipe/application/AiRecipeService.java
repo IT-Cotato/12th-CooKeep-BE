@@ -341,7 +341,7 @@ public class AiRecipeService {
                         return recipe.getTitle();
                     } catch (Exception e) {
                         log.warn("레시피 제목 파싱 실패: {}", message.getId());
-                        return null;
+                        throw new AppException(ErrorCode.RECIPE_TITLE_PARSE_FAILED);
                     }
                 })
                 .filter(title -> title != null && !title.isBlank())
@@ -474,8 +474,7 @@ public class AiRecipeService {
     // 세션 제목 업데이트
     private void updateSessionTitle(AiSession session, GeminiRecipeResponseDto aiResponse) {
         if (aiResponse == null || aiResponse.getTitle() == null) {
-            return;
-            // TODO: add ErrorCode
+            throw new AppException(ErrorCode.AI_RECIPE_TITLE_MISSING);
         }
 
         session.setTitle(aiResponse.getTitle());
