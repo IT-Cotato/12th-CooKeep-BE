@@ -257,7 +257,7 @@ public class AiRecipeService {
                 .build();
     }
 
-    // (MAIN06-3) AI 대화 상세 내역 전체 조회
+    // (MAIN06-3) AI 대화 세션 삭제
     public void deleteSession(Long userId, Long sessionId) {
         // 1. 세션 조회
         AiSession session = aiSessionRepository.findById(sessionId)
