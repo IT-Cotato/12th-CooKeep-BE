@@ -356,6 +356,7 @@ public class AiRecipeService {
             AiMessage message = AiMessage.builder()
                     .session(session)
                     .role(Role.AI)
+                    .messageType(type)
                     .content(json)
                     .build();
 
