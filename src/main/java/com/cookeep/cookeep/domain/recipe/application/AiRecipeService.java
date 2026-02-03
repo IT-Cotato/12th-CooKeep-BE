@@ -268,7 +268,8 @@ public class AiRecipeService {
             throw new AppException(ErrorCode.AI_SESSION_FORBIDDEN);
         }
 
-        // 3. 연관 메시지 삭제
+        // 3. 연관 레시피&메시지 삭제
+        aiRecipeRepository.deleteBySessionId(sessionId);
         aiMessageRepository.deleteBySessionId(sessionId);
 
         // 4. 세션 삭제
