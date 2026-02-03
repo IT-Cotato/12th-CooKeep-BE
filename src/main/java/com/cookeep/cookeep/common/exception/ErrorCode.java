@@ -55,6 +55,7 @@ public enum ErrorCode {
 	DUPLICATE_NICKNAME(HttpStatus.CONFLICT, "이미 사용 중인 닉네임입니다.", "USER-001"),
 
 	//500
+	FILE_UPLOAD_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "파일 업로드에 실패했습니다.", "FILE-001"),
 	AI_SEARCH_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "AI 요청 또는 저장 처리에 실패했습니다.","RECIPE-012"),
 	AI_RESPONSE_PARSE_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "AI 응답 파싱에 실패했습니다.","RECIPE-013"),
 	AI_RESPONSE_INVALID_FORMAT(HttpStatus.INTERNAL_SERVER_ERROR, "AI 응답 형식이 올바르지 않습니다.","RECIPE-014"),
