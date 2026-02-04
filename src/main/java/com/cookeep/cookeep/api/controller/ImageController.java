@@ -12,6 +12,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.cookeep.cookeep.api.dto.response.ImageUploadResponseDto;
 import com.cookeep.cookeep.common.dto.DataResponse;
+import com.cookeep.cookeep.common.util.ImageFolder;
 import com.cookeep.cookeep.common.util.S3Service;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -26,13 +27,13 @@ public class ImageController {
 
 	private final S3Service s3Service;
 
-	@Operation(summary = "이미지 업로드", description = "S3에 이미지를 업로드하고 URL을 반환합니다.")
+	@Operation(summary = "이미지 업로드", description = "S3에 이미지를 업로드하고 URL을 반환합니다. folder: PLANTS, RECIPE_IMAGES")
 	@PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
 	public ResponseEntity<DataResponse<ImageUploadResponseDto>> uploadImage(
 		@RequestPart("image") MultipartFile image,
-		@RequestParam(value = "folder", defaultValue = "images") String folder
+		@RequestParam(value = "folder") ImageFolder folder
 	) {
-		String imageUrl = s3Service.upload(image, folder);
+		String imageUrl = s3Service.upload(image, folder.getFolderName());
 		return ResponseEntity.ok(DataResponse.from(ImageUploadResponseDto.from(imageUrl)));
 	}
 
