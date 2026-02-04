@@ -35,6 +35,9 @@ public class CustomIngredient {
     @Column(name = "user_id", nullable = false)
     private Long userId;
 
+    @Column(name = "image_url", length = 500)
+    private String imageUrl;
+
     public CustomIngredient(
             String name,
             Integer expirationDays,
@@ -47,5 +50,6 @@ public class CustomIngredient {
         this.storage = storage;
         this.category = category;
         this.userId = userId;
+        this.imageUrl = "https://s3.amazonaws.com/cookeep/ingredients/default.png"; // 디폴트 이미지 임시 url
     }
 }

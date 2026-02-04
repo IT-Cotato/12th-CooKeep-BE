@@ -41,4 +41,7 @@ public class DefaultIngredient {
 
     @Column(name = "ai_tip", length = 500)
     private String aiTip;
+
+    @Column(name = "image_url", length = 500)
+    private String imageUrl;
 }
