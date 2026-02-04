@@ -263,4 +263,32 @@ public class AiRecipeController {
 
         return ResponseEntity.ok(DataResponse.ok());
     }
+
+    @Operation(
+            summary = "(MAIN07) AI 대화 세션 즐겨찾기 추가/삭제",
+            description = "특정 세션의 즐겨찾기 상태를 변경합니다. (T -> F / F -> T)"
+    )
+    @SecurityRequirements
+    @ApiErrorCodeExamples({
+            ErrorCode.UNAUTHORIZED,
+            ErrorCode.AI_SESSION_NOT_FOUND,
+            ErrorCode.AI_SESSION_FORBIDDEN
+    })
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "즐겨찾기 상태 변경 성공"),
+            @ApiResponse(responseCode = "401", description = "인증 실패", content = @Content),
+            @ApiResponse(responseCode = "403", description = "본인의 대화 세션이 아님", content = @Content),
+            @ApiResponse(responseCode = "404", description = "세션을 찾을 수 없음", content = @Content)
+    })
+    @PatchMapping("/sessions/{sessionId}")
+    public ResponseEntity<DataResponse<Void>> toggleFavorite(
+            @AuthenticationPrincipal(expression = "userId") Long userId,
+            @Parameter(description = "세션 ID", required = true)
+            @PathVariable Long sessionId
+    ) {
+
+        aiRecipeService.toggleFavorite(userId, sessionId);
+
+        return ResponseEntity.ok(DataResponse.ok());
+    }
 }
