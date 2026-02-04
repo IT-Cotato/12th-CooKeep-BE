@@ -224,12 +224,14 @@ public class AiRecipeService {
         // 즐겨찾기 대화 별도 정렬
         List<AiSessionListResponseDto.SessionSummary> pinned = allSessions.stream()
                 .filter(session -> Boolean.TRUE.equals(session.getIsPinned()))
+                .sorted((s1, s2) -> s2.getCreatedAt().compareTo(s1.getCreatedAt()))
                 .map(AiSessionListResponseDto.SessionSummary::from)
                 .collect(Collectors.toList());
 
         // 일반 대화 정렬
         List<AiSessionListResponseDto.SessionSummary> sessions = allSessions.stream()
                 .filter(session -> !Boolean.TRUE.equals(session.getIsPinned()))
+                .sorted((s1, s2) -> s2.getCreatedAt().compareTo(s1.getCreatedAt()))
                 .map(AiSessionListResponseDto.SessionSummary::from)
                 .collect(Collectors.toList());
 
