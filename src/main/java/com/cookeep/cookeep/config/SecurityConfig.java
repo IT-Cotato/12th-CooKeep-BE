@@ -24,10 +24,13 @@ public class SecurityConfig {
 	@Bean
 	public CorsConfigurationSource corsConfigurationSource() {
 		CorsConfiguration config = new CorsConfiguration();
-		config.setAllowedOrigins(List.of("*")); // TODO: 추후 프론트엔드 도메인으로 설정 예정
+		config.setAllowedOrigins(List.of(
+			"http://localhost:3000",
+			"https://12th-coo-keep-fe.vercel.app"
+		));
 		config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
 		config.setAllowedHeaders(List.of("*"));
-		config.setAllowCredentials(false);
+		config.setAllowCredentials(true);
 
 		UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
 		source.registerCorsConfiguration("/**", config);
