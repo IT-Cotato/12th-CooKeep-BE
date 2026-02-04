@@ -3,9 +3,7 @@ package com.cookeep.cookeep.api.controller;
 import com.cookeep.cookeep.api.dto.request.NicknameUpdateRequestDto;
 import com.cookeep.cookeep.common.dto.DataResponse;
 import com.cookeep.cookeep.common.exception.ErrorCode;
-import com.cookeep.cookeep.common.util.AuthUtils;
 import com.cookeep.cookeep.config.ApiErrorCodeExamples;
-import com.cookeep.cookeep.config.JwtTokenProvider;
 import com.cookeep.cookeep.domain.user.application.UserInfoService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -16,6 +14,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @Tag(name = "회원 정보", description = "회원 정보 관리 API")
@@ -25,7 +24,6 @@ import org.springframework.web.bind.annotation.*;
 public class UserInfoController {
 
     private final UserInfoService userInfoService;
-    private final JwtTokenProvider jwtTokenProvider;
 
     @Operation(summary = "닉네임 수정", description = "사용자의 닉네임을 수정합니다.")
     @ApiErrorCodeExamples({
@@ -55,12 +53,9 @@ public class UserInfoController {
     })
     @PatchMapping("/nickname")
     public ResponseEntity<DataResponse<Void>> updateNickname(
-            @RequestHeader("Authorization") String authorization,
+            @AuthenticationPrincipal(expression = "userId") Long userId,
             @RequestBody @Valid NicknameUpdateRequestDto request
     ) {
-        String token = AuthUtils.extractBearerToken(authorization);
-        Long userId = jwtTokenProvider.getUserId(token, false);
-
         userInfoService.updateNickname(userId, request);
 
         return ResponseEntity.ok(DataResponse.ok());
