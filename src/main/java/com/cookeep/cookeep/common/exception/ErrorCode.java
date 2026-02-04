@@ -34,6 +34,9 @@ public enum ErrorCode {
 	INVALID_FOOD_TYPE_COUNT(HttpStatus.BAD_REQUEST, "선호하는 음식 종류는 3개까지만 선택 가능합니다.", "ONBOARDING-001"),
 	INVALID_WEEKLY_GOAL_TARGET_COUNT(HttpStatus.BAD_REQUEST, "주간 목표가 설정된 경우 목표 횟수를 필수로 입력해야 합니다.", "ONBOARDING-002"),
 	INVALID_TARGET_COUNT(HttpStatus.BAD_REQUEST, "목표 횟수는 1에서 10 사이의 정수여야 합니다.", "ONBOARDING-003"),
+	RECIPE_SESSIONID_REQUIRED(HttpStatus.BAD_REQUEST, "레시피 요청에 필요한 값이 누락되었습니다.", "RECIPE-016"),
+	SESSION_DIFFICULTY_NOT_FOUND(HttpStatus.BAD_REQUEST, "세션의 난이도 정보를 찾을 수 없습니다.", "RECIPE-017"),
+	SESSION_INGREDIENTS_NOT_FOUND(HttpStatus.BAD_REQUEST, "세션의 재료 정보를 찾을 수 없습니다.", "RECIPE-018"),
 
 	// 401 UNAUTHORIZED (인증 관련)
 	UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "인증에 실패했습니다.", "AUTH-001"),
@@ -41,6 +44,7 @@ public enum ErrorCode {
 
 	// 403 FORBIDDEN (권한 관련)
 	NOT_MY_PLANT(HttpStatus.FORBIDDEN, "해당 식물에 대한 권한이 없습니다.", "PLANT-001"),
+	AI_SESSION_FORBIDDEN(HttpStatus.FORBIDDEN, "본인의 대화 세션이 아닙니다.", "RECIPE-015"),
 
 	// 404 NOT FOUND
 	NOT_FOUND(HttpStatus.NOT_FOUND, "찾을 수 없습니다.", "COMMON-003"),
@@ -49,6 +53,7 @@ public enum ErrorCode {
 	INGREDIENT_REFERENCE_NOT_FOUND(HttpStatus.NOT_FOUND, "해당 식재료를 찾을 수 없습니다.", "INGREDIENT-006"),
 	AI_SESSION_NOT_FOUND(HttpStatus.NOT_FOUND, "해당 AI 세션을 찾을 수 없습니다.", "RECIPE-010"),
 	INGREDIENT_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 재료입니다.", "RECIPE-011"),
+	AI_RECIPE_TITLE_MISSING(HttpStatus.NOT_FOUND, "AI 응답에 레시피 제목이 존재하지 않습니다.", "RECIPE-019"),
 
 	// 409
 	DUPLICATE_CUSTOM_INGREDIENT(HttpStatus.CONFLICT, "이미 등록된 식재료 입니다.", "INGREDIENT-007"),
@@ -58,6 +63,8 @@ public enum ErrorCode {
 	AI_SEARCH_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "AI 요청 또는 저장 처리에 실패했습니다.","RECIPE-012"),
 	AI_RESPONSE_PARSE_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "AI 응답 파싱에 실패했습니다.","RECIPE-013"),
 	AI_RESPONSE_INVALID_FORMAT(HttpStatus.INTERNAL_SERVER_ERROR, "AI 응답 형식이 올바르지 않습니다.","RECIPE-014"),
+	RECIPE_TITLE_PARSE_FAILED(HttpStatus.INTERNAL_SERVER_ERROR,"레시피 제목 파싱 실패","RECIPE-020"),
+	INGREDIENTS_JSON_CONVERSION_FAILED(HttpStatus.INTERNAL_SERVER_ERROR,"재료 JSON 변환에 실패했습니다.","RECIPE-021"),
 	INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "서버 내부에서 에러가 발생하였습니다.", "COMMON-005"),
 	;
 

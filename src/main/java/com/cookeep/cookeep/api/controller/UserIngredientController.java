@@ -17,6 +17,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @Tag(name = "(MAIN01) 냉장고 식재료 관리", description = "유저 냉장고 식재료 관리 API")
@@ -59,12 +60,9 @@ public class UserIngredientController {
     })
     @PostMapping
     public ResponseEntity<DataResponse<UserIngredientCreateResponseDto>> createUserIngredient(
-            @RequestHeader("Authorization") String authorization,
+            @AuthenticationPrincipal(expression = "userId") Long userId,
             @RequestBody @Valid UserIngredientCreateRequestDto request
     ) {
-        String token = authorization.replace("Bearer ", "");
-        Long userId = jwtTokenProvider.getUserId(token, false);
-
         UserIngredientCreateResponseDto response = userIngredientService.create(userId, request);
 
         return ResponseEntity
