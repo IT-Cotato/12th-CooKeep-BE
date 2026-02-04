@@ -1,6 +1,5 @@
 package com.cookeep.cookeep.common.util;
 
-import java.io.IOException;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Value;
@@ -11,11 +10,13 @@ import com.cookeep.cookeep.common.exception.AppException;
 import com.cookeep.cookeep.common.exception.ErrorCode;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class S3Service {
@@ -41,7 +42,8 @@ public class S3Service {
 				.build();
 
 			s3Client.putObject(request, RequestBody.fromBytes(file.getBytes()));
-		} catch (IOException e) {
+		} catch (Exception e) {
+			log.error("S3 upload failed. bucket={}, folder={}", bucket, folder, e);
 			throw new AppException(ErrorCode.FILE_UPLOAD_ERROR);
 		}
 
