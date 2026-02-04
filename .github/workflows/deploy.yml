@@ -61,5 +61,8 @@ jobs:
               -e JWT_REFRESH_SECRET_KEY=${{ secrets.JWT_REFRESH_SECRET_KEY }} \
               -e GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }} \
               -e YOUTUBE_API_KEY=${{ secrets.YOUTUBE_API_KEY }} \
+              -e AWS_ACCESS_KEY=${{ secrets.AWS_ACCESS_KEY }} \
+              -e AWS_SECRET_KEY=${{ secrets.AWS_SECRET_KEY }} \
+              -e S3_BUCKET_NAME=${{ secrets.S3_BUCKET_NAME }} \
               ${{ secrets.DOCKER_USERNAME }}/cookeep:latest
             docker image prune -f
