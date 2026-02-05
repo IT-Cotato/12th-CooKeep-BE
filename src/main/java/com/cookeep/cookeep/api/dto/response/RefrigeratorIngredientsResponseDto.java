@@ -44,18 +44,11 @@ public class RefrigeratorIngredientsResponseDto {
     public static class IngredientItem {
 
         @Schema(
-                description = "식재료 타입",
-                example = "DEFAULT",
+                description = "유저 식재료 ID",
+                example = "1",
                 requiredMode = Schema.RequiredMode.REQUIRED
         )
-        private String type;
-
-        @Schema(
-                description = "참조 ID (DEFAULT 또는 CUSTOM 식재료 ID)",
-                example = "12",
-                requiredMode = Schema.RequiredMode.REQUIRED
-        )
-        private Long referenceId;
+        private Long ingredientId;
 
         @Schema(
                 description = "식재료 이름",

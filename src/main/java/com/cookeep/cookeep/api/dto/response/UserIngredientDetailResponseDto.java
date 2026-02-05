@@ -54,9 +54,23 @@ public class UserIngredientDetailResponseDto {
     private Integer quantity;
 
     @Schema(
+            description = "남은 일수 (D-day, 음수면 D+로 표시)",
+            example = "3",
+            requiredMode = Schema.RequiredMode.REQUIRED
+    )
+    private Integer leftDays;
+
+    @Schema(
             description = "메모",
             example = "샐러드용",
             requiredMode = Schema.RequiredMode.NOT_REQUIRED
     )
     private String memo;
+
+    @Schema(
+            description = "AI 팁 (보관 팁)",
+            example = "키친타월로 감싸 밀봉 보관하면 수분이 유지돼요.",
+            requiredMode = Schema.RequiredMode.NOT_REQUIRED
+    )
+    private String aiTip;
 }

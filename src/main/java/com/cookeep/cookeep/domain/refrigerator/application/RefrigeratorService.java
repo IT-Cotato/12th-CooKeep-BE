@@ -102,7 +102,22 @@ public class RefrigeratorService {
                 .orElseThrow(() -> new EntityNotFoundException(ErrorCode.INGREDIENT_NOT_FOUND));
 
         // 식재료 이름 조회
-        String ingredientName = getIngredientName(userIngredient);
+        String ingredientName;
+        String aiTip = null;
+
+        if (userIngredient.getType() == Type.DEFAULT) {
+            DefaultIngredient defaultIngredient = defaultIngredientRepository
+                    .findById(userIngredient.getReferenceId())
+                    .orElse(null);
+            ingredientName = defaultIngredient != null ? defaultIngredient.getIngredient() : "Unknown";
+            aiTip = defaultIngredient != null ? defaultIngredient.getAiTip() : null;
+        } else {
+            CustomIngredient customIngredient = customIngredientRepository
+                    .findById(userIngredient.getReferenceId())
+                    .orElse(null);
+            ingredientName = customIngredient != null ? customIngredient.getName() : "Unknown";
+            // 커스텀 식재료는 aiTip이 없음
+        }
 
         return UserIngredientDetailResponseDto.builder()
                 .ingredientId(userIngredient.getIngredientId())
@@ -110,7 +125,9 @@ public class RefrigeratorService {
                 .storage(userIngredient.getStorage().name())
                 .expirationDate(userIngredient.getExpirationDate())
                 .quantity(userIngredient.getQuantity())
+                .leftDays(userIngredient.getLeftDays())
                 .memo(userIngredient.getMemo())
+                .aiTip(aiTip)
                 .build();
     }
 
@@ -139,8 +156,7 @@ public class RefrigeratorService {
                     }
 
                     return RefrigeratorIngredientsResponseDto.IngredientItem.builder()
-                            .type(ui.getType().name())
-                            .referenceId(ui.getReferenceId())
+                            .ingredientId(ui.getIngredientId())
                             .name(name)
                             .leftDays(ui.getLeftDays())
                             .imageUrl(imageUrl)
