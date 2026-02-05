@@ -1,6 +1,6 @@
 package com.cookeep.cookeep.api.controller;
 
-import com.cookeep.cookeep.api.dto.response.MyPlantResponse;
+import com.cookeep.cookeep.api.dto.response.MyPlantResponseDto;
 import com.cookeep.cookeep.common.dto.DataResponse;
 import com.cookeep.cookeep.common.util.AuthUtils;
 import com.cookeep.cookeep.config.JwtTokenProvider;
@@ -29,7 +29,7 @@ public class MyPlantController {
             @ApiResponse(responseCode = "200", description = "조회 성공")
     })
     @GetMapping
-    public DataResponse<List<MyPlantResponse>> getMyPlants(
+    public DataResponse<List<MyPlantResponseDto>> getMyPlants(
             @RequestHeader("Authorization") String authorization) {
         String token = AuthUtils.extractBearerToken(authorization);
         Long userId = jwtTokenProvider.getUserId(token, false);

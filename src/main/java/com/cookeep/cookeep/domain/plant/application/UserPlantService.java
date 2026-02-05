@@ -1,6 +1,6 @@
 package com.cookeep.cookeep.domain.plant.application;
 
-import com.cookeep.cookeep.api.dto.response.MyPlantResponse;
+import com.cookeep.cookeep.api.dto.response.MyPlantResponseDto;
 import com.cookeep.cookeep.common.exception.AppException;
 import com.cookeep.cookeep.common.exception.ErrorCode;
 import com.cookeep.cookeep.domain.cookie.application.CookieService;
@@ -31,7 +31,7 @@ public class UserPlantService {
 
     // 유저 보유 식물 목록 조회
     @Transactional(readOnly = true) // 성능 최적화를 위해 읽기 전용 설정
-    public List<MyPlantResponse> getMyPlants(Long userId) {
+    public List<MyPlantResponseDto> getMyPlants(Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND));
 
@@ -39,7 +39,7 @@ public class UserPlantService {
         List<UserPlant> userPlants = userPlantRepository.findAllByUser(user);
 
         return userPlants.stream()
-                .map(plant -> MyPlantResponse.from(plant, user))
+                .map(plant -> MyPlantResponseDto.from(plant, user))
                 .collect(Collectors.toList());
     }
 
