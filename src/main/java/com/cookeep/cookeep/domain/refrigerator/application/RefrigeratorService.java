@@ -2,7 +2,9 @@ package com.cookeep.cookeep.domain.refrigerator.application;
 
 import com.cookeep.cookeep.api.dto.response.PaginatedIngredientsResponseDto;
 import com.cookeep.cookeep.api.dto.response.RefrigeratorIngredientsResponseDto;
+import com.cookeep.cookeep.api.dto.response.UserIngredientDetailResponseDto;
 import com.cookeep.cookeep.common.exception.AppException;
+import com.cookeep.cookeep.common.exception.EntityNotFoundException;
 import com.cookeep.cookeep.common.exception.ErrorCode;
 import com.cookeep.cookeep.domain.ingredient.common.Storage;
 import com.cookeep.cookeep.domain.ingredient.common.Type;
@@ -89,6 +91,29 @@ public class RefrigeratorService {
                 .build();
     }
 
+    // 식재료 상세 조회
+    public UserIngredientDetailResponseDto getIngredientDetail(Long userId, Long ingredientId) {
+        if (userId == null) {
+            throw new AppException(ErrorCode.UNAUTHORIZED);
+        }
+
+        UserIngredient userIngredient = userIngredientRepository
+                .findByIngredientIdAndUserId(ingredientId, userId)
+                .orElseThrow(() -> new EntityNotFoundException(ErrorCode.INGREDIENT_NOT_FOUND));
+
+        // 식재료 이름 조회
+        String ingredientName = getIngredientName(userIngredient);
+
+        return UserIngredientDetailResponseDto.builder()
+                .ingredientId(userIngredient.getIngredientId())
+                .name(ingredientName)
+                .storage(userIngredient.getStorage().name())
+                .expirationDate(userIngredient.getExpirationDate())
+                .quantity(userIngredient.getQuantity())
+                .memo(userIngredient.getMemo())
+                .build();
+    }
+
     // --- 내부 메서드 ---
     // UserIngredient 리스트를 IngredientItem 리스트로 변환
     private List<RefrigeratorIngredientsResponseDto.IngredientItem> convertToIngredientItems(
@@ -136,5 +161,20 @@ public class RefrigeratorService {
             case CREATED_DESC -> Sort.by(Sort.Direction.DESC, "createdAt");
             case CREATED_ASC -> Sort.by(Sort.Direction.ASC, "createdAt");
         };
+    }
+
+    // 식재료 이름 조회
+    private String getIngredientName(UserIngredient userIngredient) {
+        if (userIngredient.getType() == Type.DEFAULT) {
+            return defaultIngredientRepository
+                    .findById(userIngredient.getReferenceId())
+                    .map(DefaultIngredient::getIngredient)
+                    .orElse("Unknown");
+        } else {
+            return customIngredientRepository
+                    .findById(userIngredient.getReferenceId())
+                    .map(CustomIngredient::getName)
+                    .orElse("Unknown");
+        }
     }
 }

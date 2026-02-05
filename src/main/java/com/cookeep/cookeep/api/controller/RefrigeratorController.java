@@ -2,6 +2,7 @@ package com.cookeep.cookeep.api.controller;
 
 import com.cookeep.cookeep.api.dto.response.PaginatedIngredientsResponseDto;
 import com.cookeep.cookeep.api.dto.response.RefrigeratorIngredientsResponseDto;
+import com.cookeep.cookeep.api.dto.response.UserIngredientDetailResponseDto;
 import com.cookeep.cookeep.common.dto.DataResponse;
 import com.cookeep.cookeep.common.exception.ErrorCode;
 import com.cookeep.cookeep.config.ApiErrorCodeExamples;
@@ -20,12 +21,9 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
-@Tag(name = "(MAIN02) 냉장고 관리", description = "냉장고 식재료 조회 API")
+@Tag(name = "(MAIN03) 냉장고 관리", description = "냉장고 식재료 조회 API")
 @SecurityRequirement(name = "bearerAuth")
 @RestController
 @RequiredArgsConstructor
@@ -107,6 +105,37 @@ public class RefrigeratorController {
         PaginatedIngredientsResponseDto response = refrigeratorService.getIngredientsByStorage(
                 userId, storage, sort, page, size
         );
+        return ResponseEntity.ok(DataResponse.from(response));
+    }
+
+    @Operation(
+            summary = "재료 상세 조회",
+            description = "특정 식재료의 상세 정보를 조회합니다."
+    )
+    @SecurityRequirements
+    @ApiErrorCodeExamples({
+            ErrorCode.UNAUTHORIZED,
+            ErrorCode.INGREDIENT_NOT_FOUND
+    })
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "조회 성공"),
+            @ApiResponse(responseCode = "401", description = """
+                    인증 실패입니다.
+                    - UNAUTHORIZED: 인증 정보가 없거나 유효하지 않습니다.
+                    """, content = @Content),
+            @ApiResponse(responseCode = "404", description = """
+                    리소스를 찾을 수 없습니다. 다음 오류가 발생할 수 있습니다:
+                    - USER_INGREDIENT_NOT_FOUND: 해당 식재료를 찾을 수 없습니다.
+                    """, content = @Content)
+    })
+    @GetMapping("/{ingredientId}")
+    public ResponseEntity<DataResponse<UserIngredientDetailResponseDto>> getIngredientDetail(
+            @AuthenticationPrincipal(expression = "userId") Long userId,
+
+            @Parameter(description = "유저 식재료 ID", required = true)
+            @PathVariable Long ingredientId
+    ) {
+        UserIngredientDetailResponseDto response = refrigeratorService.getIngredientDetail(userId, ingredientId);
         return ResponseEntity.ok(DataResponse.from(response));
     }
 
