@@ -37,6 +37,8 @@ public enum ErrorCode {
 	RECIPE_SESSIONID_REQUIRED(HttpStatus.BAD_REQUEST, "레시피 요청에 필요한 값이 누락되었습니다.", "RECIPE-016"),
 	SESSION_DIFFICULTY_NOT_FOUND(HttpStatus.BAD_REQUEST, "세션의 난이도 정보를 찾을 수 없습니다.", "RECIPE-017"),
 	SESSION_INGREDIENTS_NOT_FOUND(HttpStatus.BAD_REQUEST, "세션의 재료 정보를 찾을 수 없습니다.", "RECIPE-018"),
+	REFRIGERATOR_INVALID_QUERY(HttpStatus.BAD_REQUEST, "잘못된 쿼리 파라미터입니다.", "REFRIGERATOR-001"),
+	INVALID_SORT_TYPE(HttpStatus.BAD_REQUEST, "유효하지 않은 정렬 타입입니다.", "REFRIGERATOR-002"),
 
 	// 401 UNAUTHORIZED (인증 관련)
 	UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "인증에 실패했습니다.", "AUTH-001"),
