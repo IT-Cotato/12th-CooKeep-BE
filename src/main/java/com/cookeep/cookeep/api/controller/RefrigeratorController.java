@@ -34,6 +34,10 @@ public class RefrigeratorController {
 
     private final RefrigeratorService refrigeratorService;
 
+    @Operation(
+            summary = "냉장고 전체 식재료 조회",
+            description = "냉장/냉동/상온 구분하여 모든 식재료를 조회합니다. 각 보관 장소 내에서 유통기한 임박순(leftDays 오름차순)으로 정렬됩니다."
+    )
     @SecurityRequirements
     @ApiErrorCodeExamples({
             ErrorCode.UNAUTHORIZED
@@ -45,7 +49,7 @@ public class RefrigeratorController {
                     - UNAUTHORIZED: 인증 정보가 없거나 유효하지 않습니다.
                     """, content = @Content)
     })
-    @GetMapping
+    @GetMapping("/home")
     public ResponseEntity<DataResponse<RefrigeratorIngredientsResponseDto>> getAllIngredients(
             @AuthenticationPrincipal(expression = "userId") Long userId
     ) {
@@ -55,7 +59,7 @@ public class RefrigeratorController {
 
     @Operation(
             summary = "냉장고 식재료 전체보기 조회",
-            description = "냉장/냉동/상온 식재료를 정렬 옵션과 페이지네이션을 적용하여 조회합니다."
+            description = "냉장/냉동/상온 위치별 식재료를 정렬 옵션 적용하여 조회합니다."
     )
     @SecurityRequirements
     @ApiErrorCodeExamples({
@@ -77,7 +81,7 @@ public class RefrigeratorController {
                     - UNAUTHORIZED: 인증 정보가 없거나 유효하지 않습니다.
                     """, content = @Content)
     })
-    @GetMapping("/list")
+    @GetMapping()
     public ResponseEntity<DataResponse<PaginatedIngredientsResponseDto>> getIngredientsByStorage(
             @AuthenticationPrincipal(expression = "userId") Long userId,
 
@@ -94,7 +98,7 @@ public class RefrigeratorController {
             )
             @RequestParam(required = false, defaultValue = "EXPIRATION_ASC") IngredientSort sort,
 
-            @Parameter(description = "페이지 번호 (0부터 시작)")
+            @Parameter(description = "페이지 번호 (상하스크롤)")
             @RequestParam(required = false, defaultValue = "0") int page,
 
             @Parameter(description = "페이지 크기")
