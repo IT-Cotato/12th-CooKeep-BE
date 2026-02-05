@@ -224,12 +224,14 @@ public class AiRecipeService {
         // 즐겨찾기 대화 별도 정렬
         List<AiSessionListResponseDto.SessionSummary> pinned = allSessions.stream()
                 .filter(session -> Boolean.TRUE.equals(session.getIsPinned()))
+                .sorted((s1, s2) -> s2.getCreatedAt().compareTo(s1.getCreatedAt()))
                 .map(AiSessionListResponseDto.SessionSummary::from)
                 .collect(Collectors.toList());
 
         // 일반 대화 정렬
         List<AiSessionListResponseDto.SessionSummary> sessions = allSessions.stream()
                 .filter(session -> !Boolean.TRUE.equals(session.getIsPinned()))
+                .sorted((s1, s2) -> s2.getCreatedAt().compareTo(s1.getCreatedAt()))
                 .map(AiSessionListResponseDto.SessionSummary::from)
                 .collect(Collectors.toList());
 
@@ -274,6 +276,28 @@ public class AiRecipeService {
 
         // 4. 세션 삭제
         aiSessionRepository.delete(session);
+    }
+
+    // (MAIN07) AI 대화 세션 즐겨찾기 추가/삭제
+    public void toggleFavorite(Long userId, Long sessionId) {
+        // 1. 세션 조회
+        AiSession session = aiSessionRepository.findById(sessionId)
+                .orElseThrow(() -> new AppException(ErrorCode.AI_SESSION_NOT_FOUND));
+
+        // 2. 본인 세션 여부 체크
+        if (!session.getUserId().equals(userId)) {
+            throw new AppException(ErrorCode.AI_SESSION_FORBIDDEN);
+        }
+
+        // 3. 즐겨찾기 상태 변경 (T -> F / F -> T)
+        if (Boolean.TRUE.equals(session.getIsPinned())) {
+            session.unpin();
+        } else {
+            session.pin();
+        }
+
+        // 4. 저장
+        aiSessionRepository.save(session);
     }
 
     // --- 내부 메서드 ---
