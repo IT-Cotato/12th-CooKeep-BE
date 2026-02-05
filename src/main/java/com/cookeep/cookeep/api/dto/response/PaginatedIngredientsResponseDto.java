@@ -9,7 +9,7 @@ import java.util.List;
 
 @Schema(
         name = "PaginatedIngredientsResponse",
-        description = "페이지네이션된 식재료 목록 응답 DTO (냉장고탭 좌우스크롤에 사용)"
+        description = "페이지네이션된 식재료 목록 응답 DTO (장소별 전체보기 화면 내 스크롤에 이용)"
 )
 @Getter
 @Builder
