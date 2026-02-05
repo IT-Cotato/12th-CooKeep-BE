@@ -46,9 +46,13 @@ public class UserIngredientCreateResponseDto {
     @Schema(description = "메모", example = "유통기한 짧음. 먼저 사용")
     private String memo;
 
+    @Schema(description = "식재료 이미지 URL", example = "https://s3.amazonaws.com/cookeep/ingredients/carrot.png")
+    private String imageUrl;
+
     public static UserIngredientCreateResponseDto of(
             UserIngredient userIngredient,
-            String ingredientName
+            String ingredientName,
+            String imageUrl
     ) {
         return new UserIngredientCreateResponseDto(
                 userIngredient.getType().name(),
@@ -60,7 +64,8 @@ public class UserIngredientCreateResponseDto {
                 userIngredient.getStorage().name(),
                 userIngredient.getExpirationDate(),
                 userIngredient.getLeftDays(),
-                userIngredient.getMemo()
+                userIngredient.getMemo(),
+                imageUrl
         );
     }
 }

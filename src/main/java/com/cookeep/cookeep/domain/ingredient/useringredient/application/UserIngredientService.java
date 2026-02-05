@@ -37,6 +37,7 @@ public class UserIngredientService {
 
         Type type;
         String ingredientName;
+        String imageUrl;
         Storage finalStorage;
         LocalDate finalExpirationDate;
 
@@ -48,6 +49,7 @@ public class UserIngredientService {
                     .orElseThrow(() -> new EntityNotFoundException(ErrorCode.INGREDIENT_REFERENCE_NOT_FOUND));
 
             ingredientName = defaultIngredient.getIngredient();
+            imageUrl = defaultIngredient.getImageUrl();
 
             // storage: 사용자가 입력하지 않으면 기본값 사용
             finalStorage = request.getStorage() != null
@@ -66,6 +68,7 @@ public class UserIngredientService {
                     .orElseThrow(() -> new EntityNotFoundException(ErrorCode.INGREDIENT_REFERENCE_NOT_FOUND));
 
             ingredientName = customIngredient.getName();
+            imageUrl = customIngredient.getImageUrl();
 
             // storage: 사용자가 입력하지 않으면 기본값 사용
             finalStorage = request.getStorage() != null
@@ -92,6 +95,6 @@ public class UserIngredientService {
 
         UserIngredient saved = userIngredientRepository.save(userIngredient);
 
-        return UserIngredientCreateResponseDto.of(saved, ingredientName);
+        return UserIngredientCreateResponseDto.of(saved, ingredientName, imageUrl);
     }
 }
