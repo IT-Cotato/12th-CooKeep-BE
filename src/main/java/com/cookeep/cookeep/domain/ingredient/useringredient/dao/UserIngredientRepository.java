@@ -46,7 +46,7 @@ public interface UserIngredientRepository extends JpaRepository<UserIngredient, 
     );
 
     // 홈화면 좌우스크롤용 페이지
-    Page<UserIngredient> findByUserIdAndStorage(
+    Page<UserIngredient> findByUser_UserIdAndStorage(
             Long userId,
             Storage storage,
             Pageable pageable
