@@ -87,8 +87,8 @@ public class AuthService {
 
 	// 카카오 로그인
 	@Transactional
-	public KakaoLoginResponseDTO kakaoLogin(String code) {
-		String kakaoAccessToken = kakaoOAuthProvider.getKakaoAccessToken(code);
+	public KakaoLoginResponseDTO kakaoLogin(String code, String redirectUri) {
+		String kakaoAccessToken = kakaoOAuthProvider.getKakaoAccessToken(code, redirectUri);
 		KakaoUserInfoResponseDTO userInfo = kakaoOAuthProvider.getKakaoUserInfo(kakaoAccessToken);
 
 		String kakaoId = String.valueOf(userInfo.id());

@@ -33,8 +33,6 @@ public class KakaoOAuthProvider implements OAuthProvider {
 	private String KakaoAccessTokenURL;
 	@Value("${kakao.auth.userInfoURL}")
 	private String KakaoUserInfoURL;
-	@Value("${kakao.auth.redirect}")
-	private String redirectUri;
 
 	private final UserRepository userRepository;
 
@@ -44,7 +42,7 @@ public class KakaoOAuthProvider implements OAuthProvider {
 	}
 
 	// 인가코드를 사용해 로그인할 유저의 카카오 액세스 토큰값을 받아옴
-	public String getKakaoAccessToken(String code) {
+	public String getKakaoAccessToken(String code, String redirectUri) {
 		MultiValueMap<String, String> form = new LinkedMultiValueMap<>();
 		form.add("grant_type", "authorization_code");
 		form.add("client_id", clientId);

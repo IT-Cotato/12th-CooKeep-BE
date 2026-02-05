@@ -33,7 +33,9 @@ public class AuthController {
 
 	@Operation(summary = "카카오 로그인 API")
 	@GetMapping("/login/kakao")
-	public ResponseEntity<DataResponse<KakaoLoginResponseDTO>> kakaoLogin(@RequestParam String code) {
-		return ResponseEntity.ok(DataResponse.from(authService.kakaoLogin(code)));
+	public ResponseEntity<DataResponse<KakaoLoginResponseDTO>> kakaoLogin(
+			@RequestParam String code,
+			@RequestParam("redirect_uri") String redirectUri) {
+		return ResponseEntity.ok(DataResponse.from(authService.kakaoLogin(code, redirectUri)));
 	}
 }
