@@ -45,13 +45,17 @@ public class CustomIngredientCreateResponseDto {
     )
     private Category category;
 
+    @Schema(description = "식재료 이미지 URL", example = "https://s3.amazonaws.com/cookeep/ingredients/default.png")
+    private String imageUrl;
+
     public static CustomIngredientCreateResponseDto from(CustomIngredient ingredient) {
         return new CustomIngredientCreateResponseDto(
                 ingredient.getId(),
                 ingredient.getName(),
                 ingredient.getExpirationDays(),
                 ingredient.getStorage(),
-                ingredient.getCategory()
+                ingredient.getCategory(),
+                ingredient.getImageUrl()
         );
     }
 }

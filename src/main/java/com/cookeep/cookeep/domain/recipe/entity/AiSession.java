@@ -8,6 +8,7 @@ import org.hibernate.annotations.UpdateTimestamp;
 import java.time.LocalDateTime;
 
 @Getter
+@Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Builder
@@ -65,23 +66,6 @@ public class AiSession {
     public void complete() {
         this.isCompleted = true;
         this.completedAt = LocalDateTime.now();
-    }
-
-    public void updateTitle(String title) {
-        this.title = title;
-    }
-
-    public void incrementAttemptNumber() {
-        if (this.attemptNumber == null) this.attemptNumber = 0;
-        this.attemptNumber++;
-    }
-
-    public boolean isChangeLimitExceeded(int max) {
-        return this.attemptNumber != null && this.attemptNumber >= max;
-    }
-
-    public boolean isCompletedSession() {
-        return Boolean.TRUE.equals(this.isCompleted);
     }
 
     public void increaseAttempt() {

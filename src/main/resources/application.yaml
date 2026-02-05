@@ -5,6 +5,9 @@ spring:
   config:
     import: optional:classpath:application-secret.yaml
 
+  jackson:
+    time-zone: Asia/Seoul
+
   datasource:
     url: ${DB_URL}
     username: ${DB_USERNAME:root}
@@ -34,9 +37,18 @@ jwt:
 
 google:
   gemini:
+    api-key: ${GEMINI_API_KEY}
     model: gemini-2.5-flash
   youtube:
+    api-key: ${YOUTUBE_API_KEY}
 
 ai:
   recipe:
     max-change-count: 5
+
+aws:
+  s3:
+    bucket: ${S3_BUCKET_NAME}
+    region: ap-northeast-2
+    access-key: ${AWS_ACCESS_KEY}
+    secret-key: ${AWS_SECRET_KEY}

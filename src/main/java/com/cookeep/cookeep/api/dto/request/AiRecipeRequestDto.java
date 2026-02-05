@@ -12,7 +12,7 @@ import java.util.List;
 
 @Schema(
         name = "AiRecipeRequest",
-        description = "AI 레시피 생성 또는 재요청 요청 DTO"
+        description = "AI 레시피 생성 DTO"
 )
 @Getter
 @NoArgsConstructor

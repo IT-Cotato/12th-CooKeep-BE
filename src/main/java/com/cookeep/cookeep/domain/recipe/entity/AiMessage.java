@@ -1,5 +1,6 @@
 package com.cookeep.cookeep.domain.recipe.entity;
 
+import com.cookeep.cookeep.common.entity.BaseEntity;
 import com.cookeep.cookeep.domain.recipe.dto.GeminiRecipeResponseDto;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.*;
@@ -14,7 +15,7 @@ import java.time.LocalDateTime;
 @Builder
 @Entity
 @Table(name = "ai_messages")
-public class AiMessage {
+public class AiMessage extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -29,13 +30,14 @@ public class AiMessage {
     @Column(name = "role")
     private Role role;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "message_type")
+    private MessageType messageType;
+
     @Lob
     @Column(name = "content", columnDefinition = "TEXT")
     private String content;
 
-    @CreationTimestamp
-    @Column(name = "created_at", updatable = false)
-    private LocalDateTime createdAt;
 
     public static AiMessage from(AiSession session, GeminiRecipeResponseDto response, MessageType type) {
         try {
@@ -45,10 +47,20 @@ public class AiMessage {
             return AiMessage.builder()
                     .session(session)
                     .role(Role.AI)
+                    .messageType(type)
                     .content(json)
                     .build();
         } catch (Exception e) {
             throw new RuntimeException("AI 메시지 생성 실패", e);
         }
+    }
+
+    public static AiMessage userMessage(AiSession session, MessageType type, String content) {
+        return AiMessage.builder()
+                .session(session)
+                .role(Role.USER)
+                .messageType(type)
+                .content(content)
+                .build();
     }
 }
