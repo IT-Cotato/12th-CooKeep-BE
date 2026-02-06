@@ -5,6 +5,6 @@ import com.cookeep.cookeep.domain.user.entity.Provider;
 
 public interface OAuthProvider {
 	Provider provider();
-	String getKakaoAccessToken(String code);
+	String getKakaoAccessToken(String code, String redirectUri);
 	KakaoUserInfoResponseDTO getKakaoUserInfo(String accessToken);
 }
