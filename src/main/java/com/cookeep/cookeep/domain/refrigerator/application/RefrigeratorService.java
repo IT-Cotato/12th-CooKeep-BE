@@ -102,21 +102,24 @@ public class RefrigeratorService {
                 .findByIngredientIdAndUserId(ingredientId, userId)
                 .orElseThrow(() -> new EntityNotFoundException(ErrorCode.INGREDIENT_NOT_FOUND));
 
-        // 식재료 이름 조회
+        // 식재료 이름/팁/이미지 조회
         String ingredientName;
         String aiTip = null;
+        String imageUrl;
 
         if (userIngredient.getType() == Type.DEFAULT) {
             DefaultIngredient defaultIngredient = defaultIngredientRepository
                     .findById(userIngredient.getReferenceId())
                     .orElse(null);
             ingredientName = defaultIngredient != null ? defaultIngredient.getIngredient() : "Unknown";
+            imageUrl = defaultIngredient != null ? defaultIngredient.getImageUrl() : "";
             aiTip = defaultIngredient != null ? defaultIngredient.getAiTip() : null;
         } else {
             CustomIngredient customIngredient = customIngredientRepository
                     .findById(userIngredient.getReferenceId())
                     .orElse(null);
             ingredientName = customIngredient != null ? customIngredient.getName() : "Unknown";
+            imageUrl = customIngredient != null ? customIngredient.getImageUrl() : "";
             // 커스텀 식재료는 aiTip 없음
         }
 
@@ -129,6 +132,7 @@ public class RefrigeratorService {
                 .leftDays(userIngredient.getLeftDays())
                 .memo(userIngredient.getMemo())
                 .aiTip(aiTip)
+                .imageUrl(imageUrl)
                 .build();
     }
 

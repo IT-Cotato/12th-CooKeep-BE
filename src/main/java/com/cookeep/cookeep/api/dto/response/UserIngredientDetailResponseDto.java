@@ -73,4 +73,11 @@ public class UserIngredientDetailResponseDto {
             requiredMode = Schema.RequiredMode.NOT_REQUIRED
     )
     private String aiTip;
+
+    @Schema(
+            description = "식재료 이미지 URL",
+            example = "https://s3.amazonaws.com/cookeep/ingredients/default.png",
+            requiredMode = Schema.RequiredMode.REQUIRED
+    )
+    private String imageUrl;
 }
