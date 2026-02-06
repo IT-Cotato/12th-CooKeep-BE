@@ -9,5 +9,5 @@ import java.time.LocalDate;
 import java.util.Optional;
 
 public interface WeeklyGoalRepository extends JpaRepository<WeeklyGoal, Long> {
-    Optional<WeeklyGoal> findByUserAndWeekStartDate(User user, LocalDate weekStartDate);
+    Optional<WeeklyGoal> findFirstByUserAndWeekStartDateOrderByCreatedAtDesc(User user, LocalDate weekStartDate);
 }

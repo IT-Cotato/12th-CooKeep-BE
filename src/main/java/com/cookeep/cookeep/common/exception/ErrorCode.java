@@ -58,6 +58,8 @@ public enum ErrorCode {
 	// 409
 	DUPLICATE_CUSTOM_INGREDIENT(HttpStatus.CONFLICT, "이미 등록된 식재료 입니다.", "INGREDIENT-007"),
 	DUPLICATE_NICKNAME(HttpStatus.CONFLICT, "이미 사용 중인 닉네임입니다.", "USER-001"),
+	WEEKLY_GOAL_ALREADY_EXISTS(HttpStatus.CONFLICT, "이번 주 목표가 이미 설정되어 있습니다.", "WEEKLY_GOAL-001"),
+
 
 	//500
 	FILE_UPLOAD_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "파일 업로드에 실패했습니다.", "FILE-001"),
