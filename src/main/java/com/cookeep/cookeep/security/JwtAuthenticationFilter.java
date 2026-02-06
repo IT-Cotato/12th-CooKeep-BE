@@ -1,4 +1,4 @@
-package com.cookeep.cookeep.config;
+package com.cookeep.cookeep.security;
 
 import java.io.IOException;
 import java.util.List;

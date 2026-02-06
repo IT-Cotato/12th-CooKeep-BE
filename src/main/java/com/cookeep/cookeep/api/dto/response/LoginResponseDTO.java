@@ -1,0 +1,9 @@
+package com.cookeep.cookeep.api.dto.response;
+
+import com.cookeep.cookeep.domain.user.entity.UserStatus;
+
+public record LoginResponseDTO(
+	Long userId, String accessToken,
+	String refreshToken, UserStatus userStatus
+) {
+}

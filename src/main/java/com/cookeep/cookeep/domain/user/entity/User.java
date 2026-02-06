@@ -44,6 +44,9 @@ public class User extends BaseEntity {
 	@Column(length = 255, nullable = false, unique = true)
 	private String email;
 
+	@Column(length = 255)
+	private String password;
+
 	/**
 	 소셜 로그인 회원의 경우 회원가입 및 로그인 완료 후에 약관 동의 페이지로 넘어가므로
 	 marketingConsent와 marketingPush 모두 nullable로 둠
@@ -111,5 +114,9 @@ public class User extends BaseEntity {
 
 	public void updateNickname(String nickname) {
 		this.nickname = nickname;
+	}
+
+	public void updatePassword(String password) {
+		this.password = password;
 	}
 }

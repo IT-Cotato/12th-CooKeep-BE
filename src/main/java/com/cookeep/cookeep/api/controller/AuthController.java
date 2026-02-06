@@ -8,13 +8,20 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.cookeep.cookeep.api.dto.request.LoginRequestDTO;
+import com.cookeep.cookeep.api.dto.request.SignupRequestDTO;
 import com.cookeep.cookeep.api.dto.request.TokenRefreshRequestDTO;
 import com.cookeep.cookeep.api.dto.response.KakaoLoginResponseDTO;
+import com.cookeep.cookeep.api.dto.response.LoginResponseDTO;
+import com.cookeep.cookeep.api.dto.response.SignUpResponseDTO;
 import com.cookeep.cookeep.api.dto.response.TokenRefreshResponseDTO;
 import com.cookeep.cookeep.common.dto.DataResponse;
 import com.cookeep.cookeep.domain.user.application.AuthService;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -25,6 +32,10 @@ public class AuthController {
 	private final AuthService authService;
 
 	@Operation(summary = "액세스 토큰 재발급 API")
+	@ApiResponses(value = {
+		@ApiResponse(responseCode = "200", description = "액세스 토큰 갱신 성공"),
+		@ApiResponse(responseCode = "401", description = "유효하지 않은 리프레쉬 토큰")
+	})
 	@PostMapping("/refresh")
 	public ResponseEntity<DataResponse<TokenRefreshResponseDTO>> tokenRefresh(@RequestBody TokenRefreshRequestDTO tokenRefreshRequestDTO) {
 		return ResponseEntity.ok(DataResponse.from(authService.tokenRefresh(tokenRefreshRequestDTO)));
@@ -32,10 +43,35 @@ public class AuthController {
 	}
 
 	@Operation(summary = "카카오 로그인 API")
+	@ApiResponses(value = {
+		@ApiResponse(responseCode = "200", description = "카카오 로그인 성공"),
+		@ApiResponse(responseCode = "400", description = "요청 파라미터 오류")
+	})
 	@GetMapping("/login/kakao")
 	public ResponseEntity<DataResponse<KakaoLoginResponseDTO>> kakaoLogin(
 			@RequestParam String code,
 			@RequestParam(value = "redirect_uri", required = false) String redirectUri) {
 		return ResponseEntity.ok(DataResponse.from(authService.kakaoLogin(code, redirectUri)));
+	}
+
+	@Operation(summary = "전화번호 회원가입 API")
+	@ApiResponses(value = {
+		@ApiResponse(responseCode = "200", description = "회원가입 성공"),
+		@ApiResponse(responseCode = "400", description = "요청 파라미터 오류"),
+		@ApiResponse(responseCode = "409", description = "이미 사용중인 전화번호 또는 이메일")
+	})
+	@PostMapping("/signup")
+	public ResponseEntity<DataResponse<SignUpResponseDTO>> signup(@Valid @RequestBody SignupRequestDTO signupRequestDTO) {
+		return ResponseEntity.ok(DataResponse.from(authService.signUp(signupRequestDTO)));
+	}
+
+	@Operation(summary = "전화번호 로그인 API")
+	@PostMapping("/login")
+	@ApiResponses(value = {
+		@ApiResponse(responseCode = "200", description = "회원가입 성공"),
+		@ApiResponse(responseCode = "400", description = "요청 파라미터 오류")
+	})
+	public ResponseEntity<DataResponse<LoginResponseDTO>> login(@Valid @RequestBody LoginRequestDTO loginRequestDTO) {
+		return ResponseEntity.ok(DataResponse.from(authService.login(loginRequestDTO)));
 	}
 }
