@@ -17,6 +17,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 
 import java.security.SignatureException;
+import java.util.Map;
 
 @Slf4j
 @RestControllerAdvice
@@ -57,18 +58,40 @@ public class GlobalExceptionHandler {
 	// Validation 실패 (필수값 누락, @Valid 검증 실패)
 	@ExceptionHandler(MethodArgumentNotValidException.class)
 	public ResponseEntity<ErrorResponse> handleValidationException(
-			MethodArgumentNotValidException e, HttpServletRequest request) {
+		MethodArgumentNotValidException e, HttpServletRequest request) {
+
 		log.error("Validation 에러 발생: {}", e.getBindingResult().getAllErrors().get(0).getDefaultMessage());
 		log.error("에러가 발생한 지점 {}, {}", request.getMethod(), request.getRequestURI());
 
-		ErrorResponse errorResponse = ErrorResponse.of(
-				ErrorCode.INGREDIENT_REQUIRED_FIELDS_MISSING,
-				request
+		Map<String, String> errors = new java.util.LinkedHashMap<>();
+
+		// 필드 에러
+		for (org.springframework.validation.FieldError fe : e.getBindingResult().getFieldErrors()) {
+			String msg = fe.getDefaultMessage(); // DTO 내 에러 메세지
+			if (msg == null || msg.isBlank()) msg = "요청 값이 올바르지 않습니다."; // 메세지가 비어있을 경우 기본 문구
+			// key와 value로 Map에 저장
+			// ex) SignupRequestDTO의 이메일 에러일 경우 key: "email", value: "이메일은 필수 입력 값입니다."
+			// 여러 필드에서 에러가 동시에 발생할 수 있으므로 Map 형태로 저장
+			// 동일 필드의 중복 에러는 첫 번째만 유지됨
+			errors.putIfAbsent(fe.getField(), msg);
+		}
+
+		// 글로벌 에러 (@PasswordMatch 같은 타입레벨)
+		for (org.springframework.validation.ObjectError oe : e.getBindingResult().getGlobalErrors()) {
+			String msg = oe.getDefaultMessage();
+			if (msg == null || msg.isBlank()) msg = "요청 값이 올바르지 않습니다.";
+			errors.putIfAbsent("_global", msg); // key를 _global로 처리
+		}
+
+		ErrorResponse errorResponse = ErrorResponse.ofValidation(
+			ErrorCode.INVALID_PARAMETER,
+			errors,
+			request
 		);
-		return ResponseEntity
-				.status(HttpStatus.BAD_REQUEST)
-				.body(errorResponse);
+
+		return ResponseEntity.status(org.springframework.http.HttpStatus.BAD_REQUEST).body(errorResponse);
 	}
+
 
 	// JSON 파싱 실패 또는 ENUM 타입 불일치
 	@ExceptionHandler(HttpMessageNotReadableException.class)
