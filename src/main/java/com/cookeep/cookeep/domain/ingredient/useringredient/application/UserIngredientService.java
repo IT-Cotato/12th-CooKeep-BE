@@ -29,6 +29,8 @@ public class UserIngredientService {
     private final DefaultIngredientRepository defaultIngredientRepository;
     private final CustomIngredientRepository customIngredientRepository;
     private final UserRepository userRepository;
+    private static final String DEFAULT_IMAGE =
+            "https://s3.amazonaws.com/cookeep/ingredients/default.png";
 
     @Transactional
     public UserIngredientCreateResponseDto create(Long userId, UserIngredientCreateRequestDto request) {
