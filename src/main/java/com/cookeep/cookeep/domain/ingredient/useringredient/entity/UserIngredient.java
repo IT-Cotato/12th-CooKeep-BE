@@ -76,17 +76,13 @@ public class UserIngredient extends BaseEntity {
         this.leftDays = calculateLeftDays(expirationDate);
     }
 
-    /**
-     * 엔티티가 영속화되기 전에 자동으로 leftDays 계산
-     */
+    // 엔티티가 영속화되기 전에 자동으로 leftDays 계산
     @PrePersist
     public void prePersist() {
         this.leftDays = calculateLeftDays(this.expirationDate);
     }
 
-    /**
-     * 엔티티가 업데이트되기 전에 자동으로 leftDays 재계산
-     */
+    // 엔티티가 업데이트되기 전에 자동으로 leftDays 재계산
     @PreUpdate
     public void preUpdate() {
         this.leftDays = calculateLeftDays(this.expirationDate);
@@ -96,10 +92,7 @@ public class UserIngredient extends BaseEntity {
         return (int) java.time.temporal.ChronoUnit.DAYS.between(LocalDate.now(), expirationDate);
     }
 
-    /**
-     * leftDays를 현재 날짜 기준으로 재계산
-     * JPA Dirty Checking을 위해 새로운 값으로 setter 호출
-     */
+    // leftDays를 현재 날짜 기준으로 재계산
     public void updateLeftDays() {
         Integer newLeftDays = calculateLeftDays(this.expirationDate);
         // 값이 변경되었을 때만 업데이트 (최적화)
@@ -108,10 +101,7 @@ public class UserIngredient extends BaseEntity {
         }
     }
 
-    /**
-     * 조회 시점에 실시간으로 leftDays 반환
-     * DB 값이 오래되었을 수 있으므로 항상 재계산
-     */
+    // 조회 시점에 실시간으로 leftDays 반환
     public Integer getLeftDays() {
         return calculateLeftDays(this.expirationDate);
     }
