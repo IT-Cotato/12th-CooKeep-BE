@@ -6,11 +6,12 @@ import com.cookeep.cookeep.api.dto.response.AiSessionListResponseDto;
 import com.cookeep.cookeep.common.dto.DataResponse;
 import com.cookeep.cookeep.common.exception.ErrorCode;
 import com.cookeep.cookeep.config.ApiErrorCodeExamples;
-import com.cookeep.cookeep.config.JwtTokenProvider;
 import com.cookeep.cookeep.domain.recipe.application.AiRecipeService;
 import com.cookeep.cookeep.api.dto.response.AiRecipeAdoptResponseDto;
 import com.cookeep.cookeep.api.dto.request.AiRecipeRequestDto;
 import com.cookeep.cookeep.api.dto.response.AiRecipeResponseDto;
+import com.cookeep.cookeep.security.JwtTokenProvider;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
