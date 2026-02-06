@@ -82,11 +82,12 @@ public class MyPlantController {
             @ApiResponse(responseCode = "404", description = "식물을 찾을 수 없음")
     })
     @PostMapping("/{userPlantId}/water")
-    public DataResponse<Void> giveWater(
+    public DataResponse<String> giveWater(
             @AuthenticationPrincipal(expression = "userId") Long userId,
             @PathVariable Long userPlantId) {
-        userPlantService.giveWater(userId, userPlantId);
-        return DataResponse.from(null);
+        boolean isFreeWatering = userPlantService.giveWater(userId, userPlantId);
+        String message = isFreeWatering ? "무료 물주기가 완료되었습니다." : "물주기가 완료되었습니다.";
+        return DataResponse.from(message);
     }
 
     @Operation(summary = "식물 다시 살리기", description = "성장이 정지된(isFrozen=true) 식물을 쿠키를 사용하여 다시 살립니다.")
