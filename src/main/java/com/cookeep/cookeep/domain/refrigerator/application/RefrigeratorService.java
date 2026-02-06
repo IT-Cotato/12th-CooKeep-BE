@@ -149,10 +149,12 @@ public class RefrigeratorService {
             throw new AppException(ErrorCode.UNAUTHORIZED);
         }
 
-        // 검색어가 비어있거나 공백인 경우 null 처리
-        String processedQuery = (searchQuery != null && !searchQuery.trim().isEmpty())
-                ? searchQuery.trim()
-                : null;
+        // 검색어 확인
+        if (searchQuery == null || searchQuery.trim().isEmpty()) {
+            throw new AppException(ErrorCode.REFRIGERATOR_SEARCH_QUERY_REQUIRED);
+        }
+
+        String processedQuery = searchQuery.trim();
 
         // 정렬 기준 설정
         Sort sortCriteria = getSortCriteria(sort);
@@ -238,7 +240,6 @@ public class RefrigeratorService {
     }
 
     // 정렬
-    // TODO: enum 으로 분리
     private Sort getSortCriteria(IngredientSort sort) {
         if (sort == null) {
             sort = IngredientSort.EXPIRATION_ASC; // 기본값: 유통기한 임박순
