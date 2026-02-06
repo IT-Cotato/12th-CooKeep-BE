@@ -58,4 +58,31 @@ public interface UserIngredientRepository extends JpaRepository<UserIngredient, 
             @Param("ingredientId") Long ingredientId,
             @Param("userId") Long userId
     );
+
+    // 카테고리별 분류 + 이름 검색
+    @Query("""
+        SELECT ui FROM UserIngredient ui
+        WHERE ui.user.userId = :userId
+        AND (:storage IS NULL OR ui.storage = :storage)
+        AND (:searchQuery IS NULL OR 
+            EXISTS (
+                SELECT 1 FROM DefaultIngredient di 
+                WHERE di.id = ui.referenceId 
+                AND ui.type = 'DEFAULT'
+                AND LOWER(di.ingredient) LIKE LOWER(CONCAT('%', :searchQuery, '%'))
+            )
+            OR EXISTS (
+                SELECT 1 FROM CustomIngredient ci 
+                WHERE ci.id = ui.referenceId 
+                AND ui.type = 'CUSTOM'
+                AND LOWER(ci.name) LIKE LOWER(CONCAT('%', :searchQuery, '%'))
+            )
+        )
+    """)
+    Page<UserIngredient> searchIngredients(
+            @Param("userId") Long userId,
+            @Param("searchQuery") String searchQuery,
+            @Param("storage") Storage storage,
+            Pageable pageable
+    );
 }

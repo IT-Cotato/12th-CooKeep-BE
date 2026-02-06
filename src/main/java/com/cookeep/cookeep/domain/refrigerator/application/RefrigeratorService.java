@@ -2,6 +2,7 @@ package com.cookeep.cookeep.domain.refrigerator.application;
 
 import com.cookeep.cookeep.api.dto.response.PaginatedIngredientsResponseDto;
 import com.cookeep.cookeep.api.dto.response.RefrigeratorIngredientsResponseDto;
+import com.cookeep.cookeep.api.dto.response.RefrigeratorSearchResponseDto;
 import com.cookeep.cookeep.api.dto.response.UserIngredientDetailResponseDto;
 import com.cookeep.cookeep.common.exception.AppException;
 import com.cookeep.cookeep.common.exception.EntityNotFoundException;
@@ -35,7 +36,7 @@ public class RefrigeratorService {
     private final DefaultIngredientRepository defaultIngredientRepository;
     private final CustomIngredientRepository customIngredientRepository;
 
-    // 냉장고 전체 식재료 조회 (보관 장소별 그룹화)
+    // 1. 냉장고 전체 식재료 조회 (보관 장소별 그룹화)
     public RefrigeratorIngredientsResponseDto getAllIngredients(Long userId) {
         if (userId == null) {
             throw new AppException(ErrorCode.UNAUTHORIZED);
@@ -56,7 +57,7 @@ public class RefrigeratorService {
                 .build();
     }
 
-    // 전체보기 페이지 내 정렬
+    // 2. 전체보기 페이지 내 정렬
     public PaginatedIngredientsResponseDto getIngredientsByStorage(
             Long userId,
             Storage storage,
@@ -91,7 +92,7 @@ public class RefrigeratorService {
                 .build();
     }
 
-    // 식재료 상세 조회
+    // 3. 식재료 상세 조회
     public UserIngredientDetailResponseDto getIngredientDetail(Long userId, Long ingredientId) {
         if (userId == null) {
             throw new AppException(ErrorCode.UNAUTHORIZED);
@@ -116,7 +117,7 @@ public class RefrigeratorService {
                     .findById(userIngredient.getReferenceId())
                     .orElse(null);
             ingredientName = customIngredient != null ? customIngredient.getName() : "Unknown";
-            // 커스텀 식재료는 aiTip이 없음
+            // 커스텀 식재료는 aiTip 없음
         }
 
         return UserIngredientDetailResponseDto.builder()
@@ -128,6 +129,73 @@ public class RefrigeratorService {
                 .leftDays(userIngredient.getLeftDays())
                 .memo(userIngredient.getMemo())
                 .aiTip(aiTip)
+                .build();
+    }
+
+    // 4. 식재료 검색
+    public RefrigeratorSearchResponseDto searchIngredients(
+            Long userId,
+            String searchQuery,
+            Storage storage,
+            IngredientSort sort,
+            int page,
+            int size) {
+
+        if (userId == null) {
+            throw new AppException(ErrorCode.UNAUTHORIZED);
+        }
+
+        // 검색어가 비어있거나 공백인 경우 null 처리
+        String processedQuery = (searchQuery != null && !searchQuery.trim().isEmpty())
+                ? searchQuery.trim()
+                : null;
+
+        // 정렬 기준 설정
+        Sort sortCriteria = getSortCriteria(sort);
+        Pageable pageable = PageRequest.of(page, size, sortCriteria);
+
+        // 검색 실행
+        Page<UserIngredient> searchResults = userIngredientRepository
+                .searchIngredients(userId, processedQuery, storage, pageable);
+
+        // 결과 변환
+        List<RefrigeratorSearchResponseDto.SearchResultItem> items = searchResults.getContent()
+                .stream()
+                .map(ui -> {
+                    String name;
+                    String imageUrl;
+
+                    if (ui.getType() == Type.DEFAULT) {
+                        DefaultIngredient defaultIngredient = defaultIngredientRepository
+                                .findById(ui.getReferenceId())
+                                .orElse(null);
+                        name = defaultIngredient != null ? defaultIngredient.getIngredient() : "Unknown";
+                        imageUrl = defaultIngredient != null ? defaultIngredient.getImageUrl() : "";
+                    } else {
+                        CustomIngredient customIngredient = customIngredientRepository
+                                .findById(ui.getReferenceId())
+                                .orElse(null);
+                        name = customIngredient != null ? customIngredient.getName() : "Unknown";
+                        imageUrl = customIngredient != null ? customIngredient.getImageUrl() : "";
+                    }
+
+                    return RefrigeratorSearchResponseDto.SearchResultItem.builder()
+                            .ingredientId(ui.getIngredientId())
+                            .name(name)
+                            .imageUrl(imageUrl)
+                            .storage(ui.getStorage().name())
+                            .expirationDate(ui.getExpirationDate())
+                            .quantity(ui.getQuantity())
+                            .unit(ui.getUnit().name())
+                            .build();
+                })
+                .collect(Collectors.toList());
+
+        return RefrigeratorSearchResponseDto.builder()
+                .content(items)
+                .page(searchResults.getNumber())
+                .size(searchResults.getSize())
+                .hasNext(searchResults.hasNext())
                 .build();
     }
 
