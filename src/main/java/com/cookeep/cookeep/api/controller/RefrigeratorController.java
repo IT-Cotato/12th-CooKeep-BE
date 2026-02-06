@@ -147,13 +147,15 @@ public class RefrigeratorController {
     @SecurityRequirements
     @ApiErrorCodeExamples({
             ErrorCode.UNAUTHORIZED,
-            ErrorCode.REFRIGERATOR_INVALID_QUERY
+            ErrorCode.REFRIGERATOR_INVALID_QUERY,
+            ErrorCode.REFRIGERATOR_SEARCH_QUERY_REQUIRED
     })
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "검색 성공"),
             @ApiResponse(responseCode = "400", description = """
                     잘못된 요청입니다. 다음 오류가 발생할 수 있습니다:
                     - REFRIGERATOR_INVALID_QUERY: 잘못된 쿼리 파라미터입니다.
+                    - REFRIGERATOR_SEARCH_QUERY_REQUIRED: 검색어를 입력해주세요.
                     """, content = @Content),
             @ApiResponse(responseCode = "401", description = """
                     인증 실패입니다.
