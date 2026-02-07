@@ -87,7 +87,9 @@ public class DailyRecipeController {
 
     @Operation(
             summary = "데일리 레시피 등록",
-            description = "채택된 AI 레시피를 기반으로 데일리 요리를 기록합니다."
+            description = "채택된 AI 레시피를 기반으로 데일리 요리를 기록합니다." +
+                    "title은 미입력 시 AI 레시피 기본 제목을 사용합니다." +
+                    "요리 사진 URL은 이미지 업로드 API로 먼저 업로드 후 URL을 전달하는 방식입니다."
     )
     @ApiErrorCodeExamples({
             ErrorCode.UNAUTHORIZED,
