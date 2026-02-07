@@ -50,6 +50,7 @@ public enum ErrorCode {
 	FORBIDDEN(HttpStatus.FORBIDDEN, "접근 권한이 없습니다.", "COMMON-003"),
 	NOT_MY_PLANT(HttpStatus.FORBIDDEN, "해당 식물에 대한 권한이 없습니다.", "PLANT-001"),
 	AI_SESSION_FORBIDDEN(HttpStatus.FORBIDDEN, "본인의 대화 세션이 아닙니다.", "RECIPE-015"),
+	DAILY_RECIPE_FORBIDDEN(HttpStatus.FORBIDDEN, "본인의 레시피가 아닙니다.", "DAILY_RECIPE-001"),
 
 	// 404 NOT FOUND
 	NOT_FOUND(HttpStatus.NOT_FOUND, "찾을 수 없습니다.", "COMMON-004"),
@@ -60,6 +61,8 @@ public enum ErrorCode {
 	INGREDIENT_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 재료입니다.", "RECIPE-011"),
 	AUTH_PHONE_NOT_REGISTERED (HttpStatus.NOT_FOUND, "가입되지 않은 전화번호입니다.", "AUTH-004"),
 	AI_RECIPE_TITLE_MISSING(HttpStatus.NOT_FOUND, "AI 응답에 레시피 제목이 존재하지 않습니다.", "RECIPE-019"),
+	AI_RECIPE_NOT_FOUND(HttpStatus.NOT_FOUND, "해당 AI 레시피를 찾을 수 없습니다.", "DAILY_RECIPE-002"),
+	DAILY_RECIPE_NOT_FOUND(HttpStatus.NOT_FOUND, "해당 데일리 레시피를 찾을 수 없습니다.", "DAILY_RECIPE-003"),
 
 	// 409
 	DUPLICATE_CUSTOM_INGREDIENT(HttpStatus.CONFLICT, "이미 등록된 식재료 입니다.", "INGREDIENT-007"),
