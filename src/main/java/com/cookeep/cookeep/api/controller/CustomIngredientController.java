@@ -31,7 +31,6 @@ public class CustomIngredientController {
 
     @Operation( summary = "커스텀 식재료 등록", description = "유저가 새로운 커스텀 식재료를 등록합니다."
     )
-    @SecurityRequirements
     @ApiErrorCodeExamples({
             ErrorCode.CUSTOM_INGREDIENT_REQUIRED_FIELDS_MISSING,
             ErrorCode.INVALID_STORAGE_TYPE,

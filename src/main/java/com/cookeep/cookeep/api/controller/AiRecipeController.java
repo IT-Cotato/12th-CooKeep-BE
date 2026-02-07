@@ -41,7 +41,6 @@ public class AiRecipeController {
             summary = "(MAIN05-01)AI 레시피 생성",
             description = "유저의 식재료 및 조건을 기반으로 AI에게 레시피를 요청합니다."
     )
-    @SecurityRequirements
     @ApiErrorCodeExamples({
             ErrorCode.RECIPE_INGREDIENTS_REQUIRED,
             ErrorCode.INVALID_DIFFICULTY,

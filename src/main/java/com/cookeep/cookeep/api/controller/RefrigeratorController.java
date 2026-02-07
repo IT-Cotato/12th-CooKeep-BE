@@ -7,7 +7,7 @@ import com.cookeep.cookeep.api.dto.response.UserIngredientDetailResponseDto;
 import com.cookeep.cookeep.common.dto.DataResponse;
 import com.cookeep.cookeep.common.exception.ErrorCode;
 import com.cookeep.cookeep.config.ApiErrorCodeExamples;
-import com.cookeep.cookeep.domain.ingredient.common.Storage;
+import com.cookeep.cookeep.domain.ingredient.common.domain.Storage;
 import com.cookeep.cookeep.domain.refrigerator.application.RefrigeratorService;
 import com.cookeep.cookeep.domain.refrigerator.entity.IngredientSort;
 import io.swagger.v3.oas.annotations.Operation;
@@ -37,7 +37,6 @@ public class RefrigeratorController {
             summary = "01 냉장고 전체 식재료 조회",
             description = "냉장/냉동/상온 구분하여 모든 식재료를 조회합니다. 각 보관 장소 내에서 유통기한 임박순(leftDays 오름차순)으로 정렬됩니다."
     )
-    @SecurityRequirements
     @ApiErrorCodeExamples({
             ErrorCode.UNAUTHORIZED
     })

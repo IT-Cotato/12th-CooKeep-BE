@@ -1,8 +1,8 @@
 package com.cookeep.cookeep.api.dto.request;
 
-import com.cookeep.cookeep.domain.ingredient.common.Storage;
-import com.cookeep.cookeep.domain.ingredient.common.Type;
-import com.cookeep.cookeep.domain.ingredient.common.Unit;
+import com.cookeep.cookeep.domain.ingredient.common.domain.Storage;
+import com.cookeep.cookeep.domain.ingredient.common.domain.Type;
+import com.cookeep.cookeep.domain.ingredient.common.domain.Unit;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;

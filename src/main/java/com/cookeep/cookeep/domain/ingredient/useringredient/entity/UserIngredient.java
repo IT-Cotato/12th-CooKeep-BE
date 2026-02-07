@@ -1,9 +1,9 @@
 package com.cookeep.cookeep.domain.ingredient.useringredient.entity;
 
 import com.cookeep.cookeep.common.entity.BaseEntity;
-import com.cookeep.cookeep.domain.ingredient.common.Storage;
-import com.cookeep.cookeep.domain.ingredient.common.Type;
-import com.cookeep.cookeep.domain.ingredient.common.Unit;
+import com.cookeep.cookeep.domain.ingredient.common.domain.Storage;
+import com.cookeep.cookeep.domain.ingredient.common.domain.Type;
+import com.cookeep.cookeep.domain.ingredient.common.domain.Unit;
 import com.cookeep.cookeep.domain.user.entity.User;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
