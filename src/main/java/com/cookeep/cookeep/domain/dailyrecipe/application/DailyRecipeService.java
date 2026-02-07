@@ -6,7 +6,7 @@ import com.cookeep.cookeep.domain.dailyrecipe.dao.DailyRecipeRepository;
 import com.cookeep.cookeep.domain.dailyrecipe.entity.DailyRecipe;
 import com.cookeep.cookeep.domain.recipe.dao.AiRecipeRepository;
 import com.cookeep.cookeep.domain.recipe.entity.AiRecipe;
-import com.cookeep.cookeep.domain.user.dao.UserRepository;
+import com.cookeep.cookeep.domain.user.application.UserReader;
 import com.cookeep.cookeep.domain.user.entity.User;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -25,20 +25,26 @@ public class DailyRecipeService {
 
     private final DailyRecipeRepository dailyRecipeRepository;
     private final AiRecipeRepository aiRecipeRepository;
-    private final UserRepository userRepository;
+    private final UserReader userReader;
     private final ObjectMapper objectMapper;
 
     // 채택된 AI 레시피 목록 조회 (레시피 선택 화면)
     @Transactional(readOnly = true)
     public List<AiRecipe> getAdoptedAiRecipes(Long userId) {
-        return aiRecipeRepository.findAllByUserIdOrderByCreatedAtDesc(userId);
+        return aiRecipeRepository.findAllByUserIdOrderByCreatedAtDesc(userId); // 최신순 조회
+    }
+
+    // 채택된 AI 레시피 상세 조회 (레시피 선택 후 내용 확인)
+    @Transactional(readOnly = true)
+    public AiRecipe getAdoptedAiRecipeDetail(Long userId, Long aiRecipeId) {
+        return aiRecipeRepository.findByIdAndUserId(aiRecipeId, userId)
+                .orElseThrow(() -> new AppException(ErrorCode.AI_RECIPE_NOT_FOUND));
     }
 
     // 데일리 레시피 등록
     public DailyRecipe createDailyRecipe(Long userId, Long aiRecipeId, String title,
                                          String description, String recipeImageUrl, Boolean isPublic) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+        User user = userReader.readById(userId);
 
         AiRecipe aiRecipe = aiRecipeRepository.findById(aiRecipeId)
                 .orElseThrow(() -> new AppException(ErrorCode.AI_RECIPE_NOT_FOUND));
@@ -67,20 +73,10 @@ public class DailyRecipeService {
         return dailyRecipeRepository.save(dailyRecipe);
     }
 
-    // 내 데일리 레시피 목록 조회
-    @Transactional(readOnly = true)
-    public List<DailyRecipe> getMyDailyRecipes(Long userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
-
-        return dailyRecipeRepository.findAllByUserOrderByCreatedAtDesc(user);
-    }
-
     // 데일리 레시피 상세 조회
     @Transactional(readOnly = true)
     public DailyRecipe getDailyRecipeDetail(Long userId, Long dailyRecipeId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+        User user = userReader.readById(userId);
 
         return dailyRecipeRepository.findByIdAndUser(dailyRecipeId, user)
                 .orElseThrow(() -> new AppException(ErrorCode.DAILY_RECIPE_NOT_FOUND));
