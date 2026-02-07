@@ -40,6 +40,8 @@ public enum ErrorCode {
 	REFRIGERATOR_INVALID_QUERY(HttpStatus.BAD_REQUEST, "잘못된 쿼리 파라미터입니다.", "REFRIGERATOR-001"),
 	INVALID_SORT_TYPE(HttpStatus.BAD_REQUEST, "유효하지 않은 정렬 타입입니다.", "REFRIGERATOR-002"),
 	REFRIGERATOR_SEARCH_QUERY_REQUIRED(HttpStatus.BAD_REQUEST,"검색어를 입력해주세요.", "REFRIGERATOR-003"),
+	INVALID_QUANTITY(HttpStatus.BAD_REQUEST, "식재료 수량은 0 이상이어야 합니다.", "INGREDIENT_008"),
+	MEMO_TOO_LONG(HttpStatus.BAD_REQUEST, "식재료 메모는 최대 허용 글자 수를 초과할 수 없습니다.", "INGREDIENT_009"),
 
 	// 401 UNAUTHORIZED (인증 관련)
 	UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "인증에 실패했습니다.", "AUTH-001"),

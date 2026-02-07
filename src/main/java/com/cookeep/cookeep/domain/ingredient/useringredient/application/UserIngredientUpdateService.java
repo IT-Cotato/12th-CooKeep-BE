@@ -85,6 +85,11 @@ public class UserIngredientUpdateService {
                 .findByIngredientIdAndUserId(ingredientId, userId)
                 .orElseThrow(() -> new EntityNotFoundException(ErrorCode.INGREDIENT_NOT_FOUND));
 
+        // 수량 0 이하면 에러처리
+        if (request.getQuantity() < 0) {
+            throw new AppException(ErrorCode.INVALID_QUANTITY);
+        }
+
         // 수량 변경
         userIngredient.updateQuantity(request.getQuantity());
 
@@ -103,6 +108,11 @@ public class UserIngredientUpdateService {
         UserIngredient userIngredient = userIngredientRepository
                 .findByIngredientIdAndUserId(ingredientId, userId)
                 .orElseThrow(() -> new EntityNotFoundException(ErrorCode.INGREDIENT_NOT_FOUND));
+
+        // 메모 길이 검증
+        if (request.getMemo() != null && request.getMemo().length() > 100) {
+            throw new AppException(ErrorCode.MEMO_TOO_LONG);
+        }
 
         // 메모 변경 (빈 문자열이면 메모 삭제)
         userIngredient.updateMemo(request.getMemo());
