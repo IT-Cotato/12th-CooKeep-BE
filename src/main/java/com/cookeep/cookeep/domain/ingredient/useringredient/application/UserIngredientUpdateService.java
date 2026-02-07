@@ -169,6 +169,7 @@ public class UserIngredientUpdateService {
                 .build();
     }
 
+    // 유저 식재료 삭제
     @Transactional
     public void deleteUserIngredients(
             Long userId,
@@ -178,12 +179,12 @@ public class UserIngredientUpdateService {
 
         // 1. 요청 검증
         if (ids == null || ids.isEmpty()) {
-            throw new AppException(ErrorCode.INVALID_UPDATE_REQUEST);
+            throw new AppException(ErrorCode.INVALID_DELETE_REQUEST);
         }
 
         // 2. 사용자 소유 재료 조회
         List<UserIngredient> userIngredients =
-                userIngredientRepository.findAllByIdInAndUserId(ids, userId);
+                userIngredientRepository.findAllByIngredientIdInAndUser_UserId(ids, userId);
 
         if (userIngredients.isEmpty()) {
             throw new AppException(ErrorCode.INGREDIENT_NOT_FOUND);

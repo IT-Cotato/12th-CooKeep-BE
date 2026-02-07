@@ -37,8 +37,8 @@ public interface UserIngredientRepository extends JpaRepository<UserIngredient, 
             @Param("referenceIds") List<Long> referenceIds
     );
 
-    List<UserIngredient> findAllByIdInAndUserId(
-            List<Long> ids,
+    List<UserIngredient> findAllByIngredientIdInAndUser_UserId(
+            List<Long> ingredientIds,
             Long userId
     );
 

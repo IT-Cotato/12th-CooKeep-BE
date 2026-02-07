@@ -15,8 +15,9 @@ import java.util.List;
 public class DeleteUserIngredientsRequestDto {
 
     @Schema(
-            description = "삭제할 재료 목록",
-            requiredMode = Schema.RequiredMode.REQUIRED
+            description = "삭제할 재료 목록 (1개 이상)",
+            requiredMode = Schema.RequiredMode.REQUIRED,
+            example = "[12, 15, 18]"
     )
     private List<Long> userIngredientIds;
 }

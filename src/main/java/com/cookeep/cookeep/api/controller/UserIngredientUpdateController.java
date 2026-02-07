@@ -1,9 +1,6 @@
 package com.cookeep.cookeep.api.controller;
 
-import com.cookeep.cookeep.api.dto.request.UpdateExpirationRequestDto;
-import com.cookeep.cookeep.api.dto.request.UpdateMemoRequestDto;
-import com.cookeep.cookeep.api.dto.request.UpdateQuantityRequestDto;
-import com.cookeep.cookeep.api.dto.request.UpdateStorageRequestDto;
+import com.cookeep.cookeep.api.dto.request.*;
 import com.cookeep.cookeep.api.dto.response.UserIngredientDetailResponseDto;
 import com.cookeep.cookeep.common.dto.DataResponse;
 import com.cookeep.cookeep.common.exception.ErrorCode;
@@ -21,7 +18,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
-@Tag(name = "식재료 상태 변경", description = "식재료 상태변경 API")
+@Tag(name = "(MAIN02) 식재료 상태 변경", description = "식재료 상태변경 API")
 @RestController
 @RequestMapping("/api/users/me/ingredients")
 @RequiredArgsConstructor
@@ -175,5 +172,39 @@ public class UserIngredientUpdateController {
                 userId, ingredientId, request
         );
         return ResponseEntity.ok(DataResponse.from(response));
+    }
+
+    @Operation(
+            summary = "5. 재료 삭제",
+            description = "식재료를 삭제합니다. 한 번에 여러 식재료를 삭제할 수 있습니다."
+    )
+    @ApiErrorCodeExamples({
+            ErrorCode.INVALID_DELETE_REQUEST,
+            ErrorCode.INGREDIENT_NOT_FOUND,
+            ErrorCode.UNAUTHORIZED
+    })
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "메모 변경 성공"),
+            @ApiResponse(responseCode = "400", description = """
+                    잘못된 요청입니다. 다음 오류가 발생할 수 있습니다:
+                    - INVALID_DELETE_REQUEST: 삭제할 식재료를 입력해주세요.
+                    """, content = @Content),
+            @ApiResponse(responseCode = "404", description = """
+                    재료를 찾을 수 없습니다.
+                    - INGREDIENT_NOT_FOUND: 해당 식재료가 존재하지 않습니다.
+                    """, content = @Content),
+            @ApiResponse(responseCode = "401", description = """
+                    인증 실패입니다.
+                    - UNAUTHORIZED: 인증 정보가 없거나 유효하지 않습니다.
+                    """, content = @Content)
+    })
+    @DeleteMapping
+    public ResponseEntity<DataResponse<Void>>  deleteUserIngredients(
+            @AuthenticationPrincipal (expression = "userId") Long userId,
+            @RequestBody DeleteUserIngredientsRequestDto request
+    ) {
+        userIngredientUpdateService.deleteUserIngredients(userId, request);
+
+        return ResponseEntity.ok(DataResponse.ok());
     }
 }

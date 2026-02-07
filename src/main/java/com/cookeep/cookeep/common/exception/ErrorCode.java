@@ -42,7 +42,7 @@ public enum ErrorCode {
 	REFRIGERATOR_SEARCH_QUERY_REQUIRED(HttpStatus.BAD_REQUEST,"검색어를 입력해주세요.", "REFRIGERATOR-003"),
 	INVALID_QUANTITY(HttpStatus.BAD_REQUEST, "식재료 수량은 0 이상이어야 합니다.", "INGREDIENT_008"),
 	MEMO_TOO_LONG(HttpStatus.BAD_REQUEST, "식재료 메모는 최대 100자까지 입력 가능합니다.", "INGREDIENT_009"),
-	INVALID_UPDATE_REQUEST(HttpStatus.BAD_REQUEST, "삭제할 식재료를 입력해주세요.", "INGREDIENT_010"),
+	INVALID_DELETE_REQUEST(HttpStatus.BAD_REQUEST, "삭제할 식재료를 입력해주세요.", "INGREDIENT_010"),
 
 	// 401 UNAUTHORIZED (인증 관련)
 	UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "인증에 실패했습니다.", "AUTH-001"),
