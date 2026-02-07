@@ -7,7 +7,7 @@ import com.cookeep.cookeep.api.dto.response.AiSessionDetailResponseDto;
 import com.cookeep.cookeep.api.dto.response.AiSessionListResponseDto;
 import com.cookeep.cookeep.common.exception.AppException;
 import com.cookeep.cookeep.common.exception.ErrorCode;
-import com.cookeep.cookeep.domain.ingredient.common.Type;
+import com.cookeep.cookeep.domain.ingredient.common.domain.Type;
 import com.cookeep.cookeep.domain.ingredient.customingredient.dao.CustomIngredientRepository;
 import com.cookeep.cookeep.domain.ingredient.customingredient.entity.CustomIngredient;
 import com.cookeep.cookeep.domain.ingredient.defaultingredient.dao.DefaultIngredientRepository;
@@ -26,7 +26,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 

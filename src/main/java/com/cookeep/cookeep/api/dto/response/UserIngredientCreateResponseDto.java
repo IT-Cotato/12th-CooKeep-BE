@@ -1,6 +1,5 @@
 package com.cookeep.cookeep.api.dto.response;
 
-import com.cookeep.cookeep.domain.ingredient.common.Type;
 import com.cookeep.cookeep.domain.ingredient.useringredient.entity.UserIngredient;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;

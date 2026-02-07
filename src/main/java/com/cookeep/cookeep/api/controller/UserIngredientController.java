@@ -33,7 +33,6 @@ public class UserIngredientController {
             summary = "유저 식재료 등록",
             description = "유저가 보유 중인 식재료를 등록합니다. (기본 식재료 또는 커스텀 식재료)"
     )
-    @SecurityRequirements
     @ApiErrorCodeExamples({
             ErrorCode.USER_NOT_FOUND,
             ErrorCode.INGREDIENT_REFERENCE_NOT_FOUND,

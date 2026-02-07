@@ -1,7 +1,7 @@
 package com.cookeep.cookeep.domain.recipe.dto;
 
-import com.cookeep.cookeep.domain.ingredient.common.Type;
-import com.cookeep.cookeep.domain.ingredient.common.Unit;
+import com.cookeep.cookeep.domain.ingredient.common.domain.Type;
+import com.cookeep.cookeep.domain.ingredient.common.domain.Unit;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 import lombok.Getter;

@@ -33,7 +33,8 @@ public class SecurityConfig {
 		CorsConfiguration config = new CorsConfiguration();
 		config.setAllowedOrigins(List.of(
 			"http://localhost:5173",
-			"https://12th-coo-keep-fe.vercel.app"
+			"https://12th-coo-keep-fe.vercel.app",
+			"https://cookeep.store"
 		));
 		config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
 		config.setAllowedHeaders(List.of("*"));
