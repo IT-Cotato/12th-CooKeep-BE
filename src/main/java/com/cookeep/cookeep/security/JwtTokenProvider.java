@@ -1,4 +1,4 @@
-package com.cookeep.cookeep.config;
+package com.cookeep.cookeep.security;
 
 
 import io.jsonwebtoken.*;

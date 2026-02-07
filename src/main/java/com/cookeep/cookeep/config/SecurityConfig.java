@@ -14,12 +14,19 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import com.cookeep.cookeep.security.CustomAccessDeniedHandler;
+import com.cookeep.cookeep.security.CustomAuthenticationEntryPoint;
+import com.cookeep.cookeep.security.JwtAuthenticationFilter;
+import com.cookeep.cookeep.security.JwtTokenProvider;
+
 @Configuration
 @EnableWebSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
 
 	private final JwtTokenProvider jwtTokenProvider;
+	private final CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
+	private final CustomAccessDeniedHandler customAccessDeniedHandler;
 
 	@Bean
 	public CorsConfigurationSource corsConfigurationSource() {
@@ -46,12 +53,16 @@ public class SecurityConfig {
 			.formLogin(form -> form.disable()) // 별도의 로그인 api 존재하므로 스프링 시큐리티 기본 로그인 페이지는 비활성화하였음
 			.httpBasic(basic -> basic.disable())
 
+			.exceptionHandling(eh -> eh
+				.authenticationEntryPoint(customAuthenticationEntryPoint) // 401 에러 처리
+				.accessDeniedHandler(customAccessDeniedHandler)           // 403 에러 처리
+			)
+
 			.authorizeHttpRequests(auth -> auth
 				.requestMatchers(
 					// 아래 경로들은 로그인하지 않아도 접근 가능
 					// 나머지 경로는 모두 로그인해야 접근 가능함
-					"/api/auth/login/kakao",
-					"/api/auth/refresh",
+					"/api/auth/**",
 					"/swagger-ui/**",
 					"/v3/api-docs/**",
 					"/swagger-resources/**",
