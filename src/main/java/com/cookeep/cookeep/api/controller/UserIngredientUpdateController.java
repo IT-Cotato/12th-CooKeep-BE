@@ -142,7 +142,7 @@ public class UserIngredientUpdateController {
 
     @Operation(
             summary = "4. 메모 변경",
-            description = "식재료의 메모를 변경합니다 (빈 문자열은 메모 삭제)"
+            description = "식재료의 메모를 변경합니다 (빈 문자열은 메모 삭제, 100자 제한, 이모티콘은 두 글자로 계산)"
     )
     @ApiErrorCodeExamples({
             ErrorCode.MEMO_TOO_LONG,
@@ -153,7 +153,7 @@ public class UserIngredientUpdateController {
             @ApiResponse(responseCode = "200", description = "메모 변경 성공"),
             @ApiResponse(responseCode = "400", description = """
                     잘못된 요청입니다. 다음 오류가 발생할 수 있습니다:
-                    - MEMO_TOO_LONG: 메모 길이가 제한을 초과했습니다.
+                    - MEMO_TOO_LONG: 메모 길이는 최대 100자 입니다.
                     """, content = @Content),
             @ApiResponse(responseCode = "404", description = """
                     재료를 찾을 수 없습니다.
