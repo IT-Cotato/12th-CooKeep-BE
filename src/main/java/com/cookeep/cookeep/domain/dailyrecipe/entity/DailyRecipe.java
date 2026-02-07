@@ -46,6 +46,6 @@ public class DailyRecipe extends BaseEntity {
     private User user;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "ai_recipes_id", nullable = false)
-    private AiRecipe aiRecipe; // 원본 AI 레시피 참조
+    @JoinColumn(name = "ai_recipes_id")
+    private AiRecipe aiRecipe; // 원본 AI 레시피 참조 (삭제 시 null)
 }

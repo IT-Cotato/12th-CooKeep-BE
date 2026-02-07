@@ -49,7 +49,6 @@ public class DailyRecipeDetailResponseDto {
                 .content(dailyRecipe.getContent())
                 .recipeImageUrl(dailyRecipe.getRecipeImageUrl())
                 .isPublic(dailyRecipe.getIsPublic())
-                .aiRecipeId(dailyRecipe.getAiRecipe().getId())
                 .createdAt(dailyRecipe.getCreatedAt())
                 .build();
     }
