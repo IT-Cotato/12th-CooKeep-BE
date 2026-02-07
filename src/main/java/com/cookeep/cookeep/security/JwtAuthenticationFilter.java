@@ -3,6 +3,7 @@ package com.cookeep.cookeep.security;
 import java.io.IOException;
 import java.util.List;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -15,6 +16,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 
+@Slf4j
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 	// JwtTokenProvider : 토큰 생성/검증/파싱
@@ -47,6 +49,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 		} catch (JwtException | IllegalArgumentException e) {
 			SecurityContextHolder.clearContext();
 		}
+
+		log.debug("Authorization header = {}", request.getHeader("Authorization"));
 
 		filterChain.doFilter(request, response);
 	}

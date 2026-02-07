@@ -1,7 +1,10 @@
 package com.cookeep.cookeep.domain.ingredient.useringredient.dao;
 
+import com.cookeep.cookeep.domain.ingredient.common.Storage;
 import com.cookeep.cookeep.domain.ingredient.common.Type;
 import com.cookeep.cookeep.domain.ingredient.useringredient.entity.UserIngredient;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -34,4 +37,52 @@ public interface UserIngredientRepository extends JpaRepository<UserIngredient, 
             @Param("referenceIds") List<Long> referenceIds
     );
 
+    // --- 냉장고탭 ---
+    // 홈화면 카테고리별 조회
+    @Query("SELECT ui FROM UserIngredient ui WHERE ui.user.userId = :userId AND ui.storage = :storage ORDER BY ui.leftDays ASC")
+    List<UserIngredient> findByUserIdAndStorage(
+            @Param("userId") Long userId,
+            @Param("storage") Storage storage
+    );
+
+    // 홈화면 좌우스크롤용 페이지
+    Page<UserIngredient> findByUser_UserIdAndStorage(
+            Long userId,
+            Storage storage,
+            Pageable pageable
+    );
+
+    // 식재료 상세조회
+    @Query("SELECT ui FROM UserIngredient ui WHERE ui.ingredientId = :ingredientId AND ui.user.userId = :userId")
+    Optional<UserIngredient> findByIngredientIdAndUserId(
+            @Param("ingredientId") Long ingredientId,
+            @Param("userId") Long userId
+    );
+
+    // 카테고리별 분류 + 이름 검색
+    @Query("""
+        SELECT ui FROM UserIngredient ui
+        WHERE ui.user.userId = :userId
+        AND (:storage IS NULL OR ui.storage = :storage)
+        AND (:searchQuery IS NULL OR 
+            EXISTS (
+                SELECT 1 FROM DefaultIngredient di 
+                WHERE di.id = ui.referenceId 
+                AND ui.type = 'DEFAULT'
+                AND LOWER(di.ingredient) LIKE LOWER(CONCAT('%', :searchQuery, '%'))
+            )
+            OR EXISTS (
+                SELECT 1 FROM CustomIngredient ci 
+                WHERE ci.id = ui.referenceId 
+                AND ui.type = 'CUSTOM'
+                AND LOWER(ci.name) LIKE LOWER(CONCAT('%', :searchQuery, '%'))
+            )
+        )
+    """)
+    Page<UserIngredient> searchIngredients(
+            @Param("userId") Long userId,
+            @Param("searchQuery") String searchQuery,
+            @Param("storage") Storage storage,
+            Pageable pageable
+    );
 }
