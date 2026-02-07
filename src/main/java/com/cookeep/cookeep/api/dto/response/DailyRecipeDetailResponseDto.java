@@ -1,6 +1,7 @@
 package com.cookeep.cookeep.api.dto.response;
 
 import com.cookeep.cookeep.domain.dailyrecipe.entity.DailyRecipe;
+import com.fasterxml.jackson.annotation.JsonRawValue;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 import lombok.Getter;
@@ -25,6 +26,7 @@ public class DailyRecipeDetailResponseDto {
     private String description;
 
     @Schema(description = "레시피 내용 (AI 레시피 스냅샷, JSON 문자열)")
+    @JsonRawValue
     private String content;
 
     @Schema(description = "요리 사진 URL")
@@ -32,9 +34,6 @@ public class DailyRecipeDetailResponseDto {
 
     @Schema(description = "공개 여부", example = "false")
     private Boolean isPublic;
-
-    @Schema(description = "좋아요 수", example = "0")
-    private Integer likeCount;
 
     @Schema(description = "원본 AI 레시피 ID", example = "1")
     private Long aiRecipeId;
@@ -50,7 +49,6 @@ public class DailyRecipeDetailResponseDto {
                 .content(dailyRecipe.getContent())
                 .recipeImageUrl(dailyRecipe.getRecipeImageUrl())
                 .isPublic(dailyRecipe.getIsPublic())
-                .likeCount(dailyRecipe.getLikeCount())
                 .aiRecipeId(dailyRecipe.getAiRecipe().getId())
                 .createdAt(dailyRecipe.getCreatedAt())
                 .build();
