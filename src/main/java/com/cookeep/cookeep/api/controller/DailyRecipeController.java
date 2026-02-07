@@ -1,6 +1,7 @@
 package com.cookeep.cookeep.api.controller;
 
 import com.cookeep.cookeep.api.dto.request.DailyRecipeCreateRequestDto;
+import com.cookeep.cookeep.api.dto.request.DailyRecipeUpdateRequestDto;
 import com.cookeep.cookeep.api.dto.response.AdoptedAiRecipeDetailResponseDto;
 import com.cookeep.cookeep.api.dto.response.AdoptedAiRecipeListResponseDto;
 import com.cookeep.cookeep.api.dto.response.DailyRecipeCreateResponseDto;
@@ -142,5 +143,56 @@ public class DailyRecipeController {
         DailyRecipe dailyRecipe = dailyRecipeService.getDailyRecipeDetail(userId, dailyRecipeId);
 
         return ResponseEntity.ok(DataResponse.from(DailyRecipeDetailResponseDto.from(dailyRecipe)));
+    }
+
+    @Operation(
+            summary = "데일리 레시피 수정",
+            description = "데일리 레시피의 제목과 한줄평을 수정합니다."
+    )
+    @ApiErrorCodeExamples({
+            ErrorCode.UNAUTHORIZED,
+            ErrorCode.DAILY_RECIPE_NOT_FOUND
+    })
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "데일리 레시피 수정 성공"),
+            @ApiResponse(responseCode = "401", description = "인증 실패", content = @Content),
+            @ApiResponse(responseCode = "404", description = "데일리 레시피를 찾을 수 없음", content = @Content)
+    })
+    @PatchMapping("/{dailyRecipeId}")
+    public ResponseEntity<DataResponse<DailyRecipeDetailResponseDto>> updateDailyRecipe(
+            @AuthenticationPrincipal(expression = "userId") Long userId,
+            @Parameter(description = "데일리 레시피 ID", required = true)
+            @PathVariable Long dailyRecipeId,
+            @Valid @RequestBody DailyRecipeUpdateRequestDto request
+    ) {
+        DailyRecipe dailyRecipe = dailyRecipeService.updateDailyRecipe(
+                userId, dailyRecipeId, request.getTitle(), request.getDescription()
+        );
+
+        return ResponseEntity.ok(DataResponse.from(DailyRecipeDetailResponseDto.from(dailyRecipe)));
+    }
+
+    @Operation(
+            summary = "데일리 레시피 삭제",
+            description = "데일리 레시피를 삭제합니다."
+    )
+    @ApiErrorCodeExamples({
+            ErrorCode.UNAUTHORIZED,
+            ErrorCode.DAILY_RECIPE_NOT_FOUND
+    })
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "데일리 레시피 삭제 성공"),
+            @ApiResponse(responseCode = "401", description = "인증 실패", content = @Content),
+            @ApiResponse(responseCode = "404", description = "데일리 레시피를 찾을 수 없음", content = @Content)
+    })
+    @DeleteMapping("/{dailyRecipeId}")
+    public ResponseEntity<DataResponse<Void>> deleteDailyRecipe(
+            @AuthenticationPrincipal(expression = "userId") Long userId,
+            @Parameter(description = "데일리 레시피 ID", required = true)
+            @PathVariable Long dailyRecipeId
+    ) {
+        dailyRecipeService.deleteDailyRecipe(userId, dailyRecipeId);
+
+        return ResponseEntity.ok(DataResponse.ok());
     }
 }

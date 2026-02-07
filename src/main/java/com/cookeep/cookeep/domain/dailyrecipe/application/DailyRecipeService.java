@@ -82,6 +82,31 @@ public class DailyRecipeService {
                 .orElseThrow(() -> new AppException(ErrorCode.DAILY_RECIPE_NOT_FOUND));
     }
 
+    // 데일리 레시피 수정 (제목, 한줄평)
+    public DailyRecipe updateDailyRecipe(Long userId, Long dailyRecipeId, String title, String description) {
+        if ((title == null || title.isBlank()) && description == null) {
+            throw new AppException(ErrorCode.DAILY_RECIPE_UPDATE_FIELDS_REQUIRED);
+        }
+
+        User user = userReader.readById(userId);
+
+        DailyRecipe dailyRecipe = dailyRecipeRepository.findByIdAndUser(dailyRecipeId, user)
+                .orElseThrow(() -> new AppException(ErrorCode.DAILY_RECIPE_NOT_FOUND));
+
+        dailyRecipe.updateTitleAndDescription(title, description);
+        return dailyRecipe;
+    }
+
+    // 데일리 레시피 삭제
+    public void deleteDailyRecipe(Long userId, Long dailyRecipeId) {
+        User user = userReader.readById(userId);
+
+        DailyRecipe dailyRecipe = dailyRecipeRepository.findByIdAndUser(dailyRecipeId, user)
+                .orElseThrow(() -> new AppException(ErrorCode.DAILY_RECIPE_NOT_FOUND));
+
+        dailyRecipeRepository.delete(dailyRecipe);
+    }
+
     // AI 레시피 데이터를 하나의 JSON 문자열로 합쳐 스냅샷 생성
     private String buildContentSnapshot(AiRecipe aiRecipe) {
         try {

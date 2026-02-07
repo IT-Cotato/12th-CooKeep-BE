@@ -40,6 +40,7 @@ public enum ErrorCode {
 	REFRIGERATOR_INVALID_QUERY(HttpStatus.BAD_REQUEST, "잘못된 쿼리 파라미터입니다.", "REFRIGERATOR-001"),
 	INVALID_SORT_TYPE(HttpStatus.BAD_REQUEST, "유효하지 않은 정렬 타입입니다.", "REFRIGERATOR-002"),
 	REFRIGERATOR_SEARCH_QUERY_REQUIRED(HttpStatus.BAD_REQUEST,"검색어를 입력해주세요.", "REFRIGERATOR-003"),
+	DAILY_RECIPE_UPDATE_FIELDS_REQUIRED(HttpStatus.BAD_REQUEST, "수정할 항목(제목 또는 한줄평)을 입력해주세요.", "DAILY_RECIPE-004"),
 
 	// 401 UNAUTHORIZED (인증 관련)
 	UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "인증에 실패했습니다.", "AUTH-001"),

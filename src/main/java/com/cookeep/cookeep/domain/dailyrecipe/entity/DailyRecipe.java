@@ -48,4 +48,13 @@ public class DailyRecipe extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "ai_recipes_id")
     private AiRecipe aiRecipe; // 원본 AI 레시피 참조 (삭제 시 null)
+
+    public void updateTitleAndDescription(String title, String description) {
+        if (title != null && !title.isBlank()) {
+            this.title = title;
+        }
+        if (description != null) {
+            this.description = description;
+        }
+    }
 }
