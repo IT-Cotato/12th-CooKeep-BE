@@ -189,10 +189,10 @@ public class RefrigeratorService {
                             .ingredientId(ui.getIngredientId())
                             .name(name)
                             .imageUrl(imageUrl)
-                            .storage(ui.getStorage().name())
+                            .storage(ui.getStorage())
                             .expirationDate(ui.getExpirationDate())
                             .quantity(ui.getQuantity())
-                            .unit(ui.getUnit().name())
+                            .unit(ui.getUnit())
                             .build();
                 })
                 .collect(Collectors.toList());

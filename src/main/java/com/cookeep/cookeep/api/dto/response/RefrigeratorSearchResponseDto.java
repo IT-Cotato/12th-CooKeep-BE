@@ -1,5 +1,7 @@
 package com.cookeep.cookeep.api.dto.response;
 
+import com.cookeep.cookeep.domain.ingredient.common.Storage;
+import com.cookeep.cookeep.domain.ingredient.common.Unit;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -79,7 +81,7 @@ public class RefrigeratorSearchResponseDto {
                 example = "FRIDGE",
                 requiredMode = Schema.RequiredMode.REQUIRED
         )
-        private String storage;
+        private Storage storage;
 
         @Schema(
                 description = "유통기한",
@@ -102,6 +104,6 @@ public class RefrigeratorSearchResponseDto {
                 example = "PACK",
                 requiredMode = Schema.RequiredMode.REQUIRED
         )
-        private String unit;
+        private Unit unit;
     }
 }
