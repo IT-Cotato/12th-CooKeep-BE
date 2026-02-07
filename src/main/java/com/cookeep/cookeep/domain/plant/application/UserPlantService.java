@@ -117,9 +117,9 @@ public class UserPlantService {
         userPlantRepository.delete(userPlant);
     }
 
-    // 식물에게 물 주기
+    // 식물에게 물 주기 (무료 물주기 여부 반환)
     @Transactional
-    public void giveWater(Long userId, Long userPlantId) {
+    public boolean giveWater(Long userId, Long userPlantId) {
         // 1. 식물 조회
         UserPlant userPlant = userPlantRepository.findById(userPlantId)
                 .orElseThrow(() -> new AppException(ErrorCode.PLANT_NOT_FOUND)); // 404
@@ -132,8 +132,12 @@ public class UserPlantService {
             throw new AppException(ErrorCode.NOT_MY_PLANT); // 403
         }
 
-        // 3. 쿠키 차감 로직
-        cookieService.updateCookie(userId, CookieLog.CookieLogType.WATERING);
+        // 3. 무료 물주기 여부 확인 (유저의 첫 물주기인 경우 쿠키 차감 없음)
+        boolean isFirstWatering = !wateringLogRepository.existsByUserUserId(userId);
+        if (!isFirstWatering) {
+            // 첫 물주기가 아닌 경우에만 쿠키 차감
+            cookieService.updateCookie(userId, CookieLog.CookieLogType.WATERING);
+        }
 
         // 4. 물 주기 수행 및 로그 저장
         userPlant.giveWater();
@@ -148,6 +152,8 @@ public class UserPlantService {
         if (userPlant.getIsHarvested()) {
             cookieService.updateCookie(userId, CookieLog.CookieLogType.BONUS_PLANT_HARVEST_REWARD);
         }
+
+        return isFirstWatering;
     }
 
     // 식물 살리기

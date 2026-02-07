@@ -6,4 +6,5 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface WateringLogRepository extends JpaRepository<WateringLog, Long> {
+    boolean existsByUserUserId(Long userId);
 }
