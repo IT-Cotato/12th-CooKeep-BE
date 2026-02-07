@@ -19,6 +19,6 @@ public class UpdateExpirationResponseDto {
     @Schema(description = "응답 메시지", example = "유통기한이 변경되었습니다.")
     private String message;
 
-    @Schema(description = "변경된 유통기한", example = "2025-12-03", type = "string", format = "date")
+    @Schema(description = "변경된 유통기한", example = "2026-02-07", type = "string", format = "date")
     private LocalDate expirationDate;
 }
