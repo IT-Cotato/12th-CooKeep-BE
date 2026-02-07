@@ -51,9 +51,9 @@ public class MyCookeepService {
                 .user(user)
                 .goalActionType(request.goalActionType())
                 .targetCount(request.targetCount())
+                .weekStartDate(currentWeekStart)
                 .build();
 
-        weeklyGoal.initWeekStartDate();
         weeklyGoalRepository.save(weeklyGoal);
     }
 

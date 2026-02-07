@@ -5,7 +5,7 @@ import com.cookeep.cookeep.api.dto.response.MyProfileResponseDto;
 import com.cookeep.cookeep.common.dto.DataResponse;
 import com.cookeep.cookeep.common.exception.ErrorCode;
 import com.cookeep.cookeep.config.ApiErrorCodeExamples;
-import com.cookeep.cookeep.config.UserPrincipal;
+import com.cookeep.cookeep.security.UserPrincipal;
 import com.cookeep.cookeep.domain.mycookeep.application.MyCookeepService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
