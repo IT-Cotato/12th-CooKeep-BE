@@ -1,9 +1,6 @@
 package com.cookeep.cookeep.domain.ingredient.useringredient.application;
 
-import com.cookeep.cookeep.api.dto.request.UpdateExpirationRequestDto;
-import com.cookeep.cookeep.api.dto.request.UpdateMemoRequestDto;
-import com.cookeep.cookeep.api.dto.request.UpdateQuantityRequestDto;
-import com.cookeep.cookeep.api.dto.request.UpdateStorageRequestDto;
+import com.cookeep.cookeep.api.dto.request.*;
 import com.cookeep.cookeep.api.dto.response.UserIngredientDetailResponseDto;
 import com.cookeep.cookeep.common.exception.AppException;
 import com.cookeep.cookeep.common.exception.EntityNotFoundException;
@@ -19,6 +16,8 @@ import com.cookeep.cookeep.domain.ingredient.useringredient.entity.UserIngredien
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -168,5 +167,35 @@ public class UserIngredientUpdateService {
                 .memo(userIngredient.getMemo())
                 .aiTip(aiTip)
                 .build();
+    }
+
+    @Transactional
+    public void deleteUserIngredients(
+            Long userId,
+            DeleteUserIngredientsRequestDto request
+    ) {
+        List<Long> ids = request.getUserIngredientIds();
+
+        // 1. 요청 검증
+        if (ids == null || ids.isEmpty()) {
+            throw new AppException(ErrorCode.INVALID_UPDATE_REQUEST);
+        }
+
+        // 2. 사용자 소유 재료 조회
+        List<UserIngredient> userIngredients =
+                userIngredientRepository.findAllByIdInAndUserId(ids, userId);
+
+        if (userIngredients.isEmpty()) {
+            throw new AppException(ErrorCode.INGREDIENT_NOT_FOUND);
+        }
+
+        // 일부만 존재하는 경우
+        if (userIngredients.size() != ids.size()) {
+            throw new AppException(ErrorCode.INGREDIENT_NOT_FOUND);
+        }
+
+        // 3. 삭제 (리워드 지급 X)
+        userIngredientRepository.deleteAll(userIngredients);
+
     }
 }
