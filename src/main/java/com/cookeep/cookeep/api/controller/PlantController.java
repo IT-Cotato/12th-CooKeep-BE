@@ -1,6 +1,6 @@
 package com.cookeep.cookeep.api.controller;
 
-import com.cookeep.cookeep.api.dto.response.PlantResponse;
+import com.cookeep.cookeep.api.dto.response.PlantResponseDto;
 import com.cookeep.cookeep.common.dto.DataResponse;
 import com.cookeep.cookeep.domain.plant.application.PlantService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -26,9 +26,9 @@ public class PlantController {
             @ApiResponse(responseCode = "200", description = "조회 성공")
     })
     @GetMapping
-    public DataResponse<List<PlantResponse>> getAllPlants() {
-        List<PlantResponse> responses = plantService.getAllPlants().stream()
-                .map(PlantResponse::from)
+    public DataResponse<List<PlantResponseDto>> getAllPlants() {
+        List<PlantResponseDto> responses = plantService.getAllPlants().stream()
+                .map(PlantResponseDto::from)
                 .collect(Collectors.toList());
 
         return DataResponse.from(responses);
