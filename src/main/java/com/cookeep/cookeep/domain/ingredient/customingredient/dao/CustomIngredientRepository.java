@@ -1,6 +1,6 @@
 package com.cookeep.cookeep.domain.ingredient.customingredient.dao;
 
-import com.cookeep.cookeep.domain.ingredient.common.Category;
+import com.cookeep.cookeep.domain.ingredient.common.domain.Category;
 import com.cookeep.cookeep.domain.ingredient.customingredient.entity.CustomIngredient;
 import org.springframework.data.jpa.repository.JpaRepository;
 

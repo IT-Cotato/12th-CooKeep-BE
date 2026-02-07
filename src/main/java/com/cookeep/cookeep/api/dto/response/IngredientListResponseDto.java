@@ -1,6 +1,6 @@
 package com.cookeep.cookeep.api.dto.response;
 
-import com.cookeep.cookeep.domain.ingredient.common.Category;
+import com.cookeep.cookeep.domain.ingredient.common.domain.Category;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
