@@ -1,6 +1,6 @@
 package com.cookeep.cookeep.api.controller;
 
-import com.cookeep.cookeep.api.dto.response.MyPlantResponse;
+import com.cookeep.cookeep.api.dto.response.MyPlantResponseDto;
 import com.cookeep.cookeep.common.dto.DataResponse;
 import com.cookeep.cookeep.domain.plant.application.UserPlantService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -27,7 +27,7 @@ public class MyPlantController {
             @ApiResponse(responseCode = "200", description = "조회 성공")
     })
     @GetMapping
-    public DataResponse<List<MyPlantResponse>> getMyPlants(
+    public DataResponse<List<MyPlantResponseDto>> getMyPlants(
             @AuthenticationPrincipal(expression = "userId") Long userId) {
         return DataResponse.from(userPlantService.getMyPlants(userId));
     }
