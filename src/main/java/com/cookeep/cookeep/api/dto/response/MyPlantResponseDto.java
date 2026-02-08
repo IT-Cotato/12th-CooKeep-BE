@@ -13,6 +13,7 @@ public class MyPlantResponseDto {
     private String imageUrl;       // 현재 단계에 맞는 이미지 URL
     private Integer level;         // 성장 단계 (1~4)
     private Boolean isHarvested;   // 수확 여부 (false면 '키우는 중', true면 '수확 완료')
+    private Boolean isFrozen;      // 성장 정지 여부 (14일 미접속 시 true)
     private Boolean isProfile;     // 현재 이 식물이 유저의 프로필 식물인지 여부
     private String createdAt;      // 언제부터 키웠는지 (BaseEntity 활용)
 
@@ -27,6 +28,7 @@ public class MyPlantResponseDto {
                 .imageUrl(userPlant.getCurrentImageUrl())
                 .level(userPlant.getLevel())
                 .isHarvested(userPlant.getIsHarvested())
+                .isFrozen(userPlant.getIsFrozen())
                 .isProfile(isProfile)
                 .createdAt(userPlant.getCreatedAt().toLocalDate().toString())
                 .build();
