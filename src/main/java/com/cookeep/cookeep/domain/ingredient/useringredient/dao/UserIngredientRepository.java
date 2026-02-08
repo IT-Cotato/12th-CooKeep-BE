@@ -1,7 +1,7 @@
 package com.cookeep.cookeep.domain.ingredient.useringredient.dao;
 
-import com.cookeep.cookeep.domain.ingredient.common.Storage;
-import com.cookeep.cookeep.domain.ingredient.common.Type;
+import com.cookeep.cookeep.domain.ingredient.common.domain.Storage;
+import com.cookeep.cookeep.domain.ingredient.common.domain.Type;
 import com.cookeep.cookeep.domain.ingredient.useringredient.entity.UserIngredient;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

@@ -13,6 +13,7 @@ import com.cookeep.cookeep.domain.cookie.dao.DailyCookieGrantRepository;
 import com.cookeep.cookeep.domain.cookie.entity.CookieLog;
 import com.cookeep.cookeep.domain.cookie.entity.DailyCookieGrant;
 import com.cookeep.cookeep.domain.ingredient.common.Type;
+import com.cookeep.cookeep.domain.ingredient.common.domain.Type;
 import com.cookeep.cookeep.domain.ingredient.customingredient.dao.CustomIngredientRepository;
 import com.cookeep.cookeep.domain.ingredient.customingredient.entity.CustomIngredient;
 import com.cookeep.cookeep.domain.ingredient.defaultingredient.dao.DefaultIngredientRepository;
