@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface UserPlantRepository extends JpaRepository<UserPlant, Long>{
@@ -14,4 +15,7 @@ public interface UserPlantRepository extends JpaRepository<UserPlant, Long>{
     // N+1 문제를 방지하기 위해 plant 엔티티를 fetch join으로 가져옵니다.
     @EntityGraph(attributePaths = {"plant"})
     List<UserPlant> findAllByUser(User user);
+
+    // 현재 키우고 있는 식물 조회 (수확 완료되지 않고, 성장 정지되지 않은 식물)
+    Optional<UserPlant> findByUserAndIsHarvestedFalseAndIsFrozenFalse(User user);
 }
