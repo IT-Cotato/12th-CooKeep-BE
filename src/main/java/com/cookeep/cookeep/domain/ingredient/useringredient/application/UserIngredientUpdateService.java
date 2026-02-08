@@ -263,31 +263,12 @@ public class UserIngredientUpdateService {
 
     private RewardResult processRewards(Long userId, List<UserIngredient> ingredients) {
         LocalDate today = LocalDate.now();
-        boolean hasUrgentIngredient = ingredients.stream()
-                .anyMatch(ingredient -> ingredient.getLeftDays() <= URGENT);
 
         int totalPoints = 0;
         boolean granted = false;
         List<CookieLog.CookieLogType> grantedTypes = new ArrayList<>();
 
-        // 1. 임박 식재료 리워드 확인 (우선 순위 높음)
-        if (hasUrgentIngredient) {
-            CookieLog.CookieLogType urgentType = CookieLog.CookieLogType.BONUS_URGENT_INGREDIENT_USE;
-            boolean alreadyGrantedUrgent = dailyCookieGrantRepository.existsByUser_UserIdAndGrantTypeAndGrantDate(
-                    userId, urgentType, today
-            );
-
-            if (!alreadyGrantedUrgent) {
-                grantCookie(userId, urgentType, today);
-                totalPoints += urgentType.getDefaultAmount();
-                granted = true;
-                grantedTypes.add(urgentType);
-                log.info("Granted urgent ingredient reward to user {}: +{} cookies",
-                        userId, urgentType.getDefaultAmount());
-            }
-        }
-
-        // 2. 기본 일일 소비 리워드 확인
+        // 기본 일일 소비 리워드 확인
         CookieLog.CookieLogType dailyType = CookieLog.CookieLogType.BASIC_DAILY_FIRST_CONSUME;
         boolean alreadyGrantedDaily = dailyCookieGrantRepository.existsByUser_UserIdAndGrantTypeAndGrantDate(
                 userId, dailyType, today
