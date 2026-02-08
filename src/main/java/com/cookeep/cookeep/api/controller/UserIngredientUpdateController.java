@@ -6,6 +6,7 @@ import com.cookeep.cookeep.api.dto.response.UserIngredientDetailResponseDto;
 import com.cookeep.cookeep.common.dto.DataResponse;
 import com.cookeep.cookeep.common.exception.ErrorCode;
 import com.cookeep.cookeep.config.ApiErrorCodeExamples;
+import com.cookeep.cookeep.domain.ingredient.useringredient.application.ConsumeIngredientService;
 import com.cookeep.cookeep.domain.ingredient.useringredient.application.UserIngredientUpdateService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;

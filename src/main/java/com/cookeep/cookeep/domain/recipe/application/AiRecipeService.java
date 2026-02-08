@@ -7,6 +7,11 @@ import com.cookeep.cookeep.api.dto.response.AiSessionDetailResponseDto;
 import com.cookeep.cookeep.api.dto.response.AiSessionListResponseDto;
 import com.cookeep.cookeep.common.exception.AppException;
 import com.cookeep.cookeep.common.exception.ErrorCode;
+import com.cookeep.cookeep.domain.cookie.application.CookieService;
+import com.cookeep.cookeep.domain.cookie.dao.CookieLogRepository;
+import com.cookeep.cookeep.domain.cookie.dao.DailyCookieGrantRepository;
+import com.cookeep.cookeep.domain.cookie.entity.CookieLog;
+import com.cookeep.cookeep.domain.cookie.entity.DailyCookieGrant;
 import com.cookeep.cookeep.domain.ingredient.common.Type;
 import com.cookeep.cookeep.domain.ingredient.customingredient.dao.CustomIngredientRepository;
 import com.cookeep.cookeep.domain.ingredient.customingredient.entity.CustomIngredient;
@@ -19,6 +24,8 @@ import com.cookeep.cookeep.domain.recipe.dao.AiRecipeRepository;
 import com.cookeep.cookeep.domain.recipe.dao.AiSessionRepository;
 import com.cookeep.cookeep.domain.recipe.dto.*;
 import com.cookeep.cookeep.domain.recipe.entity.*;
+import com.cookeep.cookeep.domain.user.dao.UserRepository;
+import com.cookeep.cookeep.domain.user.entity.User;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -26,6 +33,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -39,6 +47,7 @@ import static com.cookeep.cookeep.domain.recipe.entity.MessageType.*;
 public class AiRecipeService {
 
     private static final int MAX_RETRY_COUNT = 5;
+    private static final int URGENT = 3;
 
     private final GeminiService geminiService;
     private final AiSessionRepository aiSessionRepository;
@@ -48,6 +57,10 @@ public class AiRecipeService {
     private final UserIngredientRepository userIngredientRepository;
     private final DefaultIngredientRepository defaultIngredientRepository;
     private final CustomIngredientRepository customIngredientRepository;
+    private final UserRepository userRepository;
+    private final CookieLogRepository cookieLogRepository;
+    private final DailyCookieGrantRepository dailyCookieGrantRepository;
+    private final CookieService cookieService;
 
     // sessionId 유무에 따라 신규/재요청 로직 분기
     public AiRecipeResponseDto generateRecipe(Long userId, AiRecipeRequestDto request) {
@@ -93,6 +106,13 @@ public class AiRecipeService {
                 .userIngredientIds(writeIngredientsAsJson(enrichedIngredients))
                 .build();
         aiSessionRepository.save(session);
+
+        // 입력한 재료 저장 (채택시 차감)
+        List<Long> ingredientIds = request.getIngredients().stream()
+                .map(IngredientSimpleDto::getReferenceId)
+                .collect(Collectors.toList());
+        session.setIngredientIds(ingredientIds);
+
         // 메시지 db에 저장
         saveInitialUserMessage(session, request);
 
@@ -201,11 +221,11 @@ public class AiRecipeService {
         // 7. 세션 완료 처리
         session.complete();
 
-        // 8. TODO: 쿠키 1개 지급 (다른 팀원 기능과 연동 예정)
-        // cookieService.grantCookie(userId, 1);
+        // 8. 식재료 섭취 차감
+        List<Long> ingredientIds = session.getIngredientIds();
 
-        // 9. TODO: 재료 섭취 완료 처리
-        // ingredientConsumptionService.consumeIngredients(userId, recipe);
+        // 9. 임박 식재료 리워드 처리
+        processUrgentIngredientReward(userId, ingredientIds);
 
         return AiRecipeAdoptResponseDto.builder()
                 .sessionId(session.getId())
@@ -505,6 +525,61 @@ public class AiRecipeService {
 
         session.setTitle(aiResponse.getTitle());
         aiSessionRepository.save(session);
+    }
+
+    // 임박 식재료 레시피 채택 시 리워드 지급
+    private void processUrgentIngredientReward(Long userId, List<Long> ingredientIds) {
+        if (ingredientIds == null || ingredientIds.isEmpty()) {
+            log.info("No ingredients provided for recipe adopt. Skipping reward processing.");
+            return;
+        }
+
+        // 1. 사용자의 실제 보유 재료 조회
+        List<UserIngredient> userIngredients =
+                userIngredientRepository.findAllByIngredientIdInAndUser_UserId(ingredientIds, userId);
+
+        if (userIngredients.isEmpty()) {
+            log.warn("No valid ingredients found for user {}. Skipping reward.", userId);
+            return;
+        }
+
+        // 2. 임박 식재료 확인 (leftDays <= 3)
+        boolean hasUrgentIngredient = userIngredients.stream()
+                .anyMatch(ingredient -> ingredient.getLeftDays() <= URGENT);
+
+        if (!hasUrgentIngredient) {
+            log.info("No urgent ingredients found for user {}. No reward granted.", userId);
+            return;
+        }
+
+        // 3. 재료 중 첫 번째만 수량 -1
+        UserIngredient targetIngredient = userIngredients.get(0);
+        int newQuantity = targetIngredient.getQuantity() - 1;
+
+        if (newQuantity > 0) {
+            // 수량만 감소
+            targetIngredient.updateQuantity(newQuantity);
+            log.info("Decreased quantity of ingredient {} from {} to {}",
+                    targetIngredient.getIngredientId(),
+                    targetIngredient.getQuantity() + 1,
+                    newQuantity);
+        } else {
+            // 수량이 0이 되면 삭제
+            userIngredientRepository.delete(targetIngredient);
+            log.info("Deleted ingredient {} as quantity reached 0",
+                    targetIngredient.getIngredientId());
+        }
+
+        // 4. 임박 식재료 리워드 지급 (하루 1회)
+        CookieLog.CookieLogType urgentType = CookieLog.CookieLogType.BONUS_URGENT_INGREDIENT_USE;
+        boolean granted = cookieService.grantDailyCookie(userId, urgentType);
+
+        if (granted) {
+            log.info("Granted urgent ingredient reward via recipe adopt: user={}, points={}",
+                    userId, urgentType.getDefaultAmount());
+        } else {
+            log.info("Urgent ingredient reward already granted today for user {}", userId);
+        }
     }
 
 }
