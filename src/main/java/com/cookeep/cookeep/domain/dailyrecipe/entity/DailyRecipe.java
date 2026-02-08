@@ -49,6 +49,10 @@ public class DailyRecipe extends BaseEntity {
     @JoinColumn(name = "ai_recipes_id")
     private AiRecipe aiRecipe; // 원본 AI 레시피 참조 (삭제 시 null)
 
+    public void updateVisibility(Boolean isPublic) {
+        this.isPublic = isPublic;
+    }
+
     public void updateTitleAndDescription(String title, String description) {
         if (title != null && !title.isBlank()) {
             this.title = title;

@@ -2,6 +2,7 @@ package com.cookeep.cookeep.api.controller;
 
 import com.cookeep.cookeep.api.dto.request.DailyRecipeCreateRequestDto;
 import com.cookeep.cookeep.api.dto.request.DailyRecipeUpdateRequestDto;
+import com.cookeep.cookeep.api.dto.request.DailyRecipeVisibilityRequestDto;
 import com.cookeep.cookeep.api.dto.response.AdoptedAiRecipeDetailResponseDto;
 import com.cookeep.cookeep.api.dto.response.AdoptedAiRecipeListResponseDto;
 import com.cookeep.cookeep.api.dto.response.DailyRecipeCreateResponseDto;
@@ -192,6 +193,33 @@ public class DailyRecipeController {
             @PathVariable Long dailyRecipeId
     ) {
         dailyRecipeService.deleteDailyRecipe(userId, dailyRecipeId);
+
+        return ResponseEntity.ok(DataResponse.ok());
+    }
+
+    @Operation(
+            summary = "데일리 레시피 공개 범위 수정",
+            description = "데일리 레시피의 공개/비공개 상태를 변경합니다."
+    )
+    @ApiErrorCodeExamples({
+            ErrorCode.UNAUTHORIZED,
+            ErrorCode.DAILY_RECIPE_NOT_FOUND
+    })
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "공개 범위 수정 성공"),
+            @ApiResponse(responseCode = "401", description = "인증 실패", content = @Content),
+            @ApiResponse(responseCode = "404", description = "데일리 레시피를 찾을 수 없음", content = @Content)
+    })
+    @PatchMapping("/{dailyRecipeId}/visibility")
+    public ResponseEntity<DataResponse<Void>> updateDailyRecipeVisibility(
+            @AuthenticationPrincipal(expression = "userId") Long userId,
+            @Parameter(description = "데일리 레시피 ID", required = true)
+            @PathVariable Long dailyRecipeId,
+            @Valid @RequestBody DailyRecipeVisibilityRequestDto request
+    ) {
+        DailyRecipe dailyRecipe = dailyRecipeService.updateDailyRecipeVisibility(
+                userId, dailyRecipeId, request.getIsPublic()
+        );
 
         return ResponseEntity.ok(DataResponse.ok());
     }

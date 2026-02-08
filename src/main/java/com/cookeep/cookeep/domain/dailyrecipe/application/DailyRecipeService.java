@@ -97,6 +97,17 @@ public class DailyRecipeService {
         return dailyRecipe;
     }
 
+    // 데일리 레시피 공개 범위 수정
+    public DailyRecipe updateDailyRecipeVisibility(Long userId, Long dailyRecipeId, Boolean isPublic) {
+        User user = userReader.readById(userId);
+
+        DailyRecipe dailyRecipe = dailyRecipeRepository.findByIdAndUser(dailyRecipeId, user)
+                .orElseThrow(() -> new AppException(ErrorCode.DAILY_RECIPE_NOT_FOUND));
+
+        dailyRecipe.updateVisibility(isPublic);
+        return dailyRecipe;
+    }
+
     // 데일리 레시피 삭제
     public void deleteDailyRecipe(Long userId, Long dailyRecipeId) {
         User user = userReader.readById(userId);
