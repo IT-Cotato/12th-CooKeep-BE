@@ -78,6 +78,9 @@ public enum ErrorCode {
 	INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "서버 내부에서 에러가 발생하였습니다.", "COMMON-006"),
 	RECIPE_TITLE_PARSE_FAILED(HttpStatus.INTERNAL_SERVER_ERROR,"레시피 제목 파싱 실패","RECIPE-020"),
 	INGREDIENTS_JSON_CONVERSION_FAILED(HttpStatus.INTERNAL_SERVER_ERROR,"재료 JSON 변환에 실패했습니다.","RECIPE-021"),
+
+	// 503 SERVICE_UNAVAILABLE
+	NICKNAME_GENERATION_UNAVAILABLE(HttpStatus.SERVICE_UNAVAILABLE,"닉네임을 생성할 수 없습니다. 잠시 후 다시 시도해주세요.", "NICKNAME-001"),
 	;
 
 	private final HttpStatus httpStatus;
