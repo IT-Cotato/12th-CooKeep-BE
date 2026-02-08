@@ -1,5 +1,6 @@
 package com.cookeep.cookeep.domain.dailyrecipe.application;
 
+import com.cookeep.cookeep.api.dto.response.DailyRecipeCalendarResponseDto;
 import com.cookeep.cookeep.common.exception.AppException;
 import com.cookeep.cookeep.common.exception.ErrorCode;
 import com.cookeep.cookeep.domain.dailyrecipe.dao.DailyRecipeRepository;
@@ -14,8 +15,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @Service
@@ -106,6 +110,41 @@ public class DailyRecipeService {
 
         dailyRecipe.updateVisibility(isPublic);
         return dailyRecipe;
+    }
+
+    // 날짜 기반 데일리 레시피 목록 조회
+    @Transactional(readOnly = true)
+    public List<DailyRecipe> getDailyRecipesByDate(Long userId, LocalDate date) {
+        User user = userReader.readById(userId);
+
+        LocalDateTime startOfDay = date.atStartOfDay();
+        LocalDateTime endOfDay = date.plusDays(1).atStartOfDay();
+
+        return dailyRecipeRepository.findByUserAndDateRange(user, startOfDay, endOfDay);
+    }
+
+    // 캘린더 마킹용 월별 데일리 레시피 날짜 목록 조회
+    @Transactional(readOnly = true)
+    public List<DailyRecipeCalendarResponseDto> getCalendarMarking(Long userId, int year, int month) {
+        User user = userReader.readById(userId);
+
+        LocalDateTime start = LocalDate.of(year, month, 1).atStartOfDay();
+        LocalDateTime end = start.plusMonths(1);
+
+        List<DailyRecipe> recipes = dailyRecipeRepository.findByUserAndDateRangeAsc(user, start, end);
+
+        // 날짜별 첫 번째 레시피 추출 (ASC 정렬이므로 putIfAbsent로 가장 먼저 등록된 레시피 선택)
+        Map<LocalDate, DailyRecipe> firstPerDate = new LinkedHashMap<>();
+        for (DailyRecipe recipe : recipes) {
+            LocalDate date = recipe.getCreatedAt().toLocalDate();
+            firstPerDate.putIfAbsent(date, recipe);
+        }
+
+        return firstPerDate.entrySet().stream()
+                .map(entry -> DailyRecipeCalendarResponseDto.of(
+                        entry.getKey(),
+                        entry.getValue().getRecipeImageUrl()))
+                .toList();
     }
 
     // 데일리 레시피 삭제

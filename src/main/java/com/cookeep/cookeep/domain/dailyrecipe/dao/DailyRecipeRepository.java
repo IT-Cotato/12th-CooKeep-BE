@@ -3,10 +3,32 @@ package com.cookeep.cookeep.domain.dailyrecipe.dao;
 import com.cookeep.cookeep.domain.dailyrecipe.entity.DailyRecipe;
 import com.cookeep.cookeep.domain.user.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 public interface DailyRecipeRepository extends JpaRepository<DailyRecipe, Long> {
 
     Optional<DailyRecipe> findByIdAndUser(Long id, User user); // 특정 레시피 조회 + 본인 소유 확인
+
+    // 날짜 기반 데일리 레시피 조회 (최신순)
+    @Query("SELECT dr FROM DailyRecipe dr WHERE dr.user = :user " +
+           "AND dr.createdAt >= :start AND dr.createdAt < :end " +
+           "ORDER BY dr.createdAt DESC")
+    List<DailyRecipe> findByUserAndDateRange(
+            @Param("user") User user,
+            @Param("start") LocalDateTime start,
+            @Param("end") LocalDateTime end);
+
+    // 캘린더 마킹용 월별 조회 (등록순 - 날짜별 첫 번째 레시피 추출용)
+    @Query("SELECT dr FROM DailyRecipe dr WHERE dr.user = :user " +
+           "AND dr.createdAt >= :start AND dr.createdAt < :end " +
+           "ORDER BY dr.createdAt ASC")
+    List<DailyRecipe> findByUserAndDateRangeAsc(
+            @Param("user") User user,
+            @Param("start") LocalDateTime start,
+            @Param("end") LocalDateTime end);
 }

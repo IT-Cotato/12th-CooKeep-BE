@@ -7,6 +7,8 @@ import com.cookeep.cookeep.api.dto.response.AdoptedAiRecipeDetailResponseDto;
 import com.cookeep.cookeep.api.dto.response.AdoptedAiRecipeListResponseDto;
 import com.cookeep.cookeep.api.dto.response.DailyRecipeCreateResponseDto;
 import com.cookeep.cookeep.api.dto.response.DailyRecipeDetailResponseDto;
+import com.cookeep.cookeep.api.dto.response.DailyRecipeCalendarResponseDto;
+import com.cookeep.cookeep.api.dto.response.DailyRecipeListResponseDto;
 import com.cookeep.cookeep.common.dto.DataResponse;
 import com.cookeep.cookeep.common.exception.ErrorCode;
 import com.cookeep.cookeep.config.ApiErrorCodeExamples;
@@ -24,8 +26,10 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.List;
 
 
@@ -171,6 +175,56 @@ public class DailyRecipeController {
         );
 
         return ResponseEntity.ok(DataResponse.from(DailyRecipeDetailResponseDto.from(dailyRecipe)));
+    }
+
+    @Operation(
+            summary = "날짜 기반 데일리 레시피 목록 조회",
+            description = "특정 날짜에 등록된 데일리 레시피 목록을 조회합니다. " +
+                    "마이쿠킵 화면 진입 시(오늘 날짜) 또는 캘린더 날짜 클릭 시 사용됩니다."
+    )
+    @ApiErrorCodeExamples({
+            ErrorCode.UNAUTHORIZED
+    })
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "날짜별 데일리 레시피 목록 조회 성공"),
+            @ApiResponse(responseCode = "401", description = "인증 실패", content = @Content)
+    })
+    @GetMapping
+    public ResponseEntity<DataResponse<List<DailyRecipeListResponseDto>>> getDailyRecipesByDate(
+            @AuthenticationPrincipal(expression = "userId") Long userId,
+            @Parameter(description = "조회할 날짜 (yyyy-MM-dd)", required = true, example = "2026-01-04")
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date
+    ) {
+        List<DailyRecipe> dailyRecipes = dailyRecipeService.getDailyRecipesByDate(userId, date);
+        List<DailyRecipeListResponseDto> response = dailyRecipes.stream()
+                .map(DailyRecipeListResponseDto::from)
+                .toList();
+
+        return ResponseEntity.ok(DataResponse.from(response));
+    }
+
+    @Operation(
+            summary = "캘린더 마킹용 데일리 레시피 리스트 조회",
+            description = "특정 연/월에 요리 기록이 있는 날짜 목록과 각 날짜의 첫 번째 레시피 이미지를 조회합니다."
+    )
+    @ApiErrorCodeExamples({
+            ErrorCode.UNAUTHORIZED
+    })
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "캘린더 마킹 데이터 조회 성공"),
+            @ApiResponse(responseCode = "401", description = "인증 실패", content = @Content)
+    })
+    @GetMapping("/calendar")
+    public ResponseEntity<DataResponse<List<DailyRecipeCalendarResponseDto>>> getCalendarMarking(
+            @AuthenticationPrincipal(expression = "userId") Long userId,
+            @Parameter(description = "조회 연도", required = true, example = "2025")
+            @RequestParam int year,
+            @Parameter(description = "조회 월 (1-12)", required = true, example = "12")
+            @RequestParam int month
+    ) {
+        List<DailyRecipeCalendarResponseDto> response = dailyRecipeService.getCalendarMarking(userId, year, month);
+
+        return ResponseEntity.ok(DataResponse.from(response));
     }
 
     @Operation(
