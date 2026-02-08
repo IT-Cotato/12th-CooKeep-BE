@@ -26,7 +26,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @Tag(
-        name = "(MAIN05, 06) AI 레시피",
+        name = "(MAIN05, 06, 07) AI 레시피",
         description = "AI를 이용한 레시피 생성/채택/조회 API"
 )
 @RestController

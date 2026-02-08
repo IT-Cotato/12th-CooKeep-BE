@@ -1,6 +1,7 @@
 package com.cookeep.cookeep.api.controller;
 
 import com.cookeep.cookeep.api.dto.request.*;
+import com.cookeep.cookeep.api.dto.response.ConsumeIngredientsResponseDto;
 import com.cookeep.cookeep.api.dto.response.UserIngredientDetailResponseDto;
 import com.cookeep.cookeep.common.dto.DataResponse;
 import com.cookeep.cookeep.common.exception.ErrorCode;
@@ -206,5 +207,40 @@ public class UserIngredientUpdateController {
         userIngredientUpdateService.deleteUserIngredients(userId, request);
 
         return ResponseEntity.ok(DataResponse.ok());
+    }
+
+    @Operation(
+            summary = "6. 재료 섭취 완료",
+            description = "식재료를 섭취 완료 처리합니다. (리워드를 지급 후 삭제)" +
+                    "1일 1회 기본 섭취 리워드(+1), 유통기한 임박 식재료(D-3 이하) 섭취 시 추가 리워드(+3)가 지급됩니다."
+    )
+    @ApiErrorCodeExamples({
+            ErrorCode.INVALID_DELETE_REQUEST,
+            ErrorCode.INGREDIENT_NOT_FOUND,
+            ErrorCode.UNAUTHORIZED
+    })
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "섭취 완료 성공"),
+            @ApiResponse(responseCode = "400", description = """
+                잘못된 요청입니다.
+                - INVALID_DELETE_REQUEST: 섭취할 식재료를 입력해주세요.
+                """, content = @Content),
+            @ApiResponse(responseCode = "404", description = """
+                재료를 찾을 수 없습니다.
+                - INGREDIENT_NOT_FOUND: 해당 식재료가 존재하지 않습니다.
+                """, content = @Content),
+            @ApiResponse(responseCode = "401", description = """
+                인증 실패입니다.
+                - UNAUTHORIZED: 인증 정보가 없거나 유효하지 않습니다.
+                """, content = @Content)
+    })
+    @PostMapping("/consume")
+    public ResponseEntity<DataResponse<ConsumeIngredientsResponseDto>> consumeIngredients(
+            @AuthenticationPrincipal(expression = "userId") Long userId,
+            @Valid @RequestBody ConsumeIngredientsRequestDto request
+    ) {
+        ConsumeIngredientsResponseDto response =
+                userIngredientUpdateService.consumeIngredients(userId, request);
+        return ResponseEntity.ok(DataResponse.from(response));
     }
 }
