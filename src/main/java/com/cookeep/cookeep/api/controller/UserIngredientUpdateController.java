@@ -26,6 +26,7 @@ import org.springframework.web.bind.annotation.*;
 public class UserIngredientUpdateController {
 
     private final UserIngredientUpdateService userIngredientUpdateService;
+    private final ConsumeIngredientService consumeIngredientsService;
 
     @Operation(
             summary = "1. 보관 장소 변경",
@@ -240,7 +241,7 @@ public class UserIngredientUpdateController {
             @Valid @RequestBody ConsumeIngredientsRequestDto request
     ) {
         ConsumeIngredientsResponseDto response =
-                userIngredientUpdateService.consumeIngredients(userId, request);
+                consumeIngredientsService.consumeIngredients(userId, request);
         return ResponseEntity.ok(DataResponse.from(response));
     }
 }
