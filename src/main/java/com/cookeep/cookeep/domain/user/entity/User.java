@@ -2,6 +2,7 @@ package com.cookeep.cookeep.domain.user.entity;
 
 import java.time.LocalDateTime;
 
+import com.cookeep.cookeep.domain.plant.entity.PlantStatus;
 import com.cookeep.cookeep.domain.plant.entity.UserPlant;
 import jakarta.persistence.*;
 import org.springframework.data.annotation.LastModifiedDate;
@@ -87,6 +88,12 @@ public class User extends BaseEntity {
 	@LastModifiedDate
 	private LocalDateTime updatedAt;
 
+	private LocalDateTime lastAccessAt;
+
+	@Builder.Default
+	@Enumerated(EnumType.STRING)
+	private PlantStatus plantStatus = PlantStatus.NORMAL;
+
 	@OneToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "profile_plant_id")
 	private UserPlant profilePlant;
@@ -118,5 +125,13 @@ public class User extends BaseEntity {
 
 	public void updatePassword(String password) {
 		this.password = password;
+	}
+
+	public void updateLastAccessAt(LocalDateTime lastAccessAt) {
+		this.lastAccessAt = lastAccessAt;
+	}
+
+	public void updatePlantStatus(PlantStatus plantStatus) {
+		this.plantStatus = plantStatus;
 	}
 }
