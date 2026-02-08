@@ -18,4 +18,7 @@ public interface UserPlantRepository extends JpaRepository<UserPlant, Long>{
 
     // 현재 키우고 있는 식물 조회 (수확 완료되지 않고, 성장 정지되지 않은 식물)
     Optional<UserPlant> findByUserAndIsHarvestedFalseAndIsFrozenFalse(User user);
+
+    // 성장 정지된 식물이 존재하는지 확인
+    boolean existsByUserAndIsFrozenTrue(User user);
 }

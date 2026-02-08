@@ -55,7 +55,9 @@ public class UserPlantService {
             // 7~13일 미접속: WILTING 상태 (성장 정지는 하지 않음)
             user.updatePlantStatus(PlantStatus.WILTING);
         } else {
-            user.updatePlantStatus(PlantStatus.NORMAL);
+            // 아직 성장 정지된 식물이 남아 있으면 FROZEN 유지 (유저가 살리기 전까지)
+            boolean hasFrozenPlant = userPlantRepository.existsByUserAndIsFrozenTrue(user);
+            user.updatePlantStatus(hasFrozenPlant ? PlantStatus.FROZEN : PlantStatus.NORMAL);
         }
     }
 
@@ -208,5 +210,8 @@ public class UserPlantService {
 
         // 5. 식물 살리기 수행 (isFrozen = false)
         userPlant.revive();
+
+        // 6. 유저의 plantStatus를 NORMAL로 변경
+        userPlant.getUser().updatePlantStatus(PlantStatus.NORMAL);
     }
 }
