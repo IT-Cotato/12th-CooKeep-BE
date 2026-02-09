@@ -98,11 +98,24 @@ public interface UserIngredientRepository extends JpaRepository<UserIngredient, 
         SELECT CASE WHEN COUNT(ui) > 0 THEN true ELSE false END
         FROM UserIngredient ui
         WHERE ui.user.userId = :userId
-        AND ui.expirationDate BETWEEN :startDate AND :endDate
+        AND ui.expirationDate = :expirationDate
     """)
-    boolean existsByUserIdAndExpirationDateBetween(
+    boolean existsByUserIdAndExpirationDate(
             @Param("userId") Long userId,
-            @Param("startDate") LocalDate startDate,
-            @Param("endDate") LocalDate endDate
+            @Param("expirationDate") LocalDate expirationDate
     );
+
+    // 유통기한 당일(D-0) 식재료 조회
+    @Query("""
+        SELECT ui
+        FROM UserIngredient ui
+        WHERE ui.user.userId = :userId
+        AND ui.expirationDate = :expirationDate
+        ORDER BY ui.ingredientId ASC
+    """)
+    List<UserIngredient> findByUserIdAndExpirationDateOrderByIngredientIdAsc(
+            @Param("userId") Long userId,
+            @Param("expirationDate") LocalDate expirationDate
+    );
+
 }

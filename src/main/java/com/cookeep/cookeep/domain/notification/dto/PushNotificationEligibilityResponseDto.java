@@ -17,7 +17,6 @@ import java.util.List;
 public class PushNotificationEligibilityResponseDto {
 
     private Boolean eligible;
-    private Integer thresholdDays;
     private Integer count;
     private List<IngredientInfo> ingredients;
 
@@ -38,13 +37,11 @@ public class PushNotificationEligibilityResponseDto {
 
     // eligible이 true일 때 사용하는 정적 팩토리 메서드
     public static PushNotificationEligibilityResponseDto eligible(
-            int thresholdDays,
             int count,
             List<IngredientInfo> ingredients
     ) {
         return PushNotificationEligibilityResponseDto.builder()
                 .eligible(true)
-                .thresholdDays(thresholdDays)
                 .count(count)
                 .ingredients(ingredients)
                 .build();
