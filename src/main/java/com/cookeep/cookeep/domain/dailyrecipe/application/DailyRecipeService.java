@@ -32,10 +32,10 @@ public class DailyRecipeService {
     private final UserReader userReader;
     private final ObjectMapper objectMapper;
 
-    // 채택된 AI 레시피 목록 조회 (레시피 선택 화면)
+    // 채택된 AI 레시피 목록 조회 (데일리 레시피 미등록 건만)
     @Transactional(readOnly = true)
     public List<AiRecipe> getAdoptedAiRecipes(Long userId) {
-        return aiRecipeRepository.findAllByUserIdOrderByCreatedAtDesc(userId); // 최신순 조회
+        return aiRecipeRepository.findAvailableByUserId(userId);
     }
 
     // 채택된 AI 레시피 상세 조회 (레시피 선택 후 내용 확인)

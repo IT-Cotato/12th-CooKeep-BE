@@ -46,7 +46,7 @@ public class DailyRecipeController {
 
     @Operation(
             summary = "채택된 AI 레시피 목록 조회",
-            description = "데일리 레시피 등록을 위한 채택된 AI 레시피 목록을 조회합니다."
+            description = "데일리 레시피 등록을 위한 채택된 AI 레시피 목록 중 데일리 레시피 미등록 건만을 조회합니다."
     )
     @ApiErrorCodeExamples({
             ErrorCode.UNAUTHORIZED
