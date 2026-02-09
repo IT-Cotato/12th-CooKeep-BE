@@ -58,6 +58,11 @@ public class DailyRecipeService {
             throw new AppException(ErrorCode.DAILY_RECIPE_FORBIDDEN);
         }
 
+        // 이미 데일리 레시피로 등록된 AI 레시피인지 확인
+        if (dailyRecipeRepository.existsByAiRecipe(aiRecipe)) {
+            throw new AppException(ErrorCode.DAILY_RECIPE_ALREADY_EXISTS);
+        }
+
         // AI 레시피 내용 스냅샷 생성
         String content = buildContentSnapshot(aiRecipe);
 

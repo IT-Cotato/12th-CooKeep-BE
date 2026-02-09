@@ -75,6 +75,7 @@ public enum ErrorCode {
 	USER_EMAIL_ALREADY_EXISTS(HttpStatus.CONFLICT, "이미 사용 중인 이메일입니다.", "USER-003"),
 	USER_EMAIL_REGISTERED_WITH_SOCIAL(HttpStatus.CONFLICT,"이미 소셜로 등록된 이메일입니다.", "USER-004"),
 	WEEKLY_GOAL_ALREADY_EXISTS(HttpStatus.CONFLICT, "이번 주 목표가 이미 설정되어 있습니다.", "WEEKLY_GOAL-001"),
+	DAILY_RECIPE_ALREADY_EXISTS(HttpStatus.CONFLICT, "이미 데일리 레시피로 등록된 AI 레시피입니다.", "DAILY_RECIPE-005"),
 
 
 	//500
