@@ -4,6 +4,7 @@ import com.cookeep.cookeep.common.exception.AppException;
 import com.cookeep.cookeep.common.exception.ErrorCode;
 import com.cookeep.cookeep.domain.ingredient.useringredient.dao.UserIngredientRepository;
 import com.cookeep.cookeep.domain.notification.dto.PushNotificationEligibilityResponseDto;
+import com.cookeep.cookeep.domain.user.application.UserReader;
 import com.cookeep.cookeep.domain.user.dao.UserRepository;
 import com.cookeep.cookeep.domain.user.entity.User;
 import lombok.RequiredArgsConstructor;
@@ -24,13 +25,13 @@ public class PushNotificationEligibilityService {
 
     private final UserIngredientRepository userIngredientRepository;
     private final UserRepository userRepository;
+    private final UserReader userReader;
 
     // 유통기한 당일(D-0) 식재료 존재 여부 확인 및 팝업 표시 자격 판단
     public PushNotificationEligibilityResponseDto checkEligibility(Long userId) {
 
         // 1. 유저 조회
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+        User user = userReader.readById(userId);
 
         // 2. 마케팅 수신 동의 여부 확인
         if (!Boolean.TRUE.equals(user.getMarketingConsent())) {

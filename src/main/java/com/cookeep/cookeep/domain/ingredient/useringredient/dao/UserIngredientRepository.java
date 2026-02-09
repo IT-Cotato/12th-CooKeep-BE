@@ -95,10 +95,12 @@ public interface UserIngredientRepository extends JpaRepository<UserIngredient, 
     // --- 푸시 알림 전송 ---
     // 유통기한 임박 식재료 존재 여부 확인
     @Query("""
-        SELECT CASE WHEN COUNT(ui) > 0 THEN true ELSE false END
-        FROM UserIngredient ui
-        WHERE ui.user.userId = :userId
-        AND ui.expirationDate = :expirationDate
+        SELECT CASE WHEN EXISTS (
+            SELECT 1
+            FROM UserIngredient ui
+            WHERE ui.user.userId = :userId
+              AND ui.expirationDate = :expirationDate
+        ) THEN true ELSE false END
     """)
     boolean existsByUserIdAndExpirationDate(
             @Param("userId") Long userId,
