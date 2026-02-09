@@ -1,6 +1,7 @@
 package com.cookeep.cookeep.domain.plant.application;
 
 import com.cookeep.cookeep.api.dto.response.MyPlantResponseDto;
+import com.cookeep.cookeep.api.dto.response.RegisterPlantResponseDto;
 import com.cookeep.cookeep.common.exception.AppException;
 import com.cookeep.cookeep.common.exception.ErrorCode;
 import com.cookeep.cookeep.domain.cookie.application.CookieService;
@@ -95,9 +96,9 @@ public class UserPlantService {
         user.updateProfilePlant(userPlant);
     }
 
-    // 현재 키우는 식물 등록 (첫 식물 등록 여부 반환)
+    // 현재 키우는 식물 등록 (첫 식물 등록 여부 + userPlantId 반환)
     @Transactional
-    public boolean registerPlant(Long userId, long plantId) {
+    public RegisterPlantResponseDto registerPlant(Long userId, long plantId) {
         // 1. 유저 존재 확인
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND));
@@ -124,7 +125,8 @@ public class UserPlantService {
         // 5. 자동 모드(isProfileAutoUpdate=true)일 때만 프로필 갱신
         user.setProfilePlantAuto(newUserPlant);
 
-        return isFirstPlant;
+        String message = isFirstPlant ? "첫 식물 등록이 완료되었습니다." : "식물 등록이 완료되었습니다.";
+        return new RegisterPlantResponseDto(newUserPlant.getUserPlantId(), message);
     }
 
     // 식물 포기하기
