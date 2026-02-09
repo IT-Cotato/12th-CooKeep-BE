@@ -105,4 +105,26 @@ public class UserIngredient extends BaseEntity {
     public Integer getLeftDays() {
         return calculateLeftDays(this.expirationDate);
     }
+
+    // 보관 장소 변경
+    public void updateStorage(Storage storage) {
+        this.storage = storage;
+    }
+
+    // 유통기한 변경 (leftDays도 자동 재계산)
+    public void updateExpirationDate(LocalDate expirationDate) {
+        this.expirationDate = expirationDate;
+        this.leftDays = calculateLeftDays(expirationDate);
+    }
+
+    // 수량 변경
+    public void updateQuantity(Integer quantity) {
+        this.quantity = quantity;
+    }
+
+    // 메모 변경
+    public void updateMemo(String memo) {
+        this.memo = memo;
+    }
+
 }

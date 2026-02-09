@@ -37,6 +37,11 @@ public interface UserIngredientRepository extends JpaRepository<UserIngredient, 
             @Param("referenceIds") List<Long> referenceIds
     );
 
+    List<UserIngredient> findAllByIngredientIdInAndUser_UserId(
+            List<Long> ingredientIds,
+            Long userId
+    );
+
     // --- 냉장고탭 ---
     // 홈화면 카테고리별 조회
     @Query("SELECT ui FROM UserIngredient ui WHERE ui.user.userId = :userId AND ui.storage = :storage ORDER BY ui.leftDays ASC")

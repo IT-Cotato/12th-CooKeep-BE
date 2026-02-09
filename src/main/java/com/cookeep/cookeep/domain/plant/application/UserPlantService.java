@@ -9,6 +9,7 @@ import com.cookeep.cookeep.domain.plant.dao.PlantRepository;
 import com.cookeep.cookeep.domain.plant.dao.UserPlantRepository;
 import com.cookeep.cookeep.domain.plant.dao.WateringLogRepository;
 import com.cookeep.cookeep.domain.plant.entity.Plant;
+import com.cookeep.cookeep.domain.plant.entity.PlantStatus;
 import com.cookeep.cookeep.domain.plant.entity.UserPlant;
 import com.cookeep.cookeep.domain.plant.entity.WateringLog;
 import com.cookeep.cookeep.domain.user.dao.UserRepository;
@@ -17,7 +18,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -28,6 +32,34 @@ public class UserPlantService {
     private final UserRepository userRepository;
     private final PlantRepository plantRepository;
     private final CookieService cookieService;
+
+    // 로그인/토큰 갱신 시 호출: 미접속 일수 기반 식물 상태 계산 및 성장 정지 처리
+    @Transactional
+    public void checkAndUpdatePlantStatus(User user) {
+        LocalDateTime lastAccess = user.getLastAccessAt();
+
+        // lastAccessAt이 null이면 (기존 유저 or 최초 적용) NORMAL 처리
+        if (lastAccess == null) {
+            user.updatePlantStatus(PlantStatus.NORMAL);
+            return;
+        }
+
+        long inactiveDays = ChronoUnit.DAYS.between(lastAccess, LocalDateTime.now());
+
+        if (inactiveDays >= 14) {
+            // 14일 이상 미접속: 키우는 식물 성장 정지 + FROZEN 상태
+            Optional<UserPlant> growingPlant = userPlantRepository.findByUserAndIsHarvestedFalseAndIsFrozenFalse(user);
+            growingPlant.ifPresent(UserPlant::freeze);
+            user.updatePlantStatus(PlantStatus.FROZEN);
+        } else if (inactiveDays >= 7) {
+            // 7~13일 미접속: WILTING 상태 (성장 정지는 하지 않음)
+            user.updatePlantStatus(PlantStatus.WILTING);
+        } else {
+            // 아직 성장 정지된 식물이 남아 있으면 FROZEN 유지 (유저가 살리기 전까지)
+            boolean hasFrozenPlant = userPlantRepository.existsByUserAndIsFrozenTrue(user);
+            user.updatePlantStatus(hasFrozenPlant ? PlantStatus.FROZEN : PlantStatus.NORMAL);
+        }
+    }
 
     // 유저 보유 식물 목록 조회
     @Transactional(readOnly = true) // 성능 최적화를 위해 읽기 전용 설정
@@ -178,5 +210,8 @@ public class UserPlantService {
 
         // 5. 식물 살리기 수행 (isFrozen = false)
         userPlant.revive();
+
+        // 6. 유저의 plantStatus를 NORMAL로 변경
+        userPlant.getUser().updatePlantStatus(PlantStatus.NORMAL);
     }
 }
