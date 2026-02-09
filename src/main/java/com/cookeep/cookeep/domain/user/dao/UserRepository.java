@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -24,4 +25,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
     boolean existsByPhoneNumber(String phoneNumber);
 
     Optional<User> findByPhoneNumber(String phoneNumber);
+
+    // 푸시 알림 동의한 사용자 조회
+    @Query("SELECT u FROM User u WHERE u.marketingPush = true")
+    List<User> findAllByMarketingPushTrue();
 }

@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -89,5 +90,19 @@ public interface UserIngredientRepository extends JpaRepository<UserIngredient, 
             @Param("searchQuery") String searchQuery,
             @Param("storage") Storage storage,
             Pageable pageable
+    );
+
+    // --- 푸시 알림 전송 ---
+    // 유통기한 임박 식재료 존재 여부 확인
+    @Query("""
+        SELECT CASE WHEN COUNT(ui) > 0 THEN true ELSE false END
+        FROM UserIngredient ui
+        WHERE ui.user.userId = :userId
+        AND ui.expirationDate BETWEEN :startDate AND :endDate
+    """)
+    boolean existsByUserIdAndExpirationDateBetween(
+            @Param("userId") Long userId,
+            @Param("startDate") LocalDate startDate,
+            @Param("endDate") LocalDate endDate
     );
 }
