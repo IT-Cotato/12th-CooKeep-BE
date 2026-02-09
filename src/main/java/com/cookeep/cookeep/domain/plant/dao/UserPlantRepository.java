@@ -21,4 +21,7 @@ public interface UserPlantRepository extends JpaRepository<UserPlant, Long>{
 
     // 성장 정지된 식물이 존재하는지 확인
     boolean existsByUserAndIsFrozenTrue(User user);
+
+    // 유저가 보유한 식물이 존재하는지 확인
+    boolean existsByUser(User user);
 }

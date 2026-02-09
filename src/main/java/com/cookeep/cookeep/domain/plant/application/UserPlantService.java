@@ -95,18 +95,21 @@ public class UserPlantService {
         user.updateProfilePlant(userPlant);
     }
 
-    // 현재 키우는 식물 등록
+    // 현재 키우는 식물 등록 (첫 식물 등록 여부 반환)
     @Transactional
-    public void registerPlant(Long userId, long plantId) {
+    public boolean registerPlant(Long userId, long plantId) {
         // 1. 유저 존재 확인
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND));
 
-        // 2. 기본으로 존재하는 식물인지 확인
+        // 2. 첫 식물 등록 여부 확인
+        boolean isFirstPlant = !userPlantRepository.existsByUser(user);
+
+        // 3. 기본으로 존재하는 식물인지 확인
         Plant plant = plantRepository.findById(plantId)
                 .orElseThrow(() -> new AppException(ErrorCode.PLANT_NOT_FOUND));
 
-        // 3. UserPlant 엔티티 생성 및 저장
+        // 4. UserPlant 엔티티 생성 및 저장
         UserPlant newUserPlant = UserPlant.builder()
                 .user(user)
                 .plant(plant)
@@ -118,8 +121,10 @@ public class UserPlantService {
 
         userPlantRepository.save(newUserPlant);
 
-        // 4. 자동 모드(isProfileAutoUpdate=true)일 때만 프로필 갱신
+        // 5. 자동 모드(isProfileAutoUpdate=true)일 때만 프로필 갱신
         user.setProfilePlantAuto(newUserPlant);
+
+        return isFirstPlant;
     }
 
     // 식물 포기하기
