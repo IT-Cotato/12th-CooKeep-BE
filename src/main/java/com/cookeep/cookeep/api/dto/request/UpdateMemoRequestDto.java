@@ -17,6 +17,6 @@ public class UpdateMemoRequestDto {
             requiredMode = Schema.RequiredMode.REQUIRED
     )
     @NotNull(message = "메모는 필수입니다.")
-    @Size(max = 500, message = "메모는 500자를 초과할 수 없습니다.")
+    @Size(max = 100, message = "메모는 100자를 초과할 수 없습니다.")
     private String memo;
 }
