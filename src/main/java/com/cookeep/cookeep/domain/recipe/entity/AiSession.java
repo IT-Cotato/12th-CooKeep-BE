@@ -1,12 +1,18 @@
 package com.cookeep.cookeep.domain.recipe.entity;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.*;
 import lombok.*;
+import lombok.extern.slf4j.Slf4j;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
+import java.util.List;
 
+@Slf4j
 @Getter
 @Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -54,6 +60,9 @@ public class AiSession {
     @Column(name = "user_id", nullable = false)
     private Long userId;
 
+    @Column(name = "ingredient_ids", columnDefinition = "JSON")
+    private String ingredientIdsJson;
+
     // Domain Logic
     public void pin() {
         this.isPinned = true;
@@ -70,6 +79,35 @@ public class AiSession {
 
     public void increaseAttempt() {
         this.attemptNumber++;
+    }
+
+    // JSON 직렬화/역직렬화 메서드
+    @Transient
+    private ObjectMapper objectMapper = new ObjectMapper();
+
+    public List<Long> getIngredientIds() {
+        if (ingredientIdsJson == null || ingredientIdsJson.isEmpty()) {
+            return Collections.emptyList();
+        }
+        try {
+            return objectMapper.readValue(ingredientIdsJson,
+                    new TypeReference<List<Long>>() {});
+        } catch (Exception e) {
+            log.error("Failed to deserialize ingredient IDs", e);
+            return Collections.emptyList();
+        }
+    }
+
+    public void setIngredientIds(List<Long> ids) {
+        if (ids == null || ids.isEmpty()) {
+            this.ingredientIdsJson = null;
+            return;
+        }
+        try {
+            this.ingredientIdsJson = objectMapper.writeValueAsString(ids);
+        } catch (Exception e) {
+            log.error("Failed to serialize ingredient IDs", e);
+        }
     }
 
 }
