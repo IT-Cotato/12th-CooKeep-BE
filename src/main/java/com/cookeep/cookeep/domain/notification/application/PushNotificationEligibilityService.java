@@ -24,7 +24,7 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
-public class PushNotificationService {
+public class PushNotificationEligibilityService {
 
     private final UserIngredientRepository userIngredientRepository;
     private final DefaultIngredientRepository defaultIngredientRepository;
