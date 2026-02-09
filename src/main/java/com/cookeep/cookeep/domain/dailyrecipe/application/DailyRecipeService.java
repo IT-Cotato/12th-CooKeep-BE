@@ -3,6 +3,8 @@ package com.cookeep.cookeep.domain.dailyrecipe.application;
 import com.cookeep.cookeep.api.dto.response.DailyRecipeCalendarResponseDto;
 import com.cookeep.cookeep.common.exception.AppException;
 import com.cookeep.cookeep.common.exception.ErrorCode;
+import com.cookeep.cookeep.domain.cookie.application.CookieService;
+import com.cookeep.cookeep.domain.cookie.entity.CookieLog;
 import com.cookeep.cookeep.domain.dailyrecipe.dao.DailyRecipeRepository;
 import com.cookeep.cookeep.domain.dailyrecipe.entity.DailyRecipe;
 import com.cookeep.cookeep.domain.recipe.dao.AiRecipeRepository;
@@ -29,6 +31,7 @@ public class DailyRecipeService {
 
     private final DailyRecipeRepository dailyRecipeRepository;
     private final AiRecipeRepository aiRecipeRepository;
+    private final CookieService cookieService;
     private final UserReader userReader;
     private final ObjectMapper objectMapper;
 
@@ -79,7 +82,17 @@ public class DailyRecipeService {
                 .aiRecipe(aiRecipe)
                 .build();
 
-        return dailyRecipeRepository.save(dailyRecipe);
+        dailyRecipeRepository.save(dailyRecipe);
+
+        // 쿠키 지급: 레시피 기록 (1개)
+        cookieService.updateCookie(userId, CookieLog.CookieLogType.BASIC_LOAD_RECIPE);
+
+        // 쿠키 추가 지급: 음식 사진 등록 시 (1개)
+        if (recipeImageUrl != null && !recipeImageUrl.isBlank()) {
+            cookieService.updateCookie(userId, CookieLog.CookieLogType.BASIC_FOOD_PHOTO_REG);
+        }
+
+        return dailyRecipe;
     }
 
     // 데일리 레시피 상세 조회
