@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
 
-@Tag(name = "푸시 알림", description = "유통기한 임박 식재료 팝업 알림 API")
+@Tag(name = "(MAIN04) 푸시 알림", description = "유통기한 임박 식재료 팝업 알림 API")
 @Slf4j
 @RestController
 @RequiredArgsConstructor
@@ -32,7 +32,7 @@ public class PushNotificationController {
             description = """
                     유통기한이 당일(D-0)인 식재료가 존재하는지 확인하여 팝업을 띄울지 결정합니다.
                     
-                    - 당일 만료 식재료가 있으면 eligible: true와 함께 재료 정보 반환
+                    - 당일 만료 식재료가 있으면 eligible: true 반환. 프론트가 호출하여 푸시 알림 전송
                     - 당일 만료 식재료가 없으면 eligible: false만 반환
                     
                     프론트엔드는 앱 진입 시 이 API를 호출하여 팝업 표시 여부를 결정합니다.
@@ -43,16 +43,7 @@ public class PushNotificationController {
             ErrorCode.INTERNAL_SERVER_ERROR
     })
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = """
-                    조회 성공
-                    
-                    eligible: true인 경우
-                    - count: 당일 만료 식재료 총 개수
-                    - ingredients: 당일 만료 식재료 목록 (최대 5개)
-                    
-                    eligible: false인 경우
-                    - eligible 필드만 반환
-                    """),
+            @ApiResponse(responseCode = "200", description = "조회 성공"),
             @ApiResponse(responseCode = "401", description = """
                     인증 실패입니다.
                     - UNAUTHORIZED: 인증 정보가 없거나 유효하지 않습니다.
@@ -72,21 +63,4 @@ public class PushNotificationController {
         return ResponseEntity.ok(DataResponse.from(response));
     }
 
-    @PostMapping("/test")
-    public ResponseEntity<?> sendTestPush(
-            @RequestParam(required = false) Long userId
-    ) {
-        Long targetUserId = userId != null ? userId : 1L;
-
-        // 로그로 확인
-        log.info("[TEST PUSH] push sent to userId={}", targetUserId);
-
-        return ResponseEntity.ok(
-                Map.of(
-                        "success", true,
-                        "message", "테스트 푸시 알림 전송 완료",
-                        "userId", targetUserId
-                )
-        );
-    }
 }
