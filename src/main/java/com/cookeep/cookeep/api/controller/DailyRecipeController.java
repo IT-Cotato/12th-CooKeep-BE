@@ -100,13 +100,15 @@ public class DailyRecipeController {
     @ApiErrorCodeExamples({
             ErrorCode.UNAUTHORIZED,
             ErrorCode.AI_RECIPE_NOT_FOUND,
-            ErrorCode.DAILY_RECIPE_FORBIDDEN
+            ErrorCode.DAILY_RECIPE_FORBIDDEN,
+            ErrorCode.DAILY_RECIPE_ALREADY_EXISTS
     })
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "데일리 레시피 등록 성공"),
             @ApiResponse(responseCode = "401", description = "인증 실패", content = @Content),
             @ApiResponse(responseCode = "403", description = "본인의 AI 레시피가 아님", content = @Content),
-            @ApiResponse(responseCode = "404", description = "AI 레시피를 찾을 수 없음", content = @Content)
+            @ApiResponse(responseCode = "404", description = "AI 레시피를 찾을 수 없음", content = @Content),
+            @ApiResponse(responseCode = "409", description = "이미 데일리 레시피로 등록된 AI 레시피", content = @Content)
     })
     @PostMapping
     public ResponseEntity<DataResponse<DailyRecipeCreateResponseDto>> createDailyRecipe(
