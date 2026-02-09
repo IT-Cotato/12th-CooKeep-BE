@@ -38,11 +38,12 @@ public class MyPlantController {
             @ApiResponse(responseCode = "404", description = "유저 또는 식물을 찾을 수 없음")
     })
     @PostMapping("/{plantId}") // /api/my-plants/{plantId}
-    public DataResponse<Void> registerPlant(
+    public DataResponse<String> registerPlant(
             @AuthenticationPrincipal(expression = "userId") Long userId,
             @Parameter(description = "기본 식물 ID") @PathVariable long plantId) {
-        userPlantService.registerPlant(userId, plantId);
-        return DataResponse.from(null);
+        boolean isFirstPlant = userPlantService.registerPlant(userId, plantId);
+        String message = isFirstPlant ? "첫 식물 등록이 완료되었습니다." : "식물 등록이 완료되었습니다.";
+        return DataResponse.from(message);
     }
 
     @Operation(summary = "프로필 식물 지정", description = "내 보유 식물 ID를 경로에 전달하여 대표 프로필로 설정합니다.")
