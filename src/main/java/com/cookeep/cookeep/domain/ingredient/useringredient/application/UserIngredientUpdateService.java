@@ -5,8 +5,8 @@ import com.cookeep.cookeep.api.dto.response.UserIngredientDetailResponseDto;
 import com.cookeep.cookeep.common.exception.AppException;
 import com.cookeep.cookeep.common.exception.EntityNotFoundException;
 import com.cookeep.cookeep.common.exception.ErrorCode;
-import com.cookeep.cookeep.domain.ingredient.common.Storage;
-import com.cookeep.cookeep.domain.ingredient.common.Type;
+import com.cookeep.cookeep.domain.ingredient.common.domain.Storage;
+import com.cookeep.cookeep.domain.ingredient.common.domain.Type;
 import com.cookeep.cookeep.domain.ingredient.customingredient.dao.CustomIngredientRepository;
 import com.cookeep.cookeep.domain.ingredient.customingredient.entity.CustomIngredient;
 import com.cookeep.cookeep.domain.ingredient.defaultingredient.dao.DefaultIngredientRepository;
@@ -126,7 +126,7 @@ public class UserIngredientUpdateService {
         }
 
         // 메모 변경 (빈 문자열이면 메모 삭제)
-        userIngredient.updateMemo(request.getMemo());
+        userIngredient.updateMemo(memo);
 
         // 변경된 상세 정보 반환
         return getIngredientDetail(userId, ingredientId);

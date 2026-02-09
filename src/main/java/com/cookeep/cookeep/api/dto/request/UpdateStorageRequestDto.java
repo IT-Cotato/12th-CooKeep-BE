@@ -1,6 +1,6 @@
 package com.cookeep.cookeep.api.dto.request;
 
-import com.cookeep.cookeep.domain.ingredient.common.Storage;
+import com.cookeep.cookeep.domain.ingredient.common.domain.Storage;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
