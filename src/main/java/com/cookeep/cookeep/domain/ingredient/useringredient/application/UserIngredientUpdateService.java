@@ -113,13 +113,6 @@ public class UserIngredientUpdateService {
         // 빈 칸이면 삭제
         String memo = request.getMemo();
 
-        if (memo != null) {
-            memo = memo.trim();
-            if (memo.isEmpty()) {
-                memo = null;
-            }
-        }
-
         // 메모 길이 100자 제한
         if (memo != null && memo.length() > 100) {
             throw new AppException(ErrorCode.MEMO_TOO_LONG);
