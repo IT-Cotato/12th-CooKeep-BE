@@ -2,14 +2,10 @@ package com.cookeep.cookeep.domain.notification.application;
 
 import com.cookeep.cookeep.common.exception.AppException;
 import com.cookeep.cookeep.common.exception.ErrorCode;
-import com.cookeep.cookeep.domain.ingredient.common.domain.Type;
-import com.cookeep.cookeep.domain.ingredient.customingredient.dao.CustomIngredientRepository;
-import com.cookeep.cookeep.domain.ingredient.customingredient.entity.CustomIngredient;
-import com.cookeep.cookeep.domain.ingredient.defaultingredient.dao.DefaultIngredientRepository;
-import com.cookeep.cookeep.domain.ingredient.defaultingredient.entity.DefaultIngredient;
 import com.cookeep.cookeep.domain.ingredient.useringredient.dao.UserIngredientRepository;
-import com.cookeep.cookeep.domain.ingredient.useringredient.entity.UserIngredient;
 import com.cookeep.cookeep.domain.notification.dto.PushNotificationEligibilityResponseDto;
+import com.cookeep.cookeep.domain.user.dao.UserRepository;
+import com.cookeep.cookeep.domain.user.entity.User;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -27,81 +23,32 @@ import java.util.stream.Collectors;
 public class PushNotificationEligibilityService {
 
     private final UserIngredientRepository userIngredientRepository;
-    private final DefaultIngredientRepository defaultIngredientRepository;
-    private final CustomIngredientRepository customIngredientRepository;
+    private final UserRepository userRepository;
 
-    /**
-     * 유통기한 당일(D-0) 식재료 존재 여부 확인 및 팝업 표시 자격 판단
-     *
-     * @param userId 사용자 ID
-     * @return 팝업 표시 자격 정보
-     */
+    // 유통기한 당일(D-0) 식재료 존재 여부 확인 및 팝업 표시 자격 판단
     public PushNotificationEligibilityResponseDto checkEligibility(Long userId) {
-        if (userId == null) {
-            throw new AppException(ErrorCode.UNAUTHORIZED);
-        }
 
-        // 1. 유통기한 당일(D-0) 식재료 존재 여부 확인
-        LocalDate today = LocalDate.now();
+        // 1. 유저 조회
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
 
-        boolean hasExpiringToday = userIngredientRepository.existsByUserIdAndExpirationDate(
-                userId, today
-        );
-
-        // 2. 당일 만료 식재료가 없으면 eligible: false 반환
-        if (!hasExpiringToday) {
-            log.info("User {} has no expiring ingredients today", userId);
+        // 2. 마케팅 수신 동의 여부 확인
+        if (!Boolean.TRUE.equals(user.getMarketingConsent())) {
             return PushNotificationEligibilityResponseDto.notEligible();
         }
 
-        // 3. 당일 만료 식재료가 있으면 상세 정보 조회
-        List<UserIngredient> expiringIngredients = userIngredientRepository
-                .findByUserIdAndExpirationDateOrderByIngredientIdAsc(userId, today);
+        // 3. D-0 재료 존재 여부 확인
+        LocalDate today = LocalDate.now();
 
-        // 4. DTO 변환 (최대 5개만 반환)
-        List<PushNotificationEligibilityResponseDto.IngredientInfo> ingredientInfos =
-                expiringIngredients.stream()
-                        .limit(5)
-                        .map(this::toIngredientInfo)
-                        .collect(Collectors.toList());
+        boolean hasExpiringToday =
+                userIngredientRepository.existsByUserIdAndExpirationDate(userId, today);
 
-        log.info("User {} has {} expiring ingredients today", userId, expiringIngredients.size());
-
-        // 5. eligible: true로 응답 반환
-        return PushNotificationEligibilityResponseDto.eligible(
-                expiringIngredients.size(),
-                ingredientInfos
-        );
-    }
-
-    // --- 내부 메서드 ---
-
-    // UserIngredient를 IngredientInfo DTO로 변환
-    private PushNotificationEligibilityResponseDto.IngredientInfo toIngredientInfo(
-            UserIngredient userIngredient
-    ) {
-        String ingredientName = getIngredientName(userIngredient);
-
-        return PushNotificationEligibilityResponseDto.IngredientInfo.builder()
-                .userIngredientId(userIngredient.getIngredientId())
-                .name(ingredientName)
-                .expiresInDays(userIngredient.getLeftDays())
-                .build();
-    }
-
-    // UserIngredient의 타입(DEFAULT/CUSTOM)에 따라 식재료 이름 조회
-    private String getIngredientName(UserIngredient userIngredient) {
-        if (userIngredient.getType() == Type.DEFAULT) {
-            DefaultIngredient defaultIngredient = defaultIngredientRepository
-                    .findById(userIngredient.getReferenceId())
-                    .orElse(null);
-            return defaultIngredient != null ? defaultIngredient.getIngredient() : "Unknown";
-        } else {
-            CustomIngredient customIngredient = customIngredientRepository
-                    .findById(userIngredient.getReferenceId())
-                    .orElse(null);
-            return customIngredient != null ? customIngredient.getName() : "Unknown";
+        if (!hasExpiringToday) {
+            return PushNotificationEligibilityResponseDto.notEligible();
         }
+
+        // 4. eligible: true로 응답 반환
+        return PushNotificationEligibilityResponseDto.eligible();
     }
 
 }

@@ -17,33 +17,14 @@ import java.util.List;
 public class PushNotificationEligibilityResponseDto {
 
     private Boolean eligible;
-    private Integer count;
-    private List<IngredientInfo> ingredients;
-
-    @Getter
-    @Builder
-    public static class IngredientInfo {
-        private Long userIngredientId;
-        private String name;
-        private Integer expiresInDays;
-    }
 
     // eligible이 false일 때 사용하는 정적 팩토리 메서드
     public static PushNotificationEligibilityResponseDto notEligible() {
-        return PushNotificationEligibilityResponseDto.builder()
-                .eligible(false)
-                .build();
+        return new PushNotificationEligibilityResponseDto(false);
     }
 
     // eligible이 true일 때 사용하는 정적 팩토리 메서드
-    public static PushNotificationEligibilityResponseDto eligible(
-            int count,
-            List<IngredientInfo> ingredients
-    ) {
-        return PushNotificationEligibilityResponseDto.builder()
-                .eligible(true)
-                .count(count)
-                .ingredients(ingredients)
-                .build();
+    public static PushNotificationEligibilityResponseDto eligible() {
+        return new PushNotificationEligibilityResponseDto(true);
     }
 }
