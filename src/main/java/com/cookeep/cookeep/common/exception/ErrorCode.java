@@ -43,7 +43,7 @@ public enum ErrorCode {
 	INVALID_PHONE_NUMBER(HttpStatus.BAD_REQUEST, "유효하지 않은 전화번호 형식입니다.", "SMS-001"),
 	INVALID_VERIFICATION_CODE(HttpStatus.BAD_REQUEST, "인증번호가 일치하지 않습니다.", "SMS-002"),
 	VERIFICATION_CODE_EXPIRED(HttpStatus.BAD_REQUEST, "인증번호가 만료되었습니다.", "SMS-003"),
-	VERIFICATION_NOT_COMPLETED(HttpStatus.BAD_REQUEST, "전화번호 인증이 완료되지 않았습니다.", "SMS-004"),
+	VERIFICATION_NOT_COMPLETED(HttpStatus.BAD_REQUEST, "전화번호 인증을 실패했습니다.", "SMS-004"),
 	INVALID_QUANTITY(HttpStatus.BAD_REQUEST, "식재료 수량은 0 이상이어야 합니다.", "INGREDIENT_008"),
 	MEMO_TOO_LONG(HttpStatus.BAD_REQUEST, "식재료 메모는 최대 100자까지 입력 가능합니다.", "INGREDIENT_009"),
 	INVALID_DELETE_REQUEST(HttpStatus.BAD_REQUEST, "삭제할 식재료를 입력해주세요.", "INGREDIENT_010"),

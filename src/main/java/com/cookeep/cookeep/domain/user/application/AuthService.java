@@ -24,6 +24,8 @@ import com.cookeep.cookeep.api.dto.response.SignUpResponseDTO;
 import com.cookeep.cookeep.api.dto.response.TokenRefreshResponseDTO;
 import com.cookeep.cookeep.domain.user.dto.TokenPair;
 import com.cookeep.cookeep.domain.user.entity.Provider;
+import com.cookeep.cookeep.domain.verification.application.SmsVerificationService;
+import com.cookeep.cookeep.domain.verification.entity.VerificationPurpose;
 import com.cookeep.cookeep.security.JwtTokenProvider;
 import com.cookeep.cookeep.domain.user.dao.UserAuthRepository;
 import com.cookeep.cookeep.domain.user.dao.UserRepository;
@@ -56,6 +58,7 @@ public class AuthService {
 	private final PasswordEncoder passwordEncoder;
 	private final NicknameGenerator nicknameGenerator;
 	private final UserPlantService userPlantService;
+	private final SmsVerificationService smsVerificationService;
 
 	// 액세스 토큰이 만료되었을 경우 리프레쉬 토큰으로 액세스 토큰 갱신
 	@Transactional
@@ -206,6 +209,20 @@ public class AuthService {
 		throw new AppException(ErrorCode.NICKNAME_GENERATION_UNAVAILABLE);
 	}
 
+
+	@Transactional
+	public void sendSignupCode(String phoneNumber) {
+		if (userRepository.existsByPhoneNumber(phoneNumber)) {
+			// 이미 가입된 전화번호일 경우
+			throw new AppException(ErrorCode.USER_PHONE_ALREADY_EXISTS);
+		}
+		smsVerificationService.sendCode(phoneNumber, VerificationPurpose.SIGNUP);
+	}
+
+	@Transactional
+	public void verifySignupCode(String phoneNumber, String code) {
+		smsVerificationService.verifyCode(phoneNumber, VerificationPurpose.SIGNUP, code);
+	}
 
 	@Transactional
 	public SignUpResponseDTO signUp(SignupRequestDTO signupRequestDTO) {
