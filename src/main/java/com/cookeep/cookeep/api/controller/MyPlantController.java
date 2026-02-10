@@ -1,6 +1,7 @@
 package com.cookeep.cookeep.api.controller;
 
 import com.cookeep.cookeep.api.dto.response.MyPlantResponseDto;
+import com.cookeep.cookeep.api.dto.response.RegisterPlantResponseDto;
 import com.cookeep.cookeep.common.dto.DataResponse;
 import com.cookeep.cookeep.domain.plant.application.UserPlantService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -38,12 +39,11 @@ public class MyPlantController {
             @ApiResponse(responseCode = "404", description = "유저 또는 식물을 찾을 수 없음")
     })
     @PostMapping("/{plantId}") // /api/my-plants/{plantId}
-    public DataResponse<String> registerPlant(
+    public DataResponse<RegisterPlantResponseDto> registerPlant(
             @AuthenticationPrincipal(expression = "userId") Long userId,
             @Parameter(description = "기본 식물 ID") @PathVariable long plantId) {
-        boolean isFirstPlant = userPlantService.registerPlant(userId, plantId);
-        String message = isFirstPlant ? "첫 식물 등록이 완료되었습니다." : "식물 등록이 완료되었습니다.";
-        return DataResponse.from(message);
+        RegisterPlantResponseDto response = userPlantService.registerPlant(userId, plantId);
+        return DataResponse.from(response);
     }
 
     @Operation(summary = "프로필 식물 지정", description = "내 보유 식물 ID를 경로에 전달하여 대표 프로필로 설정합니다.")
