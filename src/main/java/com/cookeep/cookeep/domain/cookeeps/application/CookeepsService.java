@@ -82,11 +82,12 @@ public class CookeepsService {
 				
 				// DTO로 변환 (rank = 인덱스 + 1 → 1, 2, 3)
 				return RecipeRankDto.builder()
-					.rank(index + 1)
-					.title(recipe.getTitle())
-					.likeCount(likeCount)
-					.recipeImageUrl(recipe.getRecipeImageUrl())
-					.build();
+						.dailyRecipeId(recipe.getId())
+						.rank(index + 1)
+						.title(recipe.getTitle())
+						.likeCount(likeCount)
+						.recipeImageUrl(recipe.getRecipeImageUrl())
+						.build();
 			})
 			.toList();
 	}

@@ -22,6 +22,7 @@ public class RankingResponseDto {
 	@Getter
 	@Builder
 	public static class RecipeRankDto {
+		private Long dailyRecipeId;
 		private Integer rank;
 		private String title;
 		private Long likeCount;
