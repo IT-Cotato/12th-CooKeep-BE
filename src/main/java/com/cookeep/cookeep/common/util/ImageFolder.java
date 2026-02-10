@@ -1,6 +1,5 @@
 package com.cookeep.cookeep.common.util;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
@@ -13,7 +12,6 @@ public enum ImageFolder {
 
 	private final String folderName;
 
-	@JsonCreator
 	public static ImageFolder fromValue(String value) {
 		for (ImageFolder folder : ImageFolder.values()) {
 			if (folder.folderName.equals(value)) {
