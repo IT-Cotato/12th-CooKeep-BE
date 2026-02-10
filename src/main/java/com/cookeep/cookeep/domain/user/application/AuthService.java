@@ -3,9 +3,14 @@ package com.cookeep.cookeep.domain.user.application;
 import static com.cookeep.cookeep.domain.user.entity.Provider.*;
 
 import java.time.LocalDateTime;
+import java.util.EnumSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -49,6 +54,7 @@ public class AuthService {
 	private final JwtTokenProvider jwtTokenProvider;
 	private final UserReader userReader;
 	private final PasswordEncoder passwordEncoder;
+	private final NicknameGenerator nicknameGenerator;
 	private final UserPlantService userPlantService;
 
 	// 액세스 토큰이 만료되었을 경우 리프레쉬 토큰으로 액세스 토큰 갱신
@@ -121,6 +127,9 @@ public class AuthService {
 		return new TokenPair(accessToken, refreshToken);
 	}
 
+	// 닉네임 제약 위반 시 재시도 횟수를 제한하기 위한 값 (무한 반복 방지)
+	private static final int MAX_TRIES = 30;
+
 	// 카카오 로그인
 	@Transactional
 	public KakaoLoginResponseDTO kakaoLogin(String code, String redirectUri) {
@@ -137,14 +146,11 @@ public class AuthService {
 		// 신규 유저일 경우 User, UserAuth값을 새롭게 생성함
 		UserAuth userAuth = existingUserAuth
 			.orElseGet(() -> {
-				// User 값 새롭게 생성
-				User newUser = userRepository.save(User.builder()
-					.email(email)
-					.build());
+				User user = createKakaoUser(email);
 
 				return userAuthRepository.save(
 					UserAuth.builder()
-						.user(newUser)
+						.user(user)
 						.provider(KAKAO)
 						.providerUserId(kakaoId)
 						.build());
@@ -174,6 +180,33 @@ public class AuthService {
 		);
 	}
 
+	private User createKakaoUser(String email) {
+
+		for (int i = 0; i < MAX_TRIES; i++) {
+			String nickname = nicknameGenerator.generateRandomNickname();
+
+			try {
+				return userRepository.saveAndFlush(User.builder()
+					.email(email)
+					.nickname(nickname)
+					.build());
+			} catch (DataIntegrityViolationException e) {
+				// 닉네임 관련 제약 위반인 경우에만 재시도
+				if (shouldRetryNickname(e)) {
+					log.debug("Nickname conflict during kakao signup. try={}/{}", i + 1, MAX_TRIES);
+					continue;
+				}
+				// 그 외 제약 위반은 에러 발생
+				log.error("Signup failed due to integrity violation (non-nickname).", e);
+				throw e;
+			}
+		}
+
+		log.warn("Failed to generate unique nickname after {} tries (kakao signup).", MAX_TRIES);
+		throw new AppException(ErrorCode.NICKNAME_GENERATION_UNAVAILABLE);
+	}
+
+
 	@Transactional
 	public SignUpResponseDTO signUp(SignupRequestDTO signupRequestDTO) {
 
@@ -194,12 +227,39 @@ public class AuthService {
 
 		Boolean marketingConsent = signupRequestDTO.marketingConsent();
 
-		User user = userRepository.save(User.builder()
-			.phoneNumber(phoneNumber)
-			.email(email)
-			.password(encodedPassword)
-			.marketingConsent(marketingConsent)
-			.build());
+		User user = null;
+
+		for (int i = 0; i < MAX_TRIES; i++) {
+
+			String nickname = nicknameGenerator.generateRandomNickname();
+
+			try {
+				user = userRepository.saveAndFlush(User.builder()
+					.phoneNumber(phoneNumber)
+					.email(email)
+					.password(encodedPassword)
+					.marketingConsent(marketingConsent)
+					.nickname(nickname)
+					.build());
+
+				break; // 중복 없이 저장 성공한 경우
+			} catch (DataIntegrityViolationException e) {
+				// 닉네임 관련 제약 위반일 경우에만 재시도
+				if (shouldRetryNickname(e)) {
+					log.debug("Nickname conflict during signup. try={}/{}", i + 1, MAX_TRIES);
+					continue;
+				}
+				// 그 외 제약 위반은 에러 발생
+				log.error("Signup failed due to integrity violation (non-nickname).", e);
+				throw e;
+			}
+		}
+
+		if (user == null) {
+			// MAX_TRIES를 초과해서 실패하는 경우
+			log.error("Failed to generate unique nickname after {} tries.", MAX_TRIES);
+			throw new AppException(ErrorCode.NICKNAME_GENERATION_UNAVAILABLE);
+		}
 
 		// 액세스 토큰, 리프레쉬 토큰 발급
 		TokenPair tokenPair = issueTokensAndUpsertSession(user);
@@ -215,25 +275,51 @@ public class AuthService {
 		);
 	}
 
+	private boolean shouldRetryNickname(DataIntegrityViolationException e) {
+		// DataIntegrityViolationException 중 닉네임 관련 제약 위반인지 식별
+		Throwable t = e;
+		while (t != null) { // 예외 체인 내에서 DB 에러 메세지를 탐색
+			String message = t.getMessage();
+			if (message != null && message.contains("nickname")) {
+				// 닉네임 관련 제약 위반으로 판단
+				return true;
+			}
+			t = t.getCause();
+		}
+		return false;
+	}
+
 	private void checkEmail(String email) {
 		User user = userRepository.findByEmail(email).orElse(null);
-		if (user == null) return;
+		if (user == null) return; // 중복된 이메일이 아닐 경우 null 반환
 
 		List<UserAuth> auths = userAuthRepository.findAllByUser(user);
 		if (auths.isEmpty()) {
-			throw new IllegalStateException("UserAuth가 존재하지 않는 User입니다. 서버에 문의해주세요.");
+			throw new AppException(ErrorCode.USERAUTH_DOES_NOT_EXIST);
 		}
 
-		boolean hasLocal = auths.stream()
-			.anyMatch(a -> a.getProvider() == Provider.LOCAL);
+		// 어떤 provider로 가입된 이메일인지 판별하기 위해
+		EnumSet<Provider> providerSet = auths.stream()
+			.map(UserAuth::getProvider)
+			.collect(Collectors.toCollection(() -> EnumSet.noneOf(Provider.class)));
 
-		if (hasLocal) {
-			// LOCAL 사용자로 이미 등록된 이메일일 경우
+		// LOCAL 가입자인 경우
+		// LOCAL+KAKAO, LOCAL+GOOGLE은 불가능하므로 LOCAL인 경우는 단독으로 처리
+		if (providerSet.contains(Provider.LOCAL)) {
 			throw new AppException(ErrorCode.USER_EMAIL_ALREADY_EXISTS);
 		}
 
-		// LOCAL이 아니라 소셜로만 가입된 이메일일 경우
-		throw new AppException(ErrorCode.USER_EMAIL_REGISTERED_WITH_SOCIAL);
+		// 소셜 가입자인 경우 이메일도 함께 반환해야 하므로 ErrorCode 매핑만 함
+		Map<Set<Provider>, ErrorCode> socialProviderErrorMap = Map.of(
+			EnumSet.of(Provider.KAKAO), ErrorCode.USER_EMAIL_REGISTERED_WITH_KAKAO,
+			EnumSet.of(Provider.GOOGLE), ErrorCode.USER_EMAIL_REGISTERED_WITH_GOOGLE,
+			EnumSet.of(Provider.KAKAO, Provider.GOOGLE), ErrorCode.USER_EMAIL_REGISTERED_WITH_KAKAO_GOOGLE
+		);
+
+		ErrorCode errorCode = socialProviderErrorMap.get(providerSet);
+		if (errorCode != null) {
+			throw new AppException(errorCode);
+		}
 	}
 
 	@Transactional
