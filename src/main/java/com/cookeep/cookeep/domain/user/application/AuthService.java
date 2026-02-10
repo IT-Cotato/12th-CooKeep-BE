@@ -3,8 +3,12 @@ package com.cookeep.cookeep.domain.user.application;
 import static com.cookeep.cookeep.domain.user.entity.Provider.*;
 
 import java.time.LocalDateTime;
+import java.util.EnumSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -276,23 +280,35 @@ public class AuthService {
 
 	private void checkEmail(String email) {
 		User user = userRepository.findByEmail(email).orElse(null);
-		if (user == null) return;
+		if (user == null) return; // 중복된 이메일이 아닐 경우 null 반환
 
 		List<UserAuth> auths = userAuthRepository.findAllByUser(user);
 		if (auths.isEmpty()) {
-			throw new IllegalStateException("UserAuth가 존재하지 않는 User입니다. 서버에 문의해주세요.");
+			throw new AppException(ErrorCode.USERAUTH_DOES_NOT_EXIST);
 		}
 
-		boolean hasLocal = auths.stream()
-			.anyMatch(a -> a.getProvider() == Provider.LOCAL);
+		// 어떤 provider로 가입된 이메일인지 판별하기 위해
+		EnumSet<Provider> providerSet = auths.stream()
+			.map(UserAuth::getProvider)
+			.collect(Collectors.toCollection(() -> EnumSet.noneOf(Provider.class)));
 
-		if (hasLocal) {
-			// LOCAL 사용자로 이미 등록된 이메일일 경우
+		// LOCAL 가입자인 경우
+		// LOCAL+KAKAO, LOCAL+GOOGLE은 불가능하므로 LOCAL인 경우는 단독으로 처리
+		if (providerSet.contains(Provider.LOCAL)) {
 			throw new AppException(ErrorCode.USER_EMAIL_ALREADY_EXISTS);
 		}
 
-		// LOCAL이 아니라 소셜로만 가입된 이메일일 경우
-		throw new AppException(ErrorCode.USER_EMAIL_REGISTERED_WITH_SOCIAL);
+		// 소셜 가입자인 경우 이메일도 함께 반환해야 하므로 ErrorCode 매핑만 함
+		Map<Set<Provider>, ErrorCode> socialProviderErrorMap = Map.of(
+			EnumSet.of(Provider.KAKAO), ErrorCode.USER_EMAIL_REGISTERED_WITH_KAKAO,
+			EnumSet.of(Provider.GOOGLE), ErrorCode.USER_EMAIL_REGISTERED_WITH_GOOGLE,
+			EnumSet.of(Provider.KAKAO, Provider.GOOGLE), ErrorCode.USER_EMAIL_REGISTERED_WITH_KAKAO_GOOGLE
+		);
+
+		ErrorCode errorCode = socialProviderErrorMap.get(providerSet);
+		if (errorCode != null) {
+			throw new AppException(errorCode);
+		}
 	}
 
 	@Transactional
