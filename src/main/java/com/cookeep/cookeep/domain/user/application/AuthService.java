@@ -163,7 +163,7 @@ public class AuthService {
 		if (user.getUserStatus() == UserStatus.CREATED) {
 			// 최초 회원가입인 경우 TERMS 페이지로 이동,
 			// 회원가입 이후 약관 동의까지 마친 경우 ONBOARDING 페이지로 이동
-			nextStep = (user.getMarketingConsent() == null)
+			nextStep = (marketingConsent == null)
 				? NextStep.TERMS
 				: NextStep.ONBOARDING;
 		}

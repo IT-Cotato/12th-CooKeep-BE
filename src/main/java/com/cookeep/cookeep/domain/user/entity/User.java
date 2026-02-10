@@ -134,4 +134,9 @@ public class User extends BaseEntity {
 	public void updatePlantStatus(PlantStatus plantStatus) {
 		this.plantStatus = plantStatus;
 	}
+
+	public void activate() {
+		this.userStatus = UserStatus.ACTIVE;
+	}
+
 }

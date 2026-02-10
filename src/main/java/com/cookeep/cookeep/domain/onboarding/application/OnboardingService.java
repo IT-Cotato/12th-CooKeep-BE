@@ -20,6 +20,7 @@ import com.cookeep.cookeep.domain.onboarding.entity.WeeklyGoal;
 import com.cookeep.cookeep.domain.user.application.UserReader;
 import com.cookeep.cookeep.domain.user.dao.UserRepository;
 import com.cookeep.cookeep.domain.user.entity.User;
+import com.cookeep.cookeep.domain.user.entity.UserStatus;
 
 import lombok.RequiredArgsConstructor;
 
@@ -64,6 +65,11 @@ public class OnboardingService {
 		upsertUserOnboarding(userId, user, onboardingRequestDTO);
 		upsertUserFoodPreference(userId, user, onboardingRequestDTO);
 		appendWeeklyGoal(user, onboardingRequestDTO);
+
+		// 온보딩을 마쳤으므로 userStatus를 ACTIVE로 변경
+		if (user.getUserStatus() == UserStatus.CREATED) {
+			user.activate();
+		}
 	}
 
 	// 온보딩 내 요리 수준을 upsert하는 메서드
