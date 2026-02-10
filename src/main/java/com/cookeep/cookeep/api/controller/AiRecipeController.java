@@ -92,7 +92,6 @@ public class AiRecipeController {
             summary = "(MAIN05-02)AI 레시피 재요청",
             description = "기존 세션의 식재료 및 조건을 기반으로 AI에게 레시피를 재요청합니다."
     )
-    @SecurityRequirements
     @ApiErrorCodeExamples({
             ErrorCode.RECIPE_SESSIONID_REQUIRED,
             ErrorCode.AI_SESSION_NOT_FOUND,
@@ -148,7 +147,6 @@ public class AiRecipeController {
             summary = "(MAIN05-03)AI 레시피 채택",
             description = "생성된 AI 레시피 중 하나를 최종 레시피로 채택하고 세션을 완료 처리합니다."
     )
-    @SecurityRequirements
     @ApiErrorCodeExamples({
             ErrorCode.AI_SESSION_NOT_FOUND,
             ErrorCode.SESSION_ALREADY_COMPLETED,
@@ -196,7 +194,6 @@ public class AiRecipeController {
             summary = "(MAIN06-1) AI 레시피 대화 세션 목록 조회",
             description = "사용자의 모든 AI 레시피 대화 세션 조회 (즐겨찾기 분리, 최신순 정렬)"
     )
-    @SecurityRequirements
     @ApiErrorCodeExamples({
             ErrorCode.UNAUTHORIZED
     })
@@ -214,7 +211,6 @@ public class AiRecipeController {
             summary = "(MAIN06-2)AI 레시피 대화 세션 상세 조회",
             description = "특정 세션의 모든 대화 내역 조회 (AI 응답만)"
     )
-    @SecurityRequirements
     @ApiErrorCodeExamples({
             ErrorCode.UNAUTHORIZED,
             ErrorCode.AI_SESSION_NOT_FOUND
@@ -240,7 +236,6 @@ public class AiRecipeController {
             summary = "(MAIN06-3)AI 레시피 대화 세션 삭제",
             description = "특정 세션과 관련 메시지 모두 삭제"
     )
-    @SecurityRequirements
     @ApiErrorCodeExamples({
             ErrorCode.UNAUTHORIZED,
             ErrorCode.AI_SESSION_NOT_FOUND,
@@ -268,7 +263,6 @@ public class AiRecipeController {
             summary = "(MAIN07) AI 대화 세션 즐겨찾기 추가/삭제",
             description = "특정 세션의 즐겨찾기 상태를 변경합니다. (T -> F / F -> T)"
     )
-    @SecurityRequirements
     @ApiErrorCodeExamples({
             ErrorCode.UNAUTHORIZED,
             ErrorCode.AI_SESSION_NOT_FOUND,

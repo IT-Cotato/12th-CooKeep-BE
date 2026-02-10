@@ -63,6 +63,11 @@ public class AiSession {
     @Column(name = "ingredient_ids", columnDefinition = "JSON")
     private String ingredientIdsJson;
 
+    // 유저 요청 식재료에 D-0 식재료 포함 여부 (true -> 쿠키 3개 지급/1일1회)
+    @Column(name = "has_urgent_ingredient", nullable = false)
+    @Builder.Default
+    private Boolean hasUrgentIngredient = false;
+
     // Domain Logic
     public void pin() {
         this.isPinned = true;

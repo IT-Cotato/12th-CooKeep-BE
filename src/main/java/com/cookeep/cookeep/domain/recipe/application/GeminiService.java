@@ -168,21 +168,21 @@ public class GeminiService {
         [난이도]
         %s
         
-                [규칙]
-                1. 제공된 재료의 단위를 반드시 사용하세요.
-                2. 각 재료의 적절한 수량(quantity)을 생성하세요.
-                   - 수량은 반드시 0보다 큰 양수여야 합니다. (0은 절대 불가)
-                   - 0.5, 1, 1.5, 2 등 소수점 첫 번째 자리까지 표현 가능합니다.
-                   - 예: 0은 불가, 최소 0.5 이상이어야 합니다.
-                3. user_ingredients에는 type, referenceId, name, quantity, unit을 모두 포함하세요.
-                4. 추가로 필요한 재료가 있다면 additional_ingredients에 포함하세요.
-                5. 생략 가능하거나 대체 가능한 재료는 optional_ingredients에 포함하세요.
-                6. youtube_search_queries에는 이 레시피를 유튜브에서 검색할 때 쓸 한국어 검색어를 1~3개 작성하세요.
-                   - 검색어는 실제로 유튜브에서 검색했을 때 관련 영상이 나올만한 구체적인 표현을 사용하세요.
-                   - 예: "김치볶음밥 만들기", "간단한 김치볶음밥 레시피", "볶음밥 황금레시피"
-                7. URL이나 링크는 절대 생성하지 마세요. 검색어만 제공하면 됩니다.
-                8. 반드시 JSON만 응답하세요. 설명 문구는 절대 포함하지 마세요.
-                9. steps는 간결하고 실용적인 요리 방법을 단계별로 작성하세요.
+        [규칙]
+        1. 제공된 재료의 단위를 반드시 사용하세요.
+        2. 각 재료의 적절한 수량(quantity)을 생성하세요.
+           - 수량은 반드시 0보다 큰 양수여야 합니다. (0은 절대 불가)
+           - 소수점 첫 번째 자리까지 표현 가능합니다. 예: 0.5, 1, 1.5, 2
+        3. user_ingredients에는 ingredientId, name, quantity, unit을 모두 포함하세요.
+           - ingredientId는 제공된 값을 그대로 사용하세요. 절대 임의로 변경하지 마세요.
+        4. 추가로 필요한 재료가 있다면 additional_ingredients에 포함하세요.
+        5. 생략하거나 대체 가능한 재료는 optional_ingredients에 포함하세요.
+        6. youtube_search_queries에는 이 레시피를 유튜브에서 검색할 때 쓸 한국어 검색어를 1~3개 작성하세요.
+           - 실제로 유튜브에서 검색했을 때 관련 영상이 나올만한 구체적인 표현을 사용하세요.
+           - 예: "김치볶음밥 만들기", "간단한 김치볶음밥 레시피"
+        7. URL이나 링크는 절대 생성하지 마세요. 검색어만 제공하면 됩니다.
+        8. 반드시 JSON만 응답하세요. 설명 문구는 절대 포함하지 마세요.
+        9. steps는 간결하고 실용적인 요리 방법을 단계별로 작성하세요.
         
         [응답 형식]
         {
@@ -190,10 +190,10 @@ public class GeminiService {
           "ingredients": {
             "user_ingredients": %s,
             "additional_ingredients": [
-              {"name": "간장", "quantity": 2, "unit": "GRAM"}
+              {"name": "간장", "quantity": 2.0, "unit": "GRAM"}
             ],
             "optional_ingredients": [
-              {"name": "참기름", "quantity": 1, "unit": "GRAM"}
+              {"name": "참기름", "quantity": 0.5, "unit": "GRAM"}
             ]
           },
           "steps": [
