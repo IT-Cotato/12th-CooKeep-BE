@@ -38,7 +38,8 @@ public class MyCookeepService {
 
         // 현재 키우는 식물(수확되지 않은, 얼지 않은 식물)의 이름 조회
         String growingPlantName = userPlantRepository
-            .findByUserAndIsHarvestedFalseAndIsFrozenFalse(user)
+            .findByUserAndIsHarvestedFalse(user)
+            .filter(plant -> !plant.getIsFrozen())
             .map(userPlant -> userPlant.getPlant().getPlantType().getDisplayName())
             .orElse(null);
 
