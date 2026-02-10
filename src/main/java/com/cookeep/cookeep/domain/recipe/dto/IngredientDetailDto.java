@@ -19,21 +19,11 @@ import lombok.NoArgsConstructor;
 public class IngredientDetailDto {
 
     @Schema(
-            description = "재료 타입 (기본/커스텀). DEFAULT 또는 CUSTOM",
-            example = "DEFAULT",
-            allowableValues = {"DEFAULT", "CUSTOM"},
-            requiredMode = Schema.RequiredMode.REQUIRED
-    )
-    @NotNull
-    private String type;
-
-    @Schema(
-            description = "재료 참조 ID (DEFAULT면 default_ingredients.id, CUSTOM이면 custom_ingredients.id)",
+            description = "유저 식재료 ID (user_ingredients.ingredients_id)",
             example = "7",
             requiredMode = Schema.RequiredMode.REQUIRED
     )
-    @NotNull
-    private Long referenceId;
+    private Long ingredientId;
 
     @Schema(
             description = "재료 이름 (서버에서 조회하여 채움)",
@@ -56,15 +46,5 @@ public class IngredientDetailDto {
             requiredMode = Schema.RequiredMode.NOT_REQUIRED
     )
     private String unit;
-
-    public static IngredientDetailDto from(UserIngredient entity) {
-        return IngredientDetailDto.builder()
-                .type(entity.getType().name())
-                .referenceId(entity.getReferenceId())
-                .name(entity.getMemo())
-                .quantity(entity.getQuantity())
-                .unit(entity.getUnit().name())
-                .build();
-    }
 
 }

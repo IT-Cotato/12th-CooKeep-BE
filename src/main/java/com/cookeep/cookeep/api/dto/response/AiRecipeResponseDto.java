@@ -1,9 +1,12 @@
 package com.cookeep.cookeep.api.dto.response;
 
 import com.cookeep.cookeep.domain.recipe.dto.GeminiRecipeResponseDto;
+import com.cookeep.cookeep.domain.recipe.dto.YoutubeReferenceDto;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 import lombok.Getter;
+
+import java.util.List;
 
 @Schema(
         name = "AiRecipeResponse",
@@ -33,4 +36,10 @@ public class AiRecipeResponseDto {
             requiredMode = Schema.RequiredMode.REQUIRED
     )
     private GeminiRecipeResponseDto recipe;
+
+    @Schema(
+            description = "YouTube Data API로 조회한 실제 유튜브 영상 목록",
+            requiredMode = Schema.RequiredMode.NOT_REQUIRED
+    )
+    private List<YoutubeReferenceDto> youtubeReferences;
 }
