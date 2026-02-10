@@ -39,8 +39,8 @@ public class GeminiRecipeResponseDto {
             description = "참고용 유튜브 영상 목록",
             requiredMode = Schema.RequiredMode.NOT_REQUIRED
     )
-    @JsonProperty("youtube_references")
-    private List<YoutubeReference> youtubeReferences;
+    @JsonProperty("youtube_search_queries")
+    private List<String> youtubeSearchQueries;
 
     @Schema(
             name = "GeminiRecipeIngredients",
@@ -81,18 +81,11 @@ public class GeminiRecipeResponseDto {
     public static class UserIngredient {
 
         @Schema(
-                description = "재료 타입 (DEFAULT / CUSTOM)",
-                example = "CUSTOM",
-                requiredMode = Schema.RequiredMode.REQUIRED
-        )
-        private String type;
-
-        @Schema(
-                description = "재료 참조 ID",
-                example = "5",
-                requiredMode = Schema.RequiredMode.REQUIRED
-        )
-        private Long referenceId;
+                description = "유저 식재료 ID (user_ingredients.ingredients_id)",
+                example = "7",
+                requiredMode = Schema.RequiredMode.REQUIRED)
+        @JsonProperty("ingredientId")
+        private Long ingredientId;
 
         @Schema(
                 description = "재료 이름",

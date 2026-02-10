@@ -214,7 +214,7 @@ public class UserIngredientUpdateController {
     @Operation(
             summary = "6. 재료 섭취 완료",
             description = "식재료를 섭취 완료 처리합니다. (리워드를 지급 후 삭제)" +
-                    "1일 1회 기본 섭취 리워드(+1), 유통기한 임박 식재료(D-3 이하) 섭취 시 추가 리워드(+3)가 지급됩니다."
+                    "1일 1회 기본 섭취 리워드(+1) 지급됩니다. (유통기한 임박 여부 상관없이 모두 1개 지급)"
     )
     @ApiErrorCodeExamples({
             ErrorCode.INVALID_DELETE_REQUEST,
