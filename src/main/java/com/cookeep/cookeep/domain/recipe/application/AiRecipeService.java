@@ -11,7 +11,6 @@ import com.cookeep.cookeep.domain.cookie.application.CookieService;
 import com.cookeep.cookeep.domain.cookie.dao.CookieLogRepository;
 import com.cookeep.cookeep.domain.cookie.dao.DailyCookieGrantRepository;
 import com.cookeep.cookeep.domain.cookie.entity.CookieLog;
-import com.cookeep.cookeep.domain.cookie.entity.DailyCookieGrant;
 import com.cookeep.cookeep.domain.ingredient.common.domain.Type;
 import com.cookeep.cookeep.domain.ingredient.customingredient.dao.CustomIngredientRepository;
 import com.cookeep.cookeep.domain.ingredient.customingredient.entity.CustomIngredient;
@@ -25,7 +24,6 @@ import com.cookeep.cookeep.domain.recipe.dao.AiSessionRepository;
 import com.cookeep.cookeep.domain.recipe.dto.*;
 import com.cookeep.cookeep.domain.recipe.entity.*;
 import com.cookeep.cookeep.domain.user.dao.UserRepository;
-import com.cookeep.cookeep.domain.user.entity.User;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -78,8 +76,8 @@ public class AiRecipeService {
     // 1. 새 레시피 요청
     private AiRecipeResponseDto generateInitialRecipe(Long userId, AiRecipeRequestDto request) {
 
-        // 필수 입력 필드 검증
-        if (request == null || request.getIngredients() == null || request.getIngredients().isEmpty()) {
+        // 0. 필수 입력 필드 검증
+        if (request == null || request.getIngredientIds() == null || request.getIngredientIds().isEmpty()) {
             throw new AppException(ErrorCode.RECIPE_INGREDIENTS_REQUIRED);
         }
 
@@ -87,17 +85,23 @@ public class AiRecipeService {
             throw new AppException(ErrorCode.INVALID_DIFFICULTY);
         }
 
-        // 1. 재료 정보 enrichment (이름 + 단위 조회)
-        List<IngredientDetailDto> enrichedIngredients =
-                enrichIngredientsForAI(userId, request.getIngredients());
+        // 1. 해당 유저의 재료 조회
+        List<UserIngredient> userIngredients = userIngredientRepository
+                .findAllByIngredientIdInAndUser_UserId(request.getIngredientIds(), userId);
 
-        for (IngredientSimpleDto dto : request.getIngredients()) {
-            if (dto.getType() == null) {
-                throw new AppException(ErrorCode.INVALID_INGREDIENT_TYPE);
-            }
+        if (userIngredients.isEmpty()) {
+            throw new AppException(ErrorCode.INGREDIENT_NOT_FOUND);
         }
 
-        // 2. 세션 생성
+        if (userIngredients.size() != request.getIngredientIds().size()) {
+            throw new AppException(ErrorCode.INGREDIENT_NOT_FOUND);
+        }
+
+        // 2. 재료 정보를 IngredientDetailDto로 변환
+        List<IngredientDetailDto> enrichedIngredients =
+                enrichIngredientsFromUserIngredients(userIngredients);
+
+        // 3. 세션 생성
         AiSession session = AiSession.builder()
                 .userId(userId)
                 .difficulty(request.getDifficulty())
@@ -108,10 +112,7 @@ public class AiRecipeService {
         aiSessionRepository.save(session);
 
         // 입력한 재료 저장 (채택시 차감)
-        List<Long> ingredientIds = request.getIngredients().stream()
-                .map(IngredientSimpleDto::getReferenceId)
-                .collect(Collectors.toList());
-        session.setIngredientIds(ingredientIds);
+        session.setIngredientIds(request.getIngredientIds());
 
         // 메시지 db에 저장
         saveInitialUserMessage(session, request);
@@ -326,7 +327,7 @@ public class AiRecipeService {
     private void validateRequest(AiRecipeRequestDto request) {
         // 신규 요청 (sessionId가 null)인 경우에만 재료와 난이도 검증
         if (request.getSessionId() == null) {
-            if (request.getIngredients() == null || request.getIngredients().isEmpty()) {
+            if (request.getIngredientIds() == null || request.getIngredientIds().isEmpty()) {
                 throw new AppException(ErrorCode.RECIPE_INGREDIENTS_REQUIRED);
             }
             if (request.getDifficulty() == null) {
@@ -356,6 +357,26 @@ public class AiRecipeService {
                             .name(name)
                             .quantity(null)
                             .unit(unit)
+                            .build();
+                })
+                .collect(Collectors.toList());
+    }
+
+    // UserIngredient 엔티티에서 IngredientDetailDto로 변환
+    private List<IngredientDetailDto> enrichIngredientsFromUserIngredients(
+            List<UserIngredient> userIngredients
+    ) {
+        return userIngredients.stream()
+                .map(ui -> {
+                    // user_ingredient에서 참조하는 default 또는 custom ingredient의 이름 가져오기
+                    String name = getIngredientName(ui.getType().name(), ui.getReferenceId());
+
+                    return IngredientDetailDto.builder()
+                            .type(ui.getType().name())
+                            .referenceId(ui.getReferenceId())
+                            .name(name)
+                            .quantity(null) // AI가 생성
+                            .unit(ui.getUnit().name())
                             .build();
                 })
                 .collect(Collectors.toList());
@@ -494,7 +515,7 @@ public class AiRecipeService {
             var payload = new java.util.LinkedHashMap<String, Object>();
             payload.put("type", MessageType.INITIAL_REQUEST.name());
             payload.put("message", MessageType.INITIAL_REQUEST.getDescription());
-            payload.put("ingredients", request.getIngredients());
+            payload.put("ingredients", request.getIngredientIds());
 
             String content = objectMapper.writeValueAsString(payload);
 

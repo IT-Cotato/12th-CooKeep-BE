@@ -1,10 +1,7 @@
 package com.cookeep.cookeep.api.dto.request;
 
-import com.cookeep.cookeep.domain.recipe.dto.IngredientSimpleDto;
 import com.cookeep.cookeep.domain.recipe.entity.Difficulty;
-import com.cookeep.cookeep.domain.recipe.entity.MessageType;
 import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -34,8 +31,9 @@ public class AiRecipeRequestDto {
     private Difficulty difficulty;
 
     @Schema(
-            description = "레시피 생성을 위한 재료 목록 (신규 요청 시 필수)",
+            description = "레시피 생성을 위한 유저 식재료 ID 목록 (신규 요청 시 필수)",
+            example = "[1, 2, 3]",
             requiredMode = Schema.RequiredMode.NOT_REQUIRED
     )
-    private List<IngredientSimpleDto> ingredients;
+    private List<Long> ingredientIds;
 }
