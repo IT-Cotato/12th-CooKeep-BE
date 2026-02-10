@@ -16,8 +16,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.cookeep.cookeep.api.dto.request.LoginRequestDTO;
+import com.cookeep.cookeep.api.dto.request.SendCodeRequestDTO;
 import com.cookeep.cookeep.api.dto.request.SignupRequestDTO;
 import com.cookeep.cookeep.api.dto.request.TokenRefreshRequestDTO;
+import com.cookeep.cookeep.api.dto.request.VerifyCodeRequestDTO;
 import com.cookeep.cookeep.api.dto.response.KakaoLoginResponseDTO;
 import com.cookeep.cookeep.api.dto.response.LoginResponseDTO;
 import com.cookeep.cookeep.api.dto.response.SignUpResponseDTO;
@@ -211,7 +213,9 @@ public class AuthService {
 
 
 	@Transactional
-	public void sendSignupCode(String phoneNumber) {
+	public void sendSignupCode(SendCodeRequestDTO sendCodeRequestDTO) {
+		String phoneNumber = sendCodeRequestDTO.phoneNumber();
+
 		if (userRepository.existsByPhoneNumber(phoneNumber)) {
 			// 이미 가입된 전화번호일 경우
 			throw new AppException(ErrorCode.USER_PHONE_ALREADY_EXISTS);
@@ -220,7 +224,22 @@ public class AuthService {
 	}
 
 	@Transactional
-	public void verifySignupCode(String phoneNumber, String code) {
+	public void sendPasswordResetCode(SendCodeRequestDTO sendCodeRequestDTO) {
+		String phoneNumber = sendCodeRequestDTO.phoneNumber();
+
+		if (!userRepository.existsByPhoneNumber(phoneNumber)) {
+			// 가입되지 않은 전화번호일 경우
+			throw new AppException(ErrorCode.AUTH_PHONE_NOT_REGISTERED);
+		}
+
+		smsVerificationService.sendCode(phoneNumber, VerificationPurpose.RESET_PASSWORD);
+	}
+
+	@Transactional
+	public void verifyAuthCode(VerifyCodeRequestDTO verifyCodeRequestDTO) {
+		String phoneNumber = verifyCodeRequestDTO.phoneNumber();
+		String code = verifyCodeRequestDTO.code();
+
 		smsVerificationService.verifyCode(phoneNumber, VerificationPurpose.SIGNUP, code);
 	}
 
