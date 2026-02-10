@@ -4,8 +4,10 @@ import com.twilio.Twilio;
 import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 
-@Configuration
+// @Configuration
+// twilio 사용 보류
 public class TwilioConfig {
 	@Value("${sms.api-key}") private String accountSid;
 	@Value("${sms.api-secret}") private String authToken;

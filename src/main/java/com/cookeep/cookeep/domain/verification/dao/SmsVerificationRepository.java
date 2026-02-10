@@ -9,7 +9,7 @@ import com.cookeep.cookeep.domain.verification.entity.VerificationPurpose;
 
 public interface SmsVerificationRepository extends JpaRepository<SmsVerification, Long> {
 
-	Optional<SmsVerification> findTopByPhoneE164AndPurposeOrderByCreatedAtDesc(
+	Optional<SmsVerification> findTopByPhoneAndPurposeOrderByCreatedAtDesc(
 		String phoneE164,
 		VerificationPurpose purpose
 	);

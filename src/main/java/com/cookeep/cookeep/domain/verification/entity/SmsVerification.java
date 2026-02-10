@@ -30,7 +30,8 @@ public class SmsVerification extends BaseEntity {
 	private Long smsVerificationId;
 
 	@Column(nullable = false, length = 20)
-	private String phoneE164;
+	// private String phoneE164;
+	private String phone;
 
 	// SIGNUP / RESET_PASSWORD / CHANGE_PHONE
 	@Enumerated(EnumType.STRING)

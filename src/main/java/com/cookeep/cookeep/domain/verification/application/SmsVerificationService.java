@@ -34,12 +34,12 @@ public class SmsVerificationService {
 	private int maxFailures;
 
 	@Transactional
-	public void sendCode(String rawPhoneNumber, VerificationPurpose purpose) {
+	public void sendCode(String phoneNumber, VerificationPurpose purpose) {
 		LocalDateTime now = LocalDateTime.now();
-		String phoneE164 = toE164KR(rawPhoneNumber);
+		// String phoneE164 = toE164KR(phoneNumber);
 
 		// 재전송 쿨다운 체크
-		smsVerificationRepository.findTopByPhoneE164AndPurposeOrderByCreatedAtDesc(phoneE164, purpose)
+		smsVerificationRepository.findTopByPhoneAndPurposeOrderByCreatedAtDesc(phoneNumber, purpose)
 			.ifPresent(latest -> {
 				if (latest.getCreatedAt().isAfter(now.minusSeconds(cooldownSeconds))) {
 					throw new AppException(ErrorCode.SMS_RESEND_TOO_FAST);
@@ -49,7 +49,8 @@ public class SmsVerificationService {
 		String code = generate6();
 
 		SmsVerification verification = SmsVerification.builder()
-			.phoneE164(phoneE164)
+			// .phoneE164(phoneE164)
+			.phone(phoneNumber)
 			.purpose(purpose)
 			.code(code)
 			.failCount(0)
@@ -58,16 +59,16 @@ public class SmsVerificationService {
 
 		smsVerificationRepository.save(verification);
 
-		smsSender.send(phoneE164, "[COOKEEP] 인증번호는 " + code + " 입니다.");
+		smsSender.send(phoneNumber, "[COOKEEP] 인증번호는 " + code + " 입니다.");
 	}
 
 	@Transactional
-	public void verifyCode(String rawPhoneNumber, VerificationPurpose purpose, String inputCode) {
+	public void verifyCode(String phoneNumber, VerificationPurpose purpose, String inputCode) {
 		LocalDateTime now = LocalDateTime.now();
-		String phoneE164 = toE164KR(rawPhoneNumber);
+		// String phoneE164 = toE164KR(rawPhoneNumber);
 
 		SmsVerification verification = smsVerificationRepository
-			.findTopByPhoneE164AndPurposeOrderByCreatedAtDesc(phoneE164, purpose)
+			.findTopByPhoneAndPurposeOrderByCreatedAtDesc(phoneNumber, purpose)
 			.orElseThrow(() -> new AppException(ErrorCode.VERIFICATION_NOT_COMPLETED));
 
 		// 이미 인증이 완료된 경우
@@ -97,15 +98,15 @@ public class SmsVerificationService {
 		verification.markVerified(now);
 	}
 
-	// 입력받은 전화번호를 E164 형식으로 변환
-	// 01012345678 / 010-1234-5678 -> +821012345678
-	private String toE164KR(String raw) {
-		String digits = raw == null ? "" : raw.replaceAll("[^0-9]", "");
-		if (digits.length() != 11 || !digits.startsWith("010")) {
-			throw new AppException(ErrorCode.INVALID_PHONE_NUMBER);
-		}
-		return "+82" + digits.substring(1);
-	}
+	// // 입력받은 전화번호를 E164 형식으로 변환
+	// // 01012345678 / 010-1234-5678 -> +821012345678
+	// private String toE164KR(String raw) {
+	// 	String digits = raw == null ? "" : raw.replaceAll("[^0-9]", "");
+	// 	if (digits.length() != 11 || !digits.startsWith("010")) {
+	// 		throw new AppException(ErrorCode.INVALID_PHONE_NUMBER);
+	// 	}
+	// 	return "+82" + digits.substring(1);
+	// }
 
 	// 인증번호를 랜덤으로 생성
 	private String generate6() {

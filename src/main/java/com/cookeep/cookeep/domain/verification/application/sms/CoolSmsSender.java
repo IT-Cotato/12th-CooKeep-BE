@@ -1,0 +1,46 @@
+package com.cookeep.cookeep.domain.verification.application.sms;
+
+import com.cookeep.cookeep.common.exception.AppException;
+import com.cookeep.cookeep.common.exception.ErrorCode;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import net.nurigo.sdk.message.model.Message;
+import net.nurigo.sdk.message.service.DefaultMessageService;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
+
+@Slf4j
+@Component
+@RequiredArgsConstructor
+public class CoolSmsSender implements SmsSender {
+
+	private final DefaultMessageService messageService;
+
+	@Value("${sms.sender}")
+	private String from010; // 발신번호
+
+	@Override
+	public void send(String to010, String text) {
+		try {
+			log.info("[SMS] send attempt. to={}", mask(to010));
+
+			Message message = new Message();
+			message.setFrom(from010);
+			message.setTo(to010);
+			message.setText(text);
+
+			messageService.send(message);
+
+			log.info("[SMS] send success. to={}", mask(to010));
+		} catch (Exception e) {
+			// CoolSMS SDK는 다양한 예외를 던질 수 있어 일단 공급자 오류로 묶는 게 안전
+			log.error("[SMS] CoolSMS send failed. to={}", mask(to010), e);
+			throw new AppException(ErrorCode.SMS_PROVIDER_ERROR);
+		}
+	}
+
+	private String mask(String phone010) {
+		if (phone010 == null || phone010.length() < 4) return "****";
+		return phone010.substring(0, phone010.length() - 4) + "****";
+	}
+}

@@ -50,6 +50,10 @@ dependencies {
 
 	// Twilio
 	implementation "com.twilio.sdk:twilio:10.+"
+
+	// CoolSMS
+	implementation 'net.nurigo:sdk:4.3.0'
+
 }
 
 tasks.named('test') {
