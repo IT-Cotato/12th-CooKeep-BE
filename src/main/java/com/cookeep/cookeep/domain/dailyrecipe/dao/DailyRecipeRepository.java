@@ -3,6 +3,7 @@ package com.cookeep.cookeep.domain.dailyrecipe.dao;
 import com.cookeep.cookeep.domain.dailyrecipe.entity.DailyRecipe;
 import com.cookeep.cookeep.domain.recipe.entity.AiRecipe;
 import com.cookeep.cookeep.domain.user.entity.User;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
