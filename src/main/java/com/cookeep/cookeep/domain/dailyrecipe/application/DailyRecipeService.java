@@ -106,7 +106,7 @@ public class DailyRecipeService {
 
     // 데일리 레시피 수정 (제목, 한줄평)
     public DailyRecipe updateDailyRecipe(Long userId, Long dailyRecipeId, String title, String description) {
-        if ((title == null || title.isBlank()) && description == null) {
+        if ((title == null || title.isBlank()) && (description == null || description.isBlank())) {
             throw new AppException(ErrorCode.DAILY_RECIPE_UPDATE_FIELDS_REQUIRED);
         }
 
