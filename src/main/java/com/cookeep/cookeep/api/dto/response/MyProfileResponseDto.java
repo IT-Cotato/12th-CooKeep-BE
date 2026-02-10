@@ -14,6 +14,7 @@ import java.time.temporal.ChronoUnit;
 public class MyProfileResponseDto {
     private String nickname;
     private String profilePlantImageUrl;
+    private String growingPlantName;
     private Long daysSinceJoined;
     private WeeklyGoalDto weeklyGoal;
 
@@ -35,7 +36,7 @@ public class MyProfileResponseDto {
         }
     }
 
-    public static MyProfileResponseDto of(User user, WeeklyGoal weeklyGoal) {
+    public static MyProfileResponseDto of(User user, WeeklyGoal weeklyGoal, String growingPlantName) {
         String profileImageUrl = null;
         if (user.getProfilePlant() != null) {
             profileImageUrl = user.getProfilePlant().getCurrentImageUrl();
@@ -47,10 +48,11 @@ public class MyProfileResponseDto {
         ) + 1; // 가입 당일을 1일로 계산
 
         return MyProfileResponseDto.builder()
-                .nickname(user.getNickname())
-                .profilePlantImageUrl(profileImageUrl)
-                .daysSinceJoined(daysSinceJoined)
-                .weeklyGoal(weeklyGoal != null ? WeeklyGoalDto.from(weeklyGoal) : null)
-                .build();
+            .nickname(user.getNickname())
+            .profilePlantImageUrl(profileImageUrl)
+            .growingPlantName(growingPlantName)
+            .daysSinceJoined(daysSinceJoined)
+            .weeklyGoal(weeklyGoal != null ? WeeklyGoalDto.from(weeklyGoal) : null)
+            .build();
     }
 }
