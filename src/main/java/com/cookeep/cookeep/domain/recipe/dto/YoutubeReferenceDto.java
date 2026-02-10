@@ -1,8 +1,10 @@
 package com.cookeep.cookeep.domain.recipe.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 @Schema(
         name = "YoutubeReference",
@@ -10,6 +12,8 @@ import lombok.Getter;
 )
 @Getter
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class YoutubeReferenceDto {
 
     @Schema(

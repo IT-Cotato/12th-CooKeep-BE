@@ -25,7 +25,6 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @Tag(name = "(MAIN03) 냉장고 관리", description = "냉장고 식재료 조회 API")
-@SecurityRequirement(name = "bearerAuth")
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/users/me/refrigerator")
@@ -59,7 +58,6 @@ public class RefrigeratorController {
             summary = "02냉장고 식재료 전체보기 조회",
             description = "냉장/냉동/상온 위치별 식재료를 정렬 옵션 적용하여 조회합니다."
     )
-    @SecurityRequirements
     @ApiErrorCodeExamples({
             ErrorCode.UNAUTHORIZED,
             ErrorCode.REFRIGERATOR_INVALID_QUERY,
@@ -79,7 +77,7 @@ public class RefrigeratorController {
                     - UNAUTHORIZED: 인증 정보가 없거나 유효하지 않습니다.
                     """, content = @Content)
     })
-    @GetMapping()
+    @GetMapping
     public ResponseEntity<DataResponse<PaginatedIngredientsResponseDto>> getIngredientsByStorage(
             @AuthenticationPrincipal(expression = "userId") Long userId,
 
@@ -112,7 +110,6 @@ public class RefrigeratorController {
             summary = "03 재료 상세 조회",
             description = "특정 식재료의 상세 정보를 조회합니다."
     )
-    @SecurityRequirements
     @ApiErrorCodeExamples({
             ErrorCode.UNAUTHORIZED,
             ErrorCode.INGREDIENT_NOT_FOUND
@@ -143,7 +140,6 @@ public class RefrigeratorController {
             summary = "04 식재료 검색",
             description = "재료명으로 검색하고, 보관 장소 및 정렬 옵션을 적용하여 조회합니다."
     )
-    @SecurityRequirements
     @ApiErrorCodeExamples({
             ErrorCode.UNAUTHORIZED,
             ErrorCode.REFRIGERATOR_INVALID_QUERY,

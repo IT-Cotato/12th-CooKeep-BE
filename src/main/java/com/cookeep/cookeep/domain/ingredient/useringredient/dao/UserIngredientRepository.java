@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -35,6 +36,11 @@ public interface UserIngredientRepository extends JpaRepository<UserIngredient, 
             @Param("userId") Long userId,
             @Param("type") Type type,
             @Param("referenceIds") List<Long> referenceIds
+    );
+
+    List<UserIngredient> findAllByIngredientIdInAndUser_UserId(
+            List<Long> ingredientIds,
+            Long userId
     );
 
     // --- 냉장고탭 ---
@@ -85,4 +91,33 @@ public interface UserIngredientRepository extends JpaRepository<UserIngredient, 
             @Param("storage") Storage storage,
             Pageable pageable
     );
+
+    // --- 푸시 알림 전송 ---
+    // 유통기한 임박 식재료 존재 여부 확인
+    @Query("""
+        SELECT CASE WHEN EXISTS (
+            SELECT 1
+            FROM UserIngredient ui
+            WHERE ui.user.userId = :userId
+              AND ui.expirationDate = :expirationDate
+        ) THEN true ELSE false END
+    """)
+    boolean existsByUserIdAndExpirationDate(
+            @Param("userId") Long userId,
+            @Param("expirationDate") LocalDate expirationDate
+    );
+
+    // 유통기한 당일(D-0) 식재료 조회
+    @Query("""
+        SELECT ui
+        FROM UserIngredient ui
+        WHERE ui.user.userId = :userId
+        AND ui.expirationDate = :expirationDate
+        ORDER BY ui.ingredientId ASC
+    """)
+    List<UserIngredient> findByUserIdAndExpirationDateOrderByIngredientIdAsc(
+            @Param("userId") Long userId,
+            @Param("expirationDate") LocalDate expirationDate
+    );
+
 }
