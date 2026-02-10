@@ -40,6 +40,10 @@ public enum ErrorCode {
 	REFRIGERATOR_INVALID_QUERY(HttpStatus.BAD_REQUEST, "잘못된 쿼리 파라미터입니다.", "REFRIGERATOR-001"),
 	INVALID_SORT_TYPE(HttpStatus.BAD_REQUEST, "유효하지 않은 정렬 타입입니다.", "REFRIGERATOR-002"),
 	REFRIGERATOR_SEARCH_QUERY_REQUIRED(HttpStatus.BAD_REQUEST,"검색어를 입력해주세요.", "REFRIGERATOR-003"),
+	INVALID_PHONE_NUMBER(HttpStatus.BAD_REQUEST, "유효하지 않은 전화번호 형식입니다.", "SMS-001"),
+	INVALID_VERIFICATION_CODE(HttpStatus.BAD_REQUEST, "인증번호가 일치하지 않습니다.", "SMS-002"),
+	VERIFICATION_CODE_EXPIRED(HttpStatus.BAD_REQUEST, "인증번호가 만료되었습니다.", "SMS-003"),
+	VERIFICATION_NOT_COMPLETED(HttpStatus.BAD_REQUEST, "전화번호 인증이 완료되지 않았습니다.", "SMS-004"),
 	INVALID_QUANTITY(HttpStatus.BAD_REQUEST, "식재료 수량은 0 이상이어야 합니다.", "INGREDIENT_008"),
 	MEMO_TOO_LONG(HttpStatus.BAD_REQUEST, "식재료 메모는 최대 100자까지 입력 가능합니다.", "INGREDIENT_009"),
 	INVALID_DELETE_REQUEST(HttpStatus.BAD_REQUEST, "삭제할 식재료를 입력해주세요.", "INGREDIENT_010"),
@@ -73,10 +77,15 @@ public enum ErrorCode {
 	DUPLICATE_NICKNAME(HttpStatus.CONFLICT, "이미 사용 중인 닉네임입니다.", "USER-001"),
 	USER_PHONE_ALREADY_EXISTS(HttpStatus.CONFLICT, "이미 사용 중인 전화번호입니다.", "USER-002"),
 	USER_EMAIL_ALREADY_EXISTS(HttpStatus.CONFLICT, "이미 사용 중인 이메일입니다.", "USER-003"),
-	USER_EMAIL_REGISTERED_WITH_SOCIAL(HttpStatus.CONFLICT,"이미 소셜로 등록된 이메일입니다.", "USER-004"),
+	USER_EMAIL_REGISTERED_WITH_KAKAO(HttpStatus.CONFLICT,"이미 카카오로 가입된 이메일입니다.", "USER-004"),
+	USER_EMAIL_REGISTERED_WITH_GOOGLE(HttpStatus.CONFLICT,"이미 구글로 가입된 이메일입니다.", "USER-005"),
+	USER_EMAIL_REGISTERED_WITH_KAKAO_GOOGLE(HttpStatus.CONFLICT,"이미 카카오와 구글로 가입된 이메일입니다.", "USER-005"),
 	WEEKLY_GOAL_ALREADY_EXISTS(HttpStatus.CONFLICT, "이번 주 목표가 이미 설정되어 있습니다.", "WEEKLY_GOAL-001"),
 	DAILY_RECIPE_ALREADY_EXISTS(HttpStatus.CONFLICT, "이미 데일리 레시피로 등록된 AI 레시피입니다.", "DAILY_RECIPE-005"),
 
+	// 429
+	SMS_RESEND_TOO_FAST(HttpStatus.TOO_MANY_REQUESTS, "인증번호 재전송 요청이 너무 빠릅니다. 잠시 후 다시 시도해주세요.", "SMS-005"),
+	SMS_TOO_MANY_ATTEMPTS(HttpStatus.TOO_MANY_REQUESTS, "인증 시도 횟수를 초과하였습니다. 잠시 후 다시 시도해주세요.", "SMS-006"),
 
 	//500
 	FILE_UPLOAD_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "파일 업로드에 실패했습니다.", "FILE-001"),
@@ -86,6 +95,13 @@ public enum ErrorCode {
 	INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "서버 내부에서 에러가 발생하였습니다.", "COMMON-006"),
 	RECIPE_TITLE_PARSE_FAILED(HttpStatus.INTERNAL_SERVER_ERROR,"레시피 제목 파싱 실패","RECIPE-020"),
 	INGREDIENTS_JSON_CONVERSION_FAILED(HttpStatus.INTERNAL_SERVER_ERROR,"재료 JSON 변환에 실패했습니다.","RECIPE-021"),
+	SMS_PROVIDER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "SMS 서비스 오류가 발생했습니다.", "SMS-007"),
+	SMS_SEND_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "인증번호 발송 중 오류가 발생했습니다.", "SMS-008"),
+	USERAUTH_DOES_NOT_EXIST (HttpStatus.INTERNAL_SERVER_ERROR, "UserAuth 정보가 존재하지 않습니다.", "AUTH-003"),
+
+
+	// 503 SERVICE_UNAVAILABLE
+	NICKNAME_GENERATION_UNAVAILABLE(HttpStatus.SERVICE_UNAVAILABLE,"닉네임을 생성할 수 없습니다. 잠시 후 다시 시도해주세요.", "NICKNAME-001"),
 	;
 
 	private final HttpStatus httpStatus;
