@@ -248,11 +248,11 @@ public class AiRecipeService {
             throw new AppException(ErrorCode.INTERNAL_SERVER_ERROR);
         }
 
-        // 8. 요청 재료 전체 수량 -1 (단위 무관, 0이 되면 삭제)
-        consumeIngredients(userId, ingredientIds);
-
         // 9. 임박 재료(leftDays=0) 포함 세션이면 쿠키 지급 (하루 1회)
         grantUrgentCookieRewardIfEligible(userId, ingredientIds);
+
+        // 8. 요청 재료 전체 수량 -1 (단위 무관, 0이 되면 삭제)
+        consumeIngredients(userId, ingredientIds);
 
         return AiRecipeAdoptResponseDto.builder()
                 .sessionId(session.getId())
