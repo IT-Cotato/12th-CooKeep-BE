@@ -112,4 +112,24 @@ public class SmsVerificationService {
 	private String generate6() {
 		return String.valueOf(random.nextInt(900_000) + 100_000);
 	}
+
+	@Transactional(readOnly = true)
+	public void assertVerified(String phoneNumber, VerificationPurpose purpose) {
+
+		// 번호 내 인증을 찾을 수 없는 경우
+		SmsVerification verification = smsVerificationRepository
+			.findTopByPhoneAndPurposeOrderByCreatedAtDesc(phoneNumber, purpose)
+			.orElseThrow(() -> new AppException(ErrorCode.VERIFICATION_NOT_COMPLETED));
+
+		// 기존 인증이 만료되지 않은 경우
+		if (!verification.isVerified()) {
+			throw new AppException(ErrorCode.VERIFICATION_NOT_COMPLETED);
+		}
+
+		// 인증이 만료된 경우 (5분 초과 시 만료)
+		if (verification.isExpired(LocalDateTime.now())) {
+			throw new AppException(ErrorCode.VERIFICATION_CODE_EXPIRED);
+		}
+	}
+
 }

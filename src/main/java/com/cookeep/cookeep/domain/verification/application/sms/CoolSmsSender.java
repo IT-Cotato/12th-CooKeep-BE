@@ -33,13 +33,12 @@ public class CoolSmsSender implements SmsSender {
 
 			log.info("[SMS] send success. to={}", mask(to010));
 		} catch (Exception e) {
-			// CoolSMS SDK는 다양한 예외를 던질 수 있어 일단 공급자 오류로 묶는 게 안전
 			log.error("[SMS] CoolSMS send failed. to={}", mask(to010), e);
 			throw new AppException(ErrorCode.SMS_PROVIDER_ERROR);
 		}
 	}
 
-	private String mask(String phone010) {
+	private String mask(String phone010) { // 마스킹 후 로그 기록
 		if (phone010 == null || phone010.length() < 4) return "****";
 		return phone010.substring(0, phone010.length() - 4) + "****";
 	}

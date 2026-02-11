@@ -1,5 +1,6 @@
 package com.cookeep.cookeep.api.controller;
 
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -34,11 +35,11 @@ public class VerificationController {
 		@ApiResponse(responseCode = "500", description = "SMS 발송 실패 (외부 서비스 오류)")
 	})
 	@PostMapping("/auth/signup/send-code")
-	public DataResponse<Void> sendSignupCode(
+	public ResponseEntity<DataResponse<Void>> sendSignupCode(
 		@Valid @RequestBody SendCodeRequestDTO sendCodeRequestDTO
 	) {
 		authService.sendSignupCode(sendCodeRequestDTO);
-		return DataResponse.ok();
+		return ResponseEntity.ok(DataResponse.ok());
 	}
 
 	// 비밀번호 찾기 시 전화번호 인증 요청
@@ -51,11 +52,11 @@ public class VerificationController {
 		@ApiResponse(responseCode = "500", description = "SMS 발송 실패 (외부 서비스 오류)")
 	})
 	@PostMapping("/auth/password/send-code")
-	public DataResponse<Void> sendPasswordResetCode(
+	public ResponseEntity<DataResponse<Void>> sendPasswordResetCode(
 		@Valid @RequestBody SendCodeRequestDTO sendCodeRequestDTO
 	) {
 		authService.sendPasswordResetCode(sendCodeRequestDTO);
-		return DataResponse.ok();
+		return ResponseEntity.ok(DataResponse.ok());
 	}
 
 	// 회원가입, 비밀번호 찾기 시 전화번호 인증 확인
@@ -69,10 +70,10 @@ public class VerificationController {
 		@ApiResponse(responseCode = "429", description = "인증 시도 횟수 초과")
 	})
 	@PostMapping("/auth/verify-code")
-	public DataResponse<Void> verifyAuthCode(
+	public ResponseEntity<DataResponse<Void>> verifyAuthCode(
 		@Valid @RequestBody VerifyCodeRequestDTO verifyCodeRequestDTO
 	) {
 		authService.verifyAuthCode(verifyCodeRequestDTO);
-		return DataResponse.ok();
+		return ResponseEntity.ok(DataResponse.ok());
 	}
 }

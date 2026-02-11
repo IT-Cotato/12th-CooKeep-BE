@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.cookeep.cookeep.api.dto.request.LoginRequestDTO;
+import com.cookeep.cookeep.api.dto.request.ResetPasswordRequestDTO;
 import com.cookeep.cookeep.api.dto.request.SendCodeRequestDTO;
 import com.cookeep.cookeep.api.dto.request.SignupRequestDTO;
 import com.cookeep.cookeep.api.dto.request.TokenRefreshRequestDTO;
@@ -379,5 +380,24 @@ public class AuthService {
 		return new LoginResponseDTO(
 			user.getUserId(), tokenPair.accessToken(), tokenPair.refreshToken(), userStatus
 		);
+	}
+
+	@Transactional
+	public void resetPassword(ResetPasswordRequestDTO resetPasswordRequestDTO) {
+
+		// 인증 완료 여부 확인
+		smsVerificationService.assertVerified(resetPasswordRequestDTO.phoneNumber(), VerificationPurpose.RESET_PASSWORD);
+
+		User user = userRepository.findByPhoneNumber(resetPasswordRequestDTO.phoneNumber())
+			.orElseThrow(() ->  new AppException(ErrorCode.AUTH_PHONE_NOT_REGISTERED));
+
+		String encodedPassword = passwordEncoder.encode(resetPasswordRequestDTO.password());
+
+		// 기존에 등록되어 있던 비밀번호와 새로 들어온 비밀번호가 동일할 경우
+		if (passwordEncoder.matches(resetPasswordRequestDTO.password(), user.getPassword())) {
+			throw new AppException(ErrorCode.SAME_AS_PREVIOUS_PASSWORD);
+		}
+
+		user.updatePassword(encodedPassword);
 	}
 }
