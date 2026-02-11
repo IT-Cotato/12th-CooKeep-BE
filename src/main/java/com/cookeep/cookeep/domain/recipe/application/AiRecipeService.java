@@ -624,43 +624,64 @@ public class AiRecipeService {
     // AI 응답 에러 확인
     private void validateAiResponse(GeminiRecipeResponseDto response) {
 
-        if (response == null || response.getIngredients() == null) {
+        if (response == null) {
+            log.error("❌ AI 응답 자체가 null입니다.");
+            throw new AppException(ErrorCode.AI_RESPONSE_INVALID_FORMAT);
+        }
+
+        if (response.getIngredients() == null) {
+            log.error("❌ ingredients가 null입니다.");
             throw new AppException(ErrorCode.AI_RESPONSE_INVALID_FORMAT);
         }
 
         var ingredients = response.getIngredients();
 
-        // 허용 단위 목록
         List<String> allowedUnits = List.of(
                 "개", "팩", "봉지", "병", "묶음", "캔", "g", "ml", "tsp", "Tbsp"
         );
 
-        // 1. additional_ingredients 검증
+        // 🔹 1. additional_ingredients 검증
         if (ingredients.getAdditionalIngredients() != null) {
             for (var ing : ingredients.getAdditionalIngredients()) {
 
-                // description 절대 금지
                 if (ing.getDescription() != null) {
+                    log.error("❌ additional_ingredients에 description 존재: name={}, description={}",
+                            ing.getName(), ing.getDescription());
                     throw new AppException(ErrorCode.AI_RESPONSE_INVALID_FORMAT);
                 }
 
-                if (ing.getQuantity() == null || ing.getQuantity() <= 0) {
+                if (ing.getQuantity() == null) {
+                    log.error("❌ additional_ingredients quantity null: name={}", ing.getName());
+                    throw new AppException(ErrorCode.AI_RESPONSE_INVALID_FORMAT);
+                }
+
+                if (ing.getQuantity() <= 0) {
+                    log.error("❌ additional_ingredients quantity <= 0: name={}, quantity={}",
+                            ing.getName(), ing.getQuantity());
                     throw new AppException(ErrorCode.AI_RESPONSE_INVALID_FORMAT);
                 }
 
                 if (!allowedUnits.contains(ing.getUnit())) {
+                    log.error("❌ additional_ingredients 허용되지 않은 unit: name={}, unit={}",
+                            ing.getName(), ing.getUnit());
                     throw new AppException(ErrorCode.AI_RESPONSE_INVALID_FORMAT);
                 }
             }
         }
 
-        // 2. optional_ingredients 검증
+        // 🔹 2. optional_ingredients 검증
         if (ingredients.getOptionalIngredients() != null) {
             for (var ing : ingredients.getOptionalIngredients()) {
 
                 String desc = ing.getDescription();
 
-                if (desc == null || desc.isBlank()) {
+                if (desc == null) {
+                    log.error("❌ optional_ingredients description null: name={}", ing.getName());
+                    throw new AppException(ErrorCode.AI_RESPONSE_INVALID_FORMAT);
+                }
+
+                if (desc.isBlank()) {
+                    log.error("❌ optional_ingredients description blank: name={}", ing.getName());
                     throw new AppException(ErrorCode.AI_RESPONSE_INVALID_FORMAT);
                 }
 
@@ -672,17 +693,31 @@ public class AiRecipeService {
                                         || desc.equals("이 재료는 생략 가능합니다"));
 
                 if (!validFormat) {
+                    log.error("❌ optional_ingredients description 형식 오류: name={}, description=[{}]",
+                            ing.getName(), desc);
                     throw new AppException(ErrorCode.AI_RESPONSE_INVALID_FORMAT);
                 }
 
-                if (ing.getQuantity() == null || ing.getQuantity() <= 0) {
+                if (ing.getQuantity() == null) {
+                    log.error("❌ optional_ingredients quantity null: name={}", ing.getName());
+                    throw new AppException(ErrorCode.AI_RESPONSE_INVALID_FORMAT);
+                }
+
+                if (ing.getQuantity() <= 0) {
+                    log.error("❌ optional_ingredients quantity <= 0: name={}, quantity={}",
+                            ing.getName(), ing.getQuantity());
                     throw new AppException(ErrorCode.AI_RESPONSE_INVALID_FORMAT);
                 }
 
                 if (!allowedUnits.contains(ing.getUnit())) {
+                    log.error("❌ optional_ingredients 허용되지 않은 unit: name={}, unit={}",
+                            ing.getName(), ing.getUnit());
                     throw new AppException(ErrorCode.AI_RESPONSE_INVALID_FORMAT);
                 }
             }
         }
+
+        log.info("✅ AI 응답 검증 통과");
     }
+
 }
