@@ -287,6 +287,23 @@ public class AiRecipeController {
         return ResponseEntity.ok(DataResponse.ok());
     }
 
+    @Operation(
+            summary = "(MAIN08) AI 대화 세션 제목 수정",
+            description = "특정 AI 대화 세션의 제목을 수정합니다."
+    )
+    @ApiErrorCodeExamples({
+            ErrorCode.UNAUTHORIZED,
+            ErrorCode.AI_SESSION_NOT_FOUND,
+            ErrorCode.AI_SESSION_FORBIDDEN,
+            ErrorCode.TITLE_INVALID_VALUE
+    })
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "세션 제목 수정 성공"),
+            @ApiResponse(responseCode = "400", description = "잘못된 요청 값 (빈 제목 등)", content = @Content),
+            @ApiResponse(responseCode = "401", description = "인증 실패", content = @Content),
+            @ApiResponse(responseCode = "403", description = "본인의 대화 세션이 아님", content = @Content),
+            @ApiResponse(responseCode = "404", description = "세션을 찾을 수 없음", content = @Content)
+    })
     @PatchMapping("/sessions/title/{sessionId}")
     public ResponseEntity<DataResponse<Void>> updateSessionTitle(
             @AuthenticationPrincipal(expression = "userId") Long userId,
