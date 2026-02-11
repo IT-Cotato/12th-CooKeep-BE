@@ -1,6 +1,7 @@
 package com.cookeep.cookeep.api.controller;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -11,6 +12,7 @@ import com.cookeep.cookeep.api.dto.request.VerifyCodeRequestDTO;
 import com.cookeep.cookeep.common.dto.DataResponse;
 import com.cookeep.cookeep.domain.user.application.AuthService;
 import com.cookeep.cookeep.domain.user.application.UserInfoService;
+import com.cookeep.cookeep.security.UserPrincipal;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -24,6 +26,7 @@ import lombok.RequiredArgsConstructor;
 public class VerificationController {
 
 	private final AuthService authService;
+	private final UserInfoService userInfoService;
 
 	// 회원가입 시 전화번호 인증 요청
 	@Operation(summary = "회원가입 시 SMS 인증 요청 API")
@@ -76,9 +79,8 @@ public class VerificationController {
 		return ResponseEntity.ok(DataResponse.ok());
 	}
 
-	// 회원가입, 비밀번호 찾기 시 전화번호 인증 확인
-	// 요구사항이 동일하므로 동일한 api 사용하도록 하였음
-	@Operation(summary = "회원가입, 비밀번호 찾기 시 SMS 인증 확인 API")
+	// 비밀번호 찾기 시 전화번호 인증 확인
+	@Operation(summary = "비밀번호 찾기 시 SMS 인증 확인 API")
 	@ApiResponses(value = {
 		@ApiResponse(responseCode = "200", description = "확인 성공"),
 		@ApiResponse(responseCode = "400", description = "요청 파라미터 오류"),
@@ -91,6 +93,27 @@ public class VerificationController {
 		@Valid @RequestBody VerifyCodeRequestDTO verifyCodeRequestDTO
 	) {
 		authService.verifyPasswordResetCode(verifyCodeRequestDTO);
+		return ResponseEntity.ok(DataResponse.ok());
+	}
+
+	// 전화번호 변경 시 전화번호 인증 요청
+	@Operation(summary = "전화번호 변경 시 SMS 인증 요청 API")
+	@ApiResponses(value = {
+		@ApiResponse(responseCode = "200", description = "요청 성공"),
+		@ApiResponse(responseCode = "400", description = "요청 파라미터 오류"),
+		@ApiResponse(responseCode = "401", description = "회원 인증 실패, AccessToken이 없거나 유효하지 않음"),
+		@ApiResponse(responseCode = "403", description = "접근 권한 없음"),
+		@ApiResponse(responseCode = "409", description = "이미 사용 중인 번호임"),
+		@ApiResponse(responseCode = "429", description = "인증 재요청이 너무 빠름"),
+		@ApiResponse(responseCode = "500", description = "SMS 발송 실패 (외부 서비스 오류)")
+	})
+	@PostMapping("/users/me/phone/send-code")
+	public ResponseEntity<DataResponse<Void>> sendChangePhoneCode(
+		@AuthenticationPrincipal UserPrincipal principal,
+		@Valid @RequestBody SendCodeRequestDTO sendCodeRequestDTO
+	) {
+		Long userId = principal.userId();
+		userInfoService.sendChangePhoneCode(userId, sendCodeRequestDTO);
 		return ResponseEntity.ok(DataResponse.ok());
 	}
 }

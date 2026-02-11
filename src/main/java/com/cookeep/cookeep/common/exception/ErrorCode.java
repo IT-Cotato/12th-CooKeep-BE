@@ -49,6 +49,7 @@ public enum ErrorCode {
 	INVALID_DELETE_REQUEST(HttpStatus.BAD_REQUEST, "삭제할 식재료를 입력해주세요.", "INGREDIENT_010"),
 	DAILY_RECIPE_UPDATE_FIELDS_REQUIRED(HttpStatus.BAD_REQUEST, "수정할 항목(제목 또는 한줄평)을 입력해주세요.", "DAILY_RECIPE-004"),
 	SAME_AS_PREVIOUS_PASSWORD(HttpStatus.BAD_REQUEST, "기존 등록된 비밀번호와 동일한 비밀번호입니다.", "AUTH-005"),
+	SAME_AS_CURRENT_PHONE_NUMBER(HttpStatus.BAD_REQUEST, "기존 등록된 전화번호와 동일한 전화번호입니다.", "USER-007"),
 
 	// 401 UNAUTHORIZED (인증 관련)
 	UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "인증에 실패했습니다.", "AUTH-001"),
@@ -80,7 +81,7 @@ public enum ErrorCode {
 	USER_EMAIL_ALREADY_EXISTS(HttpStatus.CONFLICT, "이미 사용 중인 이메일입니다.", "USER-003"),
 	USER_EMAIL_REGISTERED_WITH_KAKAO(HttpStatus.CONFLICT,"이미 카카오로 가입된 이메일입니다.", "USER-004"),
 	USER_EMAIL_REGISTERED_WITH_GOOGLE(HttpStatus.CONFLICT,"이미 구글로 가입된 이메일입니다.", "USER-005"),
-	USER_EMAIL_REGISTERED_WITH_KAKAO_GOOGLE(HttpStatus.CONFLICT,"이미 카카오와 구글로 가입된 이메일입니다.", "USER-005"),
+	USER_EMAIL_REGISTERED_WITH_KAKAO_GOOGLE(HttpStatus.CONFLICT,"이미 카카오와 구글로 가입된 이메일입니다.", "USER-006"),
 	WEEKLY_GOAL_ALREADY_EXISTS(HttpStatus.CONFLICT, "이번 주 목표가 이미 설정되어 있습니다.", "WEEKLY_GOAL-001"),
 	DAILY_RECIPE_ALREADY_EXISTS(HttpStatus.CONFLICT, "이미 데일리 레시피로 등록된 AI 레시피입니다.", "DAILY_RECIPE-005"),
 	// 429
