@@ -261,7 +261,7 @@ public class AiRecipeController {
     }
 
     @Operation(
-            summary = "(MAIN07) AI 대화 세션 즐겨찾기 추가/삭제",
+            summary = "(MAIN07-1) AI 대화 세션 즐겨찾기 추가/삭제",
             description = "특정 세션의 즐겨찾기 상태를 변경합니다. (T -> F / F -> T)"
     )
     @ApiErrorCodeExamples({
@@ -288,7 +288,7 @@ public class AiRecipeController {
     }
 
     @Operation(
-            summary = "(MAIN08) AI 대화 세션 제목 수정",
+            summary = "(MAIN07-2) AI 대화 세션 제목 수정",
             description = "특정 AI 대화 세션의 제목을 수정합니다."
     )
     @ApiErrorCodeExamples({
