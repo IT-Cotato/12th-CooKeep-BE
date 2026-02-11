@@ -368,7 +368,7 @@ public class AiRecipeService {
                             .ingredientId(ui.getIngredientId())
                             .name(name)
                             .quantity(null) // AI가 생성
-                            .unit(ui.getUnit().name())
+                            .unit(ui.getUnit().getDisplayName())
                             .build();
                 })
                 .collect(Collectors.toList());
