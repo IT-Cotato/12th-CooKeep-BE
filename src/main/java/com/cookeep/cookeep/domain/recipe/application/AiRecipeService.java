@@ -339,6 +339,24 @@ public class AiRecipeService {
         aiSessionRepository.save(session);
     }
 
+    public void updateSessionTitle(Long userId, Long sessionId, String newTitle) {
+
+        if (newTitle == null || newTitle.isBlank()) {
+            throw new AppException(ErrorCode.TITLE_INVALID_VALUE);
+        }
+
+        AiSession session = aiSessionRepository.findById(sessionId)
+                .orElseThrow(() -> new AppException(ErrorCode.AI_SESSION_NOT_FOUND));
+
+        if (!session.getUserId().equals(userId)) {
+            throw new AppException(ErrorCode.AI_SESSION_FORBIDDEN);
+        }
+
+        session.setTitle(newTitle.trim());
+        aiSessionRepository.save(session);
+
+    }
+
     // --- 내부 메서드 ---
 
     // 요청 검증

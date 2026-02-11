@@ -1,6 +1,7 @@
 package com.cookeep.cookeep.api.controller;
 
 import com.cookeep.cookeep.api.dto.request.AiRecipeRetryDto;
+import com.cookeep.cookeep.api.dto.request.AiSessionTitleUpdateRequestDto;
 import com.cookeep.cookeep.api.dto.response.AiSessionDetailResponseDto;
 import com.cookeep.cookeep.api.dto.response.AiSessionListResponseDto;
 import com.cookeep.cookeep.common.dto.DataResponse;
@@ -282,6 +283,22 @@ public class AiRecipeController {
     ) {
 
         aiRecipeService.toggleFavorite(userId, sessionId);
+
+        return ResponseEntity.ok(DataResponse.ok());
+    }
+
+    @PatchMapping("/sessions/title/{sessionId}")
+    public ResponseEntity<DataResponse<Void>> updateSessionTitle(
+            @AuthenticationPrincipal(expression = "userId") Long userId,
+            @PathVariable Long sessionId,
+            @Valid @RequestBody AiSessionTitleUpdateRequestDto request
+    ) {
+
+        aiRecipeService.updateSessionTitle(
+                userId,
+                sessionId,
+                request.getTitle()
+        );
 
         return ResponseEntity.ok(DataResponse.ok());
     }
