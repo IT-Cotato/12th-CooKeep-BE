@@ -35,7 +35,7 @@ public class UserInfoController {
         @ApiResponse(responseCode = "401", description = "회원 인증 실패, AccessToken이 없거나 유효하지 않음"),
         @ApiResponse(responseCode = "403", description = "접근 권한 없음")
     })
-    @PostMapping("/auth/signup/send-code")
+    @PostMapping("/profile")
     public ResponseEntity<DataResponse<UserProfileResponseDTO>> getMyProfile(
         @AuthenticationPrincipal UserPrincipal principal
     ) {
