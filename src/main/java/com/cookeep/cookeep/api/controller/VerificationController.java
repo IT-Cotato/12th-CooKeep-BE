@@ -116,4 +116,25 @@ public class VerificationController {
 		userInfoService.sendChangePhoneCode(userId, sendCodeRequestDTO);
 		return ResponseEntity.ok(DataResponse.ok());
 	}
+
+	// 전화번호 변경 시 전화번호 인증 확인
+	@Operation(summary = "전화번호 변경 시 SMS 인증 확인 API")
+	@ApiResponses(value = {
+		@ApiResponse(responseCode = "200", description = "확인 성공"),
+		@ApiResponse(responseCode = "400", description = "요청 파라미터 오류"),
+		@ApiResponse(responseCode = "401", description = "회원 인증 실패, AccessToken이 없거나 유효하지 않음"),
+		@ApiResponse(responseCode = "403", description = "접근 권한 없음"),
+		@ApiResponse(responseCode = "404", description = "인증 요청 내역이 없음"),
+		@ApiResponse(responseCode = "409", description = "인증번호 불일치 또는 만료됨"),
+		@ApiResponse(responseCode = "429", description = "인증 시도 횟수 초과")
+	})
+	@PostMapping("/users/me/phone/verify-code")
+	public ResponseEntity<DataResponse<Void>> verifyChangePhoneCode(
+		@AuthenticationPrincipal UserPrincipal principal,
+		@Valid @RequestBody VerifyCodeRequestDTO verifyCodeRequestDTO
+	) {
+		Long userId = principal.userId();
+		userInfoService.verifyChangePhoneCode(userId, verifyCodeRequestDTO);
+		return ResponseEntity.ok(DataResponse.ok());
+	}
 }

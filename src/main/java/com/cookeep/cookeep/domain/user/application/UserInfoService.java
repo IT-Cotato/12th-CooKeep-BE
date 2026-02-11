@@ -2,6 +2,7 @@ package com.cookeep.cookeep.domain.user.application;
 
 import com.cookeep.cookeep.api.dto.request.NicknameUpdateRequestDto;
 import com.cookeep.cookeep.api.dto.request.SendCodeRequestDTO;
+import com.cookeep.cookeep.api.dto.request.VerifyCodeRequestDTO;
 import com.cookeep.cookeep.common.exception.AppException;
 import com.cookeep.cookeep.common.exception.ErrorCode;
 import com.cookeep.cookeep.domain.user.dao.UserRepository;
@@ -63,5 +64,22 @@ public class UserInfoService {
         }
 
         smsVerificationService.sendCode(newPhoneNumber, VerificationPurpose.CHANGE_PHONE);
+    }
+
+    // 전화번호 변경 시 전화번호 인증 확인
+    @Transactional
+    public void verifyChangePhoneCode(Long userId, VerifyCodeRequestDTO verifyCodeRequestDTO) {
+        User user = userReader.readById(userId);
+        String newPhoneNumber = verifyCodeRequestDTO.phoneNumber();
+        String code = verifyCodeRequestDTO.code();
+
+        // 이미 등록된 번호인지 재확인
+        if (userRepository.existsByPhoneNumber(newPhoneNumber)) {
+            throw new AppException(ErrorCode.USER_PHONE_ALREADY_EXISTS);
+        }
+
+        smsVerificationService.verifyCode(newPhoneNumber, VerificationPurpose.CHANGE_PHONE, code);
+
+        user.updatePhoneNumber(newPhoneNumber);
     }
 }
