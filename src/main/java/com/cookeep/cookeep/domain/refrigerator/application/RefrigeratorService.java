@@ -129,7 +129,7 @@ public class RefrigeratorService {
                 .storage(userIngredient.getStorage())
                 .expirationDate(userIngredient.getExpirationDate())
                 .quantity(userIngredient.getQuantity())
-                .type(userIngredient.getType())
+                .unit(userIngredient.getUnit())
                 .leftDays(userIngredient.getLeftDays())
                 .memo(userIngredient.getMemo())
                 .aiTip(aiTip)

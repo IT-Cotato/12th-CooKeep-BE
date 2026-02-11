@@ -1,7 +1,7 @@
 package com.cookeep.cookeep.api.dto.response;
 
 import com.cookeep.cookeep.domain.ingredient.common.domain.Storage;
-import com.cookeep.cookeep.domain.ingredient.common.domain.Type;
+import com.cookeep.cookeep.domain.ingredient.common.domain.Unit;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -63,11 +63,11 @@ public class UserIngredientDetailResponseDto {
     private Integer leftDays;
 
     @Schema(
-            description = "재료의 타입",
+            description = "재료의 단위",
             example = "PACK",
             requiredMode = Schema.RequiredMode.REQUIRED
     )
-    private Type type;
+    private Unit unit;
 
     @Schema(
             description = "메모",
