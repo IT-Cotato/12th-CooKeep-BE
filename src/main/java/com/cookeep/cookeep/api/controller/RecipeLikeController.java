@@ -29,8 +29,9 @@ public class RecipeLikeController {
 		description = "레시피에 좋아요를 추가하거나 취소합니다. 자신의 글에는 좋아요를 누를 수 없습니다."
 	)
 	@ApiErrorCodeExamples({
-		ErrorCode.UNAUTHORIZED,
-		ErrorCode.DAILY_RECIPE_NOT_FOUND
+			ErrorCode.UNAUTHORIZED,
+			ErrorCode.DAILY_RECIPE_NOT_FOUND,
+			ErrorCode.CANNOT_LIKE_OWN_RECIPE
 	})
 	@ApiResponses(value = {
 		@ApiResponse(responseCode = "200", description = "좋아요 토글 성공"),
