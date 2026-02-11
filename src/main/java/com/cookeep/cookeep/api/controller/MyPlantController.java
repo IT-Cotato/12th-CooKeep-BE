@@ -1,5 +1,6 @@
 package com.cookeep.cookeep.api.controller;
 
+import com.cookeep.cookeep.api.dto.response.GrowingPlantResponseDto;
 import com.cookeep.cookeep.api.dto.response.MyPlantResponseDto;
 import com.cookeep.cookeep.api.dto.response.RegisterPlantResponseDto;
 import com.cookeep.cookeep.common.dto.DataResponse;
@@ -31,6 +32,16 @@ public class MyPlantController {
     public DataResponse<List<MyPlantResponseDto>> getMyPlants(
             @AuthenticationPrincipal(expression = "userId") Long userId) {
         return DataResponse.from(userPlantService.getMyPlants(userId));
+    }
+
+    @Operation(summary = "현재 키우는 식물 조회", description = "쿠킵스 화면에서 현재 키우고 있는 식물 정보를 조회합니다. 키우는 식물이 없으면 data가 null입니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "조회 성공")
+    })
+    @GetMapping("/growing-plant")
+    public DataResponse<GrowingPlantResponseDto> getGrowingPlant(
+            @AuthenticationPrincipal(expression = "userId") Long userId) {
+        return DataResponse.from(userPlantService.getGrowingPlant(userId));
     }
 
     @Operation(summary = "새로운 식물 등록", description = "기본 식물 ID를 경로에 전달하여 새로운 식물을 등록합니다.")

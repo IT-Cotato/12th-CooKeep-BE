@@ -16,8 +16,9 @@ public interface UserPlantRepository extends JpaRepository<UserPlant, Long>{
     @EntityGraph(attributePaths = {"plant"})
     List<UserPlant> findAllByUser(User user);
 
-    // 현재 키우고 있는 식물 조회 (수확 완료되지 않고, 성장 정지되지 않은 식물)
-    Optional<UserPlant> findByUserAndIsHarvestedFalseAndIsFrozenFalse(User user);
+    // 현재 키우는 식물 조회 (성장 정지 여부 무관하게, 아직 수확 완료되지 않은 식물)
+    @EntityGraph(attributePaths = {"plant"})
+    Optional<UserPlant> findByUserAndIsHarvestedFalse(User user);
 
     // 성장 정지된 식물이 존재하는지 확인
     boolean existsByUserAndIsFrozenTrue(User user);
