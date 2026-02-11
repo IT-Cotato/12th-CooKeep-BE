@@ -38,7 +38,7 @@ public class IngredientDetailDto {
             requiredMode = Schema.RequiredMode.NOT_REQUIRED,
             minimum = "1"
     )
-    private Integer quantity;
+    private Double quantity;
 
     @Schema(
             description = "재료 단위 (user_ingredients에서 조회)",

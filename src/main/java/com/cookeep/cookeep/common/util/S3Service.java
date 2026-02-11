@@ -1,5 +1,7 @@
 package com.cookeep.cookeep.common.util;
 
+import java.nio.charset.StandardCharsets;
+import java.util.Set;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Value;
@@ -32,13 +34,17 @@ public class S3Service {
 	public String upload(MultipartFile file, String folder) {
 		String originalFilename = file.getOriginalFilename();
 		String extension = extractExtension(originalFilename);
+
+		validateFile(file, extension, folder);
+
 		String key = folder + "/" + UUID.randomUUID() + "." + extension;
+		String contentType = resolveContentType(file, extension);
 
 		try {
 			PutObjectRequest request = PutObjectRequest.builder()
 				.bucket(bucket)
 				.key(key)
-				.contentType(file.getContentType())
+				.contentType(contentType)
 				.build();
 
 			s3Client.putObject(request, RequestBody.fromBytes(file.getBytes()));
@@ -72,4 +78,53 @@ public class S3Service {
 		String prefix = String.format("https://%s.s3.%s.amazonaws.com/", bucket, region);
 		return url.replace(prefix, "");
 	}
+
+	// --- svg용 ---
+	// SVG 허용 폴더: INGREDIENTS (아이콘 전용)
+	private static final Set<String> SVG_ALLOWED_FOLDERS = Set.of(
+			ImageFolder.INGREDIENTS.getFolderName()
+	);
+
+	private void validateSvgContent(MultipartFile file) {
+		try {
+			String svg = new String(file.getBytes(), StandardCharsets.UTF_8).toLowerCase();
+
+			if (svg.contains("<script")
+					|| svg.contains("onload=")
+					|| svg.contains("onclick=")
+					|| svg.contains("<foreignobject")) {
+				throw new AppException(ErrorCode.FILE_UPLOAD_ERROR);
+			}
+		} catch (Exception e) {
+			throw new AppException(ErrorCode.FILE_UPLOAD_ERROR);
+		}
+	}
+
+	private String resolveContentType(MultipartFile file, String extension) {
+		if ("svg".equalsIgnoreCase(extension)) {
+			return "image/svg+xml";
+		}
+		return file.getContentType();
+	}
+
+	private void validateFile(MultipartFile file, String extension, String folder) {
+		if ("svg".equalsIgnoreCase(extension)) {
+			validateSvgFolder(folder);
+			validateSvgContentType(file);
+			validateSvgContent(file);
+		}
+	}
+
+	private void validateSvgFolder(String folder) {
+		if (!SVG_ALLOWED_FOLDERS.contains(folder)) {
+			throw new AppException(ErrorCode.FILE_UPLOAD_ERROR);
+		}
+	}
+
+	private void validateSvgContentType(MultipartFile file) {
+		if (!"image/svg+xml".equalsIgnoreCase(file.getContentType())) {
+			throw new AppException(ErrorCode.FILE_UPLOAD_ERROR);
+		}
+	}
+
 }

@@ -28,7 +28,7 @@ public class MyCookeepController {
 
     private final MyCookeepService myCookeepService;
 
-    @Operation(summary = "마이쿠킵 프로필 조회", description = "닉네임, 프로필 식물 이미지, 가입 일수, 이번 주 목표를 조회합니다.")
+    @Operation(summary = "마이쿠킵 프로필 조회", description = "닉네임, 프로필 식물 이미지, 가입 일수, 현재 키우는 식물 이름, 이번 주 목표를 조회합니다.")
     @ApiErrorCodeExamples({
             ErrorCode.UNAUTHORIZED,
             ErrorCode.USER_NOT_FOUND,

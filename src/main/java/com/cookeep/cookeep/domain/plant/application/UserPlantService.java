@@ -1,5 +1,6 @@
 package com.cookeep.cookeep.domain.plant.application;
 
+import com.cookeep.cookeep.api.dto.response.GrowingPlantResponseDto;
 import com.cookeep.cookeep.api.dto.response.MyPlantResponseDto;
 import com.cookeep.cookeep.api.dto.response.RegisterPlantResponseDto;
 import com.cookeep.cookeep.common.exception.AppException;
@@ -13,6 +14,7 @@ import com.cookeep.cookeep.domain.plant.entity.Plant;
 import com.cookeep.cookeep.domain.plant.entity.PlantStatus;
 import com.cookeep.cookeep.domain.plant.entity.UserPlant;
 import com.cookeep.cookeep.domain.plant.entity.WateringLog;
+import com.cookeep.cookeep.domain.user.application.UserReader;
 import com.cookeep.cookeep.domain.user.dao.UserRepository;
 import com.cookeep.cookeep.domain.user.entity.User;
 import lombok.RequiredArgsConstructor;
@@ -33,6 +35,7 @@ public class UserPlantService {
     private final UserRepository userRepository;
     private final PlantRepository plantRepository;
     private final CookieService cookieService;
+    private final UserReader userReader;
 
     // 로그인/토큰 갱신 시 호출: 미접속 일수 기반 식물 상태 계산 및 성장 정지 처리
     @Transactional
@@ -49,8 +52,9 @@ public class UserPlantService {
 
         if (inactiveDays >= 14) {
             // 14일 이상 미접속: 키우는 식물 성장 정지 + FROZEN 상태
-            Optional<UserPlant> growingPlant = userPlantRepository.findByUserAndIsHarvestedFalseAndIsFrozenFalse(user);
-            growingPlant.ifPresent(UserPlant::freeze);
+            userPlantRepository.findByUserAndIsHarvestedFalse(user)
+                .filter(plant -> !plant.getIsFrozen())
+                .ifPresent(UserPlant::freeze);
             user.updatePlantStatus(PlantStatus.FROZEN);
         } else if (inactiveDays >= 7) {
             // 7~13일 미접속: WILTING 상태 (성장 정지는 하지 않음)
@@ -60,6 +64,16 @@ public class UserPlantService {
             boolean hasFrozenPlant = userPlantRepository.existsByUserAndIsFrozenTrue(user);
             user.updatePlantStatus(hasFrozenPlant ? PlantStatus.FROZEN : PlantStatus.NORMAL);
         }
+    }
+
+    // 쿠킵스 화면: 현재 키우는 식물 정보 조회
+    @Transactional(readOnly = true)
+    public GrowingPlantResponseDto getGrowingPlant(Long userId) {
+        User user = userReader.readById(userId);
+
+        return userPlantRepository.findByUserAndIsHarvestedFalse(user)
+                .map(plant -> GrowingPlantResponseDto.from(plant, user))
+                .orElse(null);
     }
 
     // 유저 보유 식물 목록 조회
