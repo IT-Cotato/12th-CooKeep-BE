@@ -347,10 +347,17 @@ public class AiRecipeService {
         aiSessionRepository.save(session);
     }
 
+    // 세션 제목 수정
     public void updateSessionTitle(Long userId, Long sessionId, String newTitle) {
 
+        // 빈 제목 방지
         if (newTitle == null || newTitle.isBlank()) {
             throw new AppException(ErrorCode.TITLE_INVALID_VALUE);
+        }
+
+        // 100자 이상 제목 방지
+        if (newTitle.trim().length() > 100) {
+            throw new AppException(ErrorCode.TITLE_TOO_LONG);
         }
 
         AiSession session = aiSessionRepository.findById(sessionId)
