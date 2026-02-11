@@ -102,18 +102,22 @@ public class AiRecipeService {
         List<IngredientDetailDto> enrichedIngredients =
                 enrichIngredientsFromUserIngredients(userIngredients);
 
-        // 3. 세션 생성
+        // 3. 유통기한 임박 식재료 포함 여부 확인
+        boolean hasUrgent = userIngredients.stream()
+                .anyMatch(ui -> ui.getLeftDays() == 0);
+
+        // 4. 세션 생성
         AiSession session = AiSession.builder()
                 .userId(userId)
                 .difficulty(request.getDifficulty())
                 .attemptNumber(1)
                 .isCompleted(false)
-                .userIngredientIds(writeIngredientsAsJson(enrichedIngredients))
+                .userIngredientIds(writeEnrichedIngredientsAsJson(enrichedIngredients))
                 .build();
         aiSessionRepository.save(session);
 
         // 입력한 재료 저장 (채택시 차감)
-        session.setIngredientIds(request.getIngredientIds());
+        session.setIngredientIdsJson(writeIngredientIdsAsJson(request.getIngredientIds()));
 
         // 메시지 db에 저장
         saveInitialUserMessage(session, request);
@@ -220,26 +224,27 @@ public class AiRecipeService {
             throw new AppException(ErrorCode.SESSION_ALREADY_COMPLETED);
         }
 
-        // 3. 마지막 AI 메시지 조회 (채택할 레시피)
-        AiMessage lastAiMessage = getLastAiMessage(session);
+        // 3. AI 메시지를 레시피로 파싱
+        GeminiRecipeResponseDto recipe =
+                parseAiMessageToRecipe(getLastAiMessage(session).getContent());
 
-        // 4. AI 메시지를 레시피로 파싱
-        GeminiRecipeResponseDto recipe = parseAiMessageToRecipe(lastAiMessage.getContent());
-
-        // 5. ai_recipes 테이블에 저장
+        // 4. ai_recipes 테이블에 저장
         AiRecipe savedRecipe = saveAdoptedRecipe(session, recipe, userId);
 
-        // 6. USER 채택 메시지 저장
+        // 5. USER 채택 메시지 저장
         saveSimpleUserMessage(session, MessageType.ADOPT_RECIPE);
 
-        // 7. 세션 완료 처리
+        // 6. 세션 완료 처리
         session.complete();
 
-        // 8. 식재료 섭취 차감
+        // 7. 세션의 ingredientIds 조회
         List<Long> ingredientIds = session.getIngredientIds();
 
-        // 9. 임박 식재료 리워드 처리
-        processUrgentIngredientReward(userId, ingredientIds);
+        // 8. 요청 재료 전체 수량 -1 (단위 무관, 0이 되면 삭제)
+        consumeIngredients(userId, ingredientIds);
+
+        // 9. 임박 재료(leftDays=0) 포함 세션이면 쿠키 지급 (하루 1회)
+        grantUrgentCookieRewardIfEligible(userId, ingredientIds);
 
         return AiRecipeAdoptResponseDto.builder()
                 .sessionId(session.getId())
@@ -475,9 +480,17 @@ public class AiRecipeService {
     }
 
     // 재료 JSON 형식 변환
-    private String writeIngredientsAsJson(List<IngredientDetailDto> ingredients) {
+    private String writeIngredientIdsAsJson(List<Long> ingredientIds) {
         try {
-            return objectMapper.writeValueAsString(ingredients);
+            return objectMapper.writeValueAsString(ingredientIds);
+        } catch (Exception e) {
+            throw new AppException(ErrorCode.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    private String writeEnrichedIngredientsAsJson(List<IngredientDetailDto> enrichedIngredients) {
+        try {
+            return objectMapper.writeValueAsString(enrichedIngredients);
         } catch (Exception e) {
             throw new AppException(ErrorCode.INTERNAL_SERVER_ERROR);
         }
@@ -536,59 +549,74 @@ public class AiRecipeService {
     }
 
     // 임박 식재료 레시피 채택 시 리워드 지급
-    private void processUrgentIngredientReward(Long userId, List<Long> ingredientIds) {
+    private void grantUrgentCookieRewardIfEligible(Long userId, List<Long> ingredientIds) {
         if (ingredientIds == null || ingredientIds.isEmpty()) {
-            log.info("No ingredients provided for recipe adopt. Skipping reward processing.");
             return;
         }
 
-        // 1. 사용자의 실제 보유 재료 조회
-        List<UserIngredient> userIngredients =
-                userIngredientRepository.findAllByIngredientIdInAndUser_UserId(ingredientIds, userId);
+        // 세션에 요청된 재료 중 leftDays == 0인 항목이 있는지 확인
+        List<UserIngredient> targets = userIngredientRepository
+                .findAllByIngredientIdInAndUser_UserId(ingredientIds, userId);
 
-        if (userIngredients.isEmpty()) {
-            log.warn("유효한 재료 없음, 임박 리워드 생략: userId={}", userId);
-            return;
-        }
-
-        // 2. 임박 식재료 확인 (leftDays <= 0)
-        boolean hasUrgent = userIngredients.stream()
-                .anyMatch(ui -> ui.getLeftDays() <= URGENT);
+        boolean hasUrgent = targets.stream()
+                .anyMatch(ui -> ui.getLeftDays() == 0);
 
         if (!hasUrgent) {
-            log.info("임박 재료 없음, 임박 리워드 생략: userId={}", userId);
+            log.info("임박 재료(leftDays=0) 없음, 쿠키 미지급: userId={}", userId);
             return;
         }
 
-        // 3. 재료 중 첫 번째만 수량 -1
-        UserIngredient targetIngredient = userIngredients.get(0);
-        int newQuantity = targetIngredient.getQuantity() - 1;
-
-        if (newQuantity > 0) {
-            // 수량만 감소
-            targetIngredient.updateQuantity(newQuantity);
-            log.info("재료 수량 감소: ingredientId={}, {} → {}",
-                    targetIngredient.getIngredientId(),
-                    targetIngredient.getQuantity() + 1,
-                    newQuantity);
-        } else {
-            // 수량이 0이 되면 삭제
-            userIngredientRepository.delete(targetIngredient);
-            log.info("재료 삭제(수량 0): ingredientId={}",
-                    targetIngredient.getIngredientId());
-        }
-
-        // 4. 임박 식재료 리워드 지급 (하루 1회)
+        // BONUS_URGENT_INGREDIENT_USE: defaultAmount = 3, grantDailyCookie로 1일1회 보장
         CookieLog.CookieLogType urgentType = CookieLog.CookieLogType.BONUS_URGENT_INGREDIENT_USE;
         boolean granted = cookieService.grantDailyCookie(userId, urgentType);
 
         if (granted) {
-            log.info("임박 재료 리워드 지급: userId={}, amount={}",
-                    userId, urgentType.getDefaultAmount());
+            log.info("임박 재료 쿠키 {}개 지급 완료: userId={}",
+                    urgentType.getDefaultAmount(), userId);
         } else {
-            log.info("임박 재료 리워드 오늘 이미 지급됨: userId={}", userId);
+            log.info("임박 재료 쿠키 오늘 이미 지급됨, 미지급: userId={}", userId);
         }
     }
 
+    // 재료 차감 로직. (단위 상관없이 무조건 -1)
+    private void consumeIngredients(Long userId, List<Long> ingredientIds) {
+        if (ingredientIds == null || ingredientIds.isEmpty()) {
+            log.info("재료 차감 생략 - ingredientIds 없음: userId={}", userId);
+            return;
+        }
 
+        List<UserIngredient> targets = userIngredientRepository
+                .findAllByIngredientIdInAndUser_UserId(ingredientIds, userId);
+
+        if (targets.isEmpty()) {
+            log.warn("재료 차감 생략 - 유효한 재료 없음: userId={}", userId);
+            return;
+        }
+
+        for (UserIngredient ui : targets) {
+            int currentQty = ui.getQuantity();
+            if (currentQty > 1) {
+                ui.updateQuantity(currentQty - 1);
+                log.info("재료 수량 차감: ingredientId={}, {} → {}",
+                        ui.getIngredientId(), currentQty, currentQty - 1);
+            } else {
+                // quantity == 1이면 -1 = 0, 섭취 완료로 삭제
+                userIngredientRepository.delete(ui);
+                log.info("재료 삭제(수량 0): ingredientId={}", ui.getIngredientId());
+            }
+        }
+    }
+
+    // 임박 식재료 포함 레시피 채택 시 쿠키 3개 지급 (1일1회)
+    private void grantUrgentCookieReward(Long userId) {
+        CookieLog.CookieLogType urgentType = CookieLog.CookieLogType.BONUS_URGENT_INGREDIENT_USE;
+        boolean granted = cookieService.grantDailyCookie(userId, urgentType);
+
+        if (granted) {
+            log.info("임박 재료 쿠키 지급 완료: userId={}, amount={}",
+                    userId, urgentType.getDefaultAmount());
+        } else {
+            log.info("임박 재료 쿠키 오늘 이미 지급됨, 미지급: userId={}", userId);
+        }
+    }
 }
