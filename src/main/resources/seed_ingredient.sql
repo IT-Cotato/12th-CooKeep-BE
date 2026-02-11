@@ -9,7 +9,7 @@ INSERT INTO default_ingredients
 (category, default_ingredient, default_unit, default_storage, default_expiration_days, ai_tip, image_url)
 VALUES
     -- 채소 (VEGETABLE)
-    ('VEGETABLE','상추','PIECE','FRIDGE',7,'키친타월로 감싸 밀봉 보관하면 수분이 유지돼요.','https://cookeep-images.s3.ap-northeast-2.amazonaws.com/ingredients/0a0cc3bd-1ade-46ed-897e-ba89ec09b7c0.png'),
+    ('VEGETABLE','상추','PIECE','FRIDGE',7,'키친타월로 감싸 밀봉 보관하면 수분이 유지돼요.','https://cookeep-images.s3.ap-northeast-2.amazonaws.com/ingredients/5af22114-d81c-4aa5-8914-fae6bfe8a379.svg'),
     ('VEGETABLE','깻잎','PIECE','FRIDGE',7,'세척하지 말고 보관했다가 사용 직전에 씻어주세요.','https://cookeep-images.s3.ap-northeast-2.amazonaws.com/ingredients/0a0cc3bd-1ade-46ed-897e-ba89ec09b7c0.png'),
     ('VEGETABLE','시금치','PIECE','FRIDGE',7,'숨이 잘 죽으니 공기를 최소화해 보관하세요.','https://cookeep-images.s3.ap-northeast-2.amazonaws.com/ingredients/0a0cc3bd-1ade-46ed-897e-ba89ec09b7c0.png'),
     ('VEGETABLE','청경채','PIECE','FRIDGE',7,'잎이 눌리지 않게 세워서 보관하면 좋아요.','https://cookeep-images.s3.ap-northeast-2.amazonaws.com/ingredients/0a0cc3bd-1ade-46ed-897e-ba89ec09b7c0.png),

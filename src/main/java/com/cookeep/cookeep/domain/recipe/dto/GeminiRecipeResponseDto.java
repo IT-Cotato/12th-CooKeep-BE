@@ -1,5 +1,6 @@
 package com.cookeep.cookeep.domain.recipe.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
@@ -13,6 +14,7 @@ import java.util.List;
 )
 @Getter
 @NoArgsConstructor
+@JsonIgnoreProperties(ignoreUnknown = true) //AI 에러 방지
 public class GeminiRecipeResponseDto {
 
     @Schema(
@@ -100,7 +102,7 @@ public class GeminiRecipeResponseDto {
                 requiredMode = Schema.RequiredMode.REQUIRED,
                 minimum = "1"
         )
-        private Integer quantity;
+        private Double quantity;
 
         @Schema(
                 description = "수량 단위",
@@ -128,43 +130,25 @@ public class GeminiRecipeResponseDto {
                 description = "수량",
                 example = "1"
         )
-        private Integer quantity;
+        private Double quantity;
 
         @Schema(
                 description = "수량 단위",
                 example = "PIECE"
         )
         private String unit;
-    }
-
-    @Schema(
-            name = "GeminiRecipeYoutubeReference",
-            description = "레시피 참고 유튜브 영상 정보 DTO"
-    )
-    @Getter
-    @NoArgsConstructor
-    public static class YoutubeReference {
 
         @Schema(
-                description = "영상 제목",
-                example = "김치볶음밥 황금레시피",
-                requiredMode = Schema.RequiredMode.REQUIRED
+                description = """
+                    재료 설명 (선택 재료일 경우 필수).
+                    - additional_ingredients는 반드시 null이어야 함.
+                    - optional_ingredients는 반드시 아래 형식 중 하나로 작성:
+                      1) \"이 재료는 [다른 재료]로 대체 가능합니다\"
+                      2) \"이 재료는 생략 가능합니다\"
+                    """,
+                example = "이 재료는 쪽파로 대체 가능합니다"
         )
-        private String title;
-
-        @Schema(
-                description = "유튜브 영상 URL",
-                example = "https://www.youtube.com/watch?v=abcdef",
-                requiredMode = Schema.RequiredMode.REQUIRED
-        )
-        private String url;
-
-        @Schema(
-                description = "영상 썸네일 URL",
-                example = "https://img.youtube.com/vi/abcdef/0.jpg",
-                requiredMode = Schema.RequiredMode.NOT_REQUIRED
-        )
-        private String thumbnail;
+        private String description;
     }
 
 }
