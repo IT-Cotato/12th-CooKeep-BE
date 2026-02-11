@@ -640,7 +640,7 @@ public class AiRecipeService {
                 "개", "팩", "봉지", "병", "묶음", "캔", "g", "ml", "tsp", "Tbsp"
         );
 
-        // 🔹 1. additional_ingredients 검증
+        // 1. additional_ingredients 검증
         if (ingredients.getAdditionalIngredients() != null) {
             for (var ing : ingredients.getAdditionalIngredients()) {
 
@@ -669,7 +669,7 @@ public class AiRecipeService {
             }
         }
 
-        // 🔹 2. optional_ingredients 검증
+        // 2. optional_ingredients 검증
         if (ingredients.getOptionalIngredients() != null) {
             for (var ing : ingredients.getOptionalIngredients()) {
 
