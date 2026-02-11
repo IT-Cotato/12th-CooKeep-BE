@@ -42,6 +42,23 @@ public class VerificationController {
 		return ResponseEntity.ok(DataResponse.ok());
 	}
 
+	// 회원가입 전화번호 인증 확인
+	@Operation(summary = "회원가입 시 SMS 인증 확인 API")
+	@ApiResponses(value = {
+		@ApiResponse(responseCode = "200", description = "확인 성공"),
+		@ApiResponse(responseCode = "400", description = "요청 파라미터 오류"),
+		@ApiResponse(responseCode = "404", description = "인증 요청 내역이 없음"),
+		@ApiResponse(responseCode = "409", description = "인증번호 불일치 또는 만료됨"),
+		@ApiResponse(responseCode = "429", description = "인증 시도 횟수 초과")
+	})
+	@PostMapping("/auth/signup/verify-code")
+	public ResponseEntity<DataResponse<Void>> verifySignupCode(
+		@Valid @RequestBody VerifyCodeRequestDTO verifyCodeRequestDTO
+	) {
+		authService.verifySignupCode(verifyCodeRequestDTO);
+		return ResponseEntity.ok(DataResponse.ok());
+	}
+
 	// 비밀번호 찾기 시 전화번호 인증 요청
 	@Operation(summary = "비밀번호 찾기 시 SMS 인증 요청 API")
 	@ApiResponses(value = {
@@ -69,11 +86,11 @@ public class VerificationController {
 		@ApiResponse(responseCode = "409", description = "인증번호 불일치 또는 만료됨"),
 		@ApiResponse(responseCode = "429", description = "인증 시도 횟수 초과")
 	})
-	@PostMapping("/auth/verify-code")
-	public ResponseEntity<DataResponse<Void>> verifyAuthCode(
+	@PostMapping("/auth/password/verify-code")
+	public ResponseEntity<DataResponse<Void>> verifyPasswordResetCode(
 		@Valid @RequestBody VerifyCodeRequestDTO verifyCodeRequestDTO
 	) {
-		authService.verifyAuthCode(verifyCodeRequestDTO);
+		authService.verifyPasswordResetCode(verifyCodeRequestDTO);
 		return ResponseEntity.ok(DataResponse.ok());
 	}
 }

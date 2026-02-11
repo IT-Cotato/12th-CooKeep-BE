@@ -237,11 +237,19 @@ public class AuthService {
 	}
 
 	@Transactional
-	public void verifyAuthCode(VerifyCodeRequestDTO verifyCodeRequestDTO) {
+	public void verifySignupCode(VerifyCodeRequestDTO verifyCodeRequestDTO) {
 		String phoneNumber = verifyCodeRequestDTO.phoneNumber();
 		String code = verifyCodeRequestDTO.code();
 
 		smsVerificationService.verifyCode(phoneNumber, VerificationPurpose.SIGNUP, code);
+	}
+
+	@Transactional
+	public void verifyPasswordResetCode(VerifyCodeRequestDTO verifyCodeRequestDTO) {
+		String phoneNumber = verifyCodeRequestDTO.phoneNumber();
+		String code = verifyCodeRequestDTO.code();
+
+		smsVerificationService.verifyCode(phoneNumber, VerificationPurpose.RESET_PASSWORD, code);
 	}
 
 	@Transactional
