@@ -186,7 +186,7 @@ public class GeminiService {
            - [다른 재료]에는 반드시 실제 식재료명을 명시하세요.
            - 위 형식 외의 문장은 절대 생성하지 마세요.
         6. additional_ingredients와 optional_ingredients의 unit은 반드시 아래 목록 중 하나만 사용하세요:
-           [개, 팩, 봉지, 병, 묶음, 캔, g, ml, tsp, Tbsp]
+           [개, 팩, 봉지, 병, 묶음, 캔, g, ml, 티스푼, 테이블스푼]
            - 위 목록에 없는 단위는 절대 사용하지 마세요.
            - 영어 단위(piece, cup 등)나 "적당량", "약간" 같은 표현은 금지합니다.
            - user_ingredients에는 해당 단위 제한을 적용하지 않습니다.

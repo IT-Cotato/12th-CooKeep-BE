@@ -238,7 +238,16 @@ public class AiRecipeService {
         session.complete();
 
         // 7. 세션의 ingredientIds 조회
-        List<Long> ingredientIds = session.getIngredientIds();
+        List<Long> ingredientIds;
+        try {
+            ingredientIds = objectMapper.readValue(
+                    session.getIngredientIdsJson(),
+                    new TypeReference<List<Long>>() {}
+            );
+        } catch (Exception e) {
+            log.error("❌ingredientIdsJson 파싱 실패", e);
+            throw new AppException(ErrorCode.INTERNAL_SERVER_ERROR);
+        }
 
         // 8. 요청 재료 전체 수량 -1 (단위 무관, 0이 되면 삭제)
         consumeIngredients(userId, ingredientIds);
