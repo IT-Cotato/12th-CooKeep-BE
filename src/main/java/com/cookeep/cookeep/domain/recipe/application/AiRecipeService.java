@@ -448,7 +448,7 @@ public class AiRecipeService {
         try {
             String ingredientsJson = objectMapper.writeValueAsString(recipe.getIngredients());
             String stepsJson = objectMapper.writeValueAsString(recipe.getSteps());
-            String youtubeUrlJson = objectMapper.writeValueAsString(recipe. getYoutubeSearchQueries());
+            String youtubeUrlJson = objectMapper.writeValueAsString(recipe.getYoutubeSearchQueries());
 
             AiRecipe aiRecipe = AiRecipe.builder()
                     .title(recipe.getTitle())
@@ -658,14 +658,18 @@ public class AiRecipeService {
         if (ingredients.getOptionalIngredients() != null) {
             for (var ing : ingredients.getOptionalIngredients()) {
 
-                if (ing.getDescription() == null || ing.getDescription().isBlank()) {
+                String desc = ing.getDescription();
+
+                if (desc == null || desc.isBlank()) {
                     throw new AppException(ErrorCode.AI_RESPONSE_INVALID_FORMAT);
                 }
 
+                desc = desc.trim();
+
                 boolean validFormat =
-                        ing.getDescription().startsWith("이 재료는 ") &&
-                                (ing.getDescription().endsWith("로 대체 가능합니다")
-                                        || ing.getDescription().equals("이 재료는 생략 가능합니다"));
+                        desc.startsWith("이 재료는 ") &&
+                                (desc.endsWith("로 대체 가능합니다")
+                                        || desc.equals("이 재료는 생략 가능합니다"));
 
                 if (!validFormat) {
                     throw new AppException(ErrorCode.AI_RESPONSE_INVALID_FORMAT);

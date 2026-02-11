@@ -102,7 +102,7 @@ public class GeminiRecipeResponseDto {
                 requiredMode = Schema.RequiredMode.REQUIRED,
                 minimum = "1"
         )
-        private Integer quantity;
+        private Double quantity;
 
         @Schema(
                 description = "수량 단위",
