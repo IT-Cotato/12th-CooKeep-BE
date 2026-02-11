@@ -3,9 +3,12 @@ package com.cookeep.cookeep.domain.user.application;
 import com.cookeep.cookeep.api.dto.request.NicknameUpdateRequestDto;
 import com.cookeep.cookeep.api.dto.request.SendCodeRequestDTO;
 import com.cookeep.cookeep.api.dto.request.VerifyCodeRequestDTO;
+import com.cookeep.cookeep.api.dto.response.UserProfileResponseDTO;
 import com.cookeep.cookeep.common.exception.AppException;
 import com.cookeep.cookeep.common.exception.ErrorCode;
+import com.cookeep.cookeep.domain.user.dao.UserAuthRepository;
 import com.cookeep.cookeep.domain.user.dao.UserRepository;
+import com.cookeep.cookeep.domain.user.entity.Provider;
 import com.cookeep.cookeep.domain.user.entity.User;
 import com.cookeep.cookeep.domain.verification.application.SmsVerificationService;
 import com.cookeep.cookeep.domain.verification.entity.VerificationPurpose;
@@ -22,6 +25,27 @@ public class UserInfoService {
     private final UserRepository userRepository;
     private final UserReader userReader;
     private final SmsVerificationService smsVerificationService;
+    private final UserAuthRepository userAuthRepository;
+
+    public UserProfileResponseDTO getMyProfile(Long userId) {
+        User user = userReader.readById(userId);
+
+        String nickname = user.getNickname();
+        String email = user.getEmail();
+        Provider provider = userAuthRepository.findProviderByUserId(userId);
+        Boolean marketingPush = user.getMarketingPush();
+
+        // 로컬 유저일 경우에만 존재, 소셜은 전화번호 없음
+        String phoneNumber = (provider == Provider.LOCAL)
+            ? user.getPhoneNumber()
+            : null;
+
+
+        return new UserProfileResponseDTO(
+            nickname, phoneNumber, email,
+            provider, marketingPush
+        );
+    }
 
     public void updateNickname(Long userId, NicknameUpdateRequestDto request) {
         if (userId == null) {
