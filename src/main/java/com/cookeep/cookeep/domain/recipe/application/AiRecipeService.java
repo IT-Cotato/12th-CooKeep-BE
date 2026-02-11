@@ -248,10 +248,10 @@ public class AiRecipeService {
             throw new AppException(ErrorCode.INTERNAL_SERVER_ERROR);
         }
 
-        // 9. 임박 재료(leftDays=0) 포함 세션이면 쿠키 지급 (하루 1회)
+        // 8. 임박 재료(leftDays=0) 포함 세션이면 쿠키 지급 (하루 1회)
         grantUrgentCookieRewardIfEligible(userId, ingredientIds);
 
-        // 8. 요청 재료 전체 수량 -1 (단위 무관, 0이 되면 삭제)
+        // 9. 요청 재료 전체 수량 -1 (단위 무관, 0이 되면 삭제)
         consumeIngredients(userId, ingredientIds);
 
         return AiRecipeAdoptResponseDto.builder()
@@ -398,17 +398,6 @@ public class AiRecipeService {
                             .build();
                 })
                 .collect(Collectors.toList());
-    }
-
-    // user_ingredients에서 단위 조회
-    private String getUserIngredientUnit(Long userId, String type, Long referenceId) {
-        Type ingredientType = Type.valueOf(type);
-
-        UserIngredient userIngredient = userIngredientRepository
-                .findByUserIdAndTypeAndReferenceId(userId, ingredientType, referenceId)
-                .orElseThrow(() -> new AppException(ErrorCode.INGREDIENT_NOT_FOUND));
-
-        return userIngredient.getUnit().name();
     }
 
     // AI 메시지에서 레시피 제목 추출
@@ -637,19 +626,6 @@ public class AiRecipeService {
                 userIngredientRepository.delete(ui);
                 log.info("재료 삭제(수량 0): ingredientId={}", ui.getIngredientId());
             }
-        }
-    }
-
-    // 임박 식재료 포함 레시피 채택 시 쿠키 3개 지급 (1일1회)
-    private void grantUrgentCookieReward(Long userId) {
-        CookieLog.CookieLogType urgentType = CookieLog.CookieLogType.BONUS_URGENT_INGREDIENT_USE;
-        boolean granted = cookieService.grantDailyCookie(userId, urgentType);
-
-        if (granted) {
-            log.info("임박 재료 쿠키 지급 완료: userId={}, amount={}",
-                    userId, urgentType.getDefaultAmount());
-        } else {
-            log.info("임박 재료 쿠키 오늘 이미 지급됨, 미지급: userId={}", userId);
         }
     }
 

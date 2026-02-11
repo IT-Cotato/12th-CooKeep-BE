@@ -16,11 +16,4 @@ public interface DailyCookieGrantRepository extends JpaRepository<DailyCookieGra
             LocalDate grantDate
     );
 
-    // 특정 유저의 특정 타입/날짜 지급 기록 조회
-    Optional<DailyCookieGrant> findByUser_UserIdAndGrantTypeAndGrantDate(
-            Long userId,
-            CookieLog.CookieLogType grantType,
-            LocalDate grantDate
-    );
-
 }
