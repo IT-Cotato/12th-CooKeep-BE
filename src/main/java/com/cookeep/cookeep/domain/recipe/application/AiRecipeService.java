@@ -409,6 +409,7 @@ public class AiRecipeService {
     // AI 메시지 저장 (MessageType 포함)
     private void saveAiMessage(AiSession session, GeminiRecipeResponseDto response, MessageType type) {
         try {
+            validateAiResponse(response);
             String json = objectMapper.writeValueAsString(response);
 
             AiMessage message = AiMessage.builder()
@@ -617,6 +618,67 @@ public class AiRecipeService {
                     userId, urgentType.getDefaultAmount());
         } else {
             log.info("임박 재료 쿠키 오늘 이미 지급됨, 미지급: userId={}", userId);
+        }
+    }
+
+    // AI 응답 에러 확인
+    private void validateAiResponse(GeminiRecipeResponseDto response) {
+
+        if (response == null || response.getIngredients() == null) {
+            throw new AppException(ErrorCode.AI_RESPONSE_INVALID_FORMAT);
+        }
+
+        var ingredients = response.getIngredients();
+
+        // 허용 단위 목록
+        List<String> allowedUnits = List.of(
+                "개", "팩", "봉지", "병", "묶음", "캔", "g", "ml", "tsp", "Tbsp"
+        );
+
+        // 1. additional_ingredients 검증
+        if (ingredients.getAdditionalIngredients() != null) {
+            for (var ing : ingredients.getAdditionalIngredients()) {
+
+                // description 절대 금지
+                if (ing.getDescription() != null) {
+                    throw new AppException(ErrorCode.AI_RESPONSE_INVALID_FORMAT);
+                }
+
+                if (ing.getQuantity() == null || ing.getQuantity() <= 0) {
+                    throw new AppException(ErrorCode.AI_RESPONSE_INVALID_FORMAT);
+                }
+
+                if (!allowedUnits.contains(ing.getUnit())) {
+                    throw new AppException(ErrorCode.AI_RESPONSE_INVALID_FORMAT);
+                }
+            }
+        }
+
+        // 2. optional_ingredients 검증
+        if (ingredients.getOptionalIngredients() != null) {
+            for (var ing : ingredients.getOptionalIngredients()) {
+
+                if (ing.getDescription() == null || ing.getDescription().isBlank()) {
+                    throw new AppException(ErrorCode.AI_RESPONSE_INVALID_FORMAT);
+                }
+
+                boolean validFormat =
+                        ing.getDescription().startsWith("이 재료는 ") &&
+                                (ing.getDescription().endsWith("로 대체 가능합니다")
+                                        || ing.getDescription().equals("이 재료는 생략 가능합니다"));
+
+                if (!validFormat) {
+                    throw new AppException(ErrorCode.AI_RESPONSE_INVALID_FORMAT);
+                }
+
+                if (ing.getQuantity() == null || ing.getQuantity() <= 0) {
+                    throw new AppException(ErrorCode.AI_RESPONSE_INVALID_FORMAT);
+                }
+
+                if (!allowedUnits.contains(ing.getUnit())) {
+                    throw new AppException(ErrorCode.AI_RESPONSE_INVALID_FORMAT);
+                }
+            }
         }
     }
 }
