@@ -17,6 +17,6 @@ public interface RecipeBookmarkRepository extends JpaRepository<RecipeBookmark, 
 
     @Query("SELECT rb.dailyRecipe FROM RecipeBookmark rb " +
             "WHERE rb.user = :user " +
-            "ORDER BY rb.dailyRecipe.likeCount DESC, rb.dailyRecipe.createdAt DESC")
+            "ORDER BY rb.createdAt DESC")
     Page<DailyRecipe> findMyBookmarkedRecipes(@Param("user") User user, Pageable pageable);
 }
