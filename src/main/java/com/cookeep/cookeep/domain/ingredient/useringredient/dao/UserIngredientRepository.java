@@ -43,6 +43,9 @@ public interface UserIngredientRepository extends JpaRepository<UserIngredient, 
             Long userId
     );
 
+    // 사용자 전체 식재료 조회 (주간 소비 리포트용)
+    List<UserIngredient> findAllByUser_UserId(Long userId);
+
     // --- 냉장고탭 ---
     // 홈화면 카테고리별 조회
     @Query("SELECT ui FROM UserIngredient ui WHERE ui.user.userId = :userId AND ui.storage = :storage ORDER BY ui.leftDays ASC")
