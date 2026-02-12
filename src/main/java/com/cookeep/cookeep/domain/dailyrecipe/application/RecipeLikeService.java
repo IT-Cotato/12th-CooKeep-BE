@@ -35,8 +35,9 @@ public class RecipeLikeService {
 			throw new AppException(ErrorCode.CANNOT_LIKE_OWN_RECIPE);
 		}
 
-		// 이미 좋아요를 눌렀으면 삭제
 		var existingLike = recipeLikeRepository.findByDailyRecipeAndUser(dailyRecipe, user);
+
+		// 이미 좋아요를 눌렀으면 삭제
 		if (existingLike.isPresent()) {
 			recipeLikeRepository.delete(existingLike.get());
 			dailyRecipe.decrementLikeCount();
