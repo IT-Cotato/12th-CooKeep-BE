@@ -1,6 +1,7 @@
 package com.cookeep.cookeep.api.controller;
 
 import com.cookeep.cookeep.api.dto.response.RecipeLikeResponseDto;
+import com.cookeep.cookeep.api.dto.response.WeeklyRecipeResponseDto;
 import com.cookeep.cookeep.common.dto.DataResponse;
 import com.cookeep.cookeep.common.exception.ErrorCode;
 import com.cookeep.cookeep.config.ApiErrorCodeExamples;
@@ -13,6 +14,8 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -88,5 +91,17 @@ public class RecipeLikeController {
 		);
 
 		return ResponseEntity.ok(DataResponse.from(response));
+	}
+
+	@Operation(
+			summary = "내가 좋아요 누른 레시피 목록 조회",
+			description = "사용자가 좋아요를 누른 레시피들을 좋아요가 많은 순서대로 페이징 조회합니다."
+	)
+	@GetMapping("/my")
+	public ResponseEntity<DataResponse<Page<WeeklyRecipeResponseDto>>> getMyLikedRecipes(
+			@AuthenticationPrincipal(expression = "userId") Long userId,
+			@org.springdoc.core.annotations.ParameterObject Pageable pageable
+	) {
+		return ResponseEntity.ok(DataResponse.from(recipeLikeService.getMyLikedRecipes(userId, pageable)));
 	}
 }
