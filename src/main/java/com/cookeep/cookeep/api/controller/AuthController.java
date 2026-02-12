@@ -1,6 +1,7 @@
 package com.cookeep.cookeep.api.controller;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -19,6 +20,7 @@ import com.cookeep.cookeep.api.dto.response.SignUpResponseDTO;
 import com.cookeep.cookeep.api.dto.response.TokenRefreshResponseDTO;
 import com.cookeep.cookeep.common.dto.DataResponse;
 import com.cookeep.cookeep.domain.user.application.AuthService;
+import com.cookeep.cookeep.security.UserPrincipal;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -89,4 +91,20 @@ public class AuthController {
 		authService.resetPassword(resetPasswordRequestDTO);
 		return ResponseEntity.ok(DataResponse.ok());
 	}
+
+	@Operation(summary = "로그아웃 API", description = "현재 로그인한 사용자의 세션(RefreshToken)을 무효화합니다.")
+	@ApiResponses(value = {
+		@ApiResponse(responseCode = "200", description = "로그아웃 성공"),
+		@ApiResponse(responseCode = "401", description = "회원 인증 실패, AccessToken이 없거나 유효하지 않음")
+	})
+	@PostMapping("/logout")
+	public ResponseEntity<DataResponse<Void>> logout(
+		@AuthenticationPrincipal UserPrincipal principal
+	) {
+		Long userId = principal.userId();
+		authService.logout(userId);
+		return ResponseEntity.ok(DataResponse.ok());
+	}
+
+
 }

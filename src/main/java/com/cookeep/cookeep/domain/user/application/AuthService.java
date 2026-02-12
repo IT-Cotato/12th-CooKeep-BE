@@ -408,4 +408,10 @@ public class AuthService {
 
 		user.updatePassword(encodedPassword);
 	}
+
+	@Transactional
+	public void logout(Long userId) {
+		// 로그아웃 시 refreshToken 저장된 userSession 폐기
+		userSessionRepository.deleteByUser_UserId(userId);
+	}
 }
