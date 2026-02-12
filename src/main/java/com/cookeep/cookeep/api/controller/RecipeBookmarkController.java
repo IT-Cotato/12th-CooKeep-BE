@@ -76,7 +76,7 @@ public class RecipeBookmarkController {
 
     @Operation(
             summary = "내가 북마크한 레시피 목록 조회",
-            description = "사용자가 북마크한 레시피들을 좋아요가 많은 순서대로 페이징 조회합니다."
+            description = "사용자가 북마크한 레시피들을 북마크 등록일 최신순으로 페이징 조회합니다."
     )
     @ApiErrorCodeExamples({
             ErrorCode.UNAUTHORIZED,
