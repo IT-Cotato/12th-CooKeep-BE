@@ -64,12 +64,17 @@ public class SecurityConfig {
 				.requestMatchers(
 					// 아래 경로들은 로그인하지 않아도 접근 가능
 					// 나머지 경로는 모두 로그인해야 접근 가능함
-					"/api/auth/**",
 					"/swagger-ui/**",
 					"/v3/api-docs/**",
 					"/swagger-resources/**",
 					"/error"
 				).permitAll()
+
+				// auth 경로 중 로그아웃은 로그인한 사용자만 가능하도록 처리
+				.requestMatchers("/api/auth/logout").authenticated()
+
+				// 나머지 auth 경로는 로그인하지 않아도 접근 가능
+				.requestMatchers("/api/auth/**").permitAll()
 
 				.anyRequest().authenticated()
 			)
