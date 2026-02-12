@@ -12,6 +12,7 @@ import com.cookeep.cookeep.domain.ingredient.defaultingredient.dao.DefaultIngred
 import com.cookeep.cookeep.domain.ingredient.defaultingredient.entity.DefaultIngredient;
 import com.cookeep.cookeep.domain.ingredient.useringredient.dao.UserIngredientRepository;
 import com.cookeep.cookeep.domain.ingredient.useringredient.entity.UserIngredient;
+import com.cookeep.cookeep.domain.mycookeep.application.ConsumptionReportService;
 import com.cookeep.cookeep.domain.user.dao.UserRepository;
 import com.cookeep.cookeep.domain.user.entity.User;
 import lombok.RequiredArgsConstructor;
@@ -29,6 +30,7 @@ public class UserIngredientService {
     private final DefaultIngredientRepository defaultIngredientRepository;
     private final CustomIngredientRepository customIngredientRepository;
     private final UserRepository userRepository;
+    private final ConsumptionReportService consumptionReportService;
     private static final String DEFAULT_IMAGE =
             "https://cookeep-images.s3.ap-northeast-2.amazonaws.com/ingredients/0a0cc3bd-1ade-46ed-897e-ba89ec09b7c0.png";
 
@@ -96,6 +98,9 @@ public class UserIngredientService {
                 .build();
 
         UserIngredient saved = userIngredientRepository.save(userIngredient);
+
+        // 주간 소비 리포트용 로그 생성
+        consumptionReportService.createLogForNewIngredient(user, saved);
 
         return UserIngredientCreateResponseDto.of(saved, ingredientName, imageUrl);
     }

@@ -3,6 +3,7 @@ package com.cookeep.cookeep.domain.dailyrecipe.dao;
 import com.cookeep.cookeep.domain.dailyrecipe.entity.RecipeLike;
 import com.cookeep.cookeep.domain.dailyrecipe.entity.DailyRecipe;
 import com.cookeep.cookeep.domain.user.entity.User;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -32,4 +33,10 @@ public interface RecipeLikeRepository extends JpaRepository<RecipeLike, Long> {
 
 	// 특정 사용자가 특정 레시피에 좋아요를 눌렀는지 boolean으로 확인
 	boolean existsByDailyRecipeAndUser(DailyRecipe dailyRecipe, User user);
+
+	// RecipeLike 테이블을 거쳐서 내가 좋아요를 누른 레시피들 조회
+	@Query("SELECT rl.dailyRecipe FROM RecipeLike rl " +
+			"WHERE rl.user = :user " +
+			"ORDER BY rl.dailyRecipe.likeCount DESC, rl.dailyRecipe.createdAt DESC")
+	Page<DailyRecipe> findMyLikedRecipes(@Param("user") User user, Pageable pageable);
 }

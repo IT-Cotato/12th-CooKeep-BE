@@ -1,5 +1,6 @@
 package com.cookeep.cookeep.domain.dailyrecipe.application;
 
+import com.cookeep.cookeep.api.dto.response.WeeklyRecipeResponseDto;
 import com.cookeep.cookeep.common.exception.AppException;
 import com.cookeep.cookeep.common.exception.ErrorCode;
 import com.cookeep.cookeep.domain.dailyrecipe.dao.DailyRecipeRepository;
@@ -9,6 +10,8 @@ import com.cookeep.cookeep.domain.dailyrecipe.entity.RecipeLike;
 import com.cookeep.cookeep.domain.user.application.UserReader;
 import com.cookeep.cookeep.domain.user.entity.User;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,8 +35,9 @@ public class RecipeLikeService {
 			throw new AppException(ErrorCode.CANNOT_LIKE_OWN_RECIPE);
 		}
 
-		// 이미 좋아요를 눌렀으면 삭제
 		var existingLike = recipeLikeRepository.findByDailyRecipeAndUser(dailyRecipe, user);
+
+		// 이미 좋아요를 눌렀으면 삭제
 		if (existingLike.isPresent()) {
 			recipeLikeRepository.delete(existingLike.get());
 			dailyRecipe.decrementLikeCount();
@@ -65,5 +69,20 @@ public class RecipeLikeService {
 		DailyRecipe dailyRecipe = dailyRecipeRepository.findById(dailyRecipeId)
 			.orElseThrow(() -> new AppException(ErrorCode.DAILY_RECIPE_NOT_FOUND));
 		return recipeLikeRepository.existsByDailyRecipeAndUser(dailyRecipe, user);
+	}
+
+	@Transactional(readOnly = true)
+	public Page<WeeklyRecipeResponseDto> getMyLikedRecipes(Long userId, Pageable pageable) {
+		User user = userReader.readById(userId);
+
+		// 좋아요 많은 순으로 조회 (Repository의 쿼리 결과)
+		Page<DailyRecipe> recipes = recipeLikeRepository.findMyLikedRecipes(user, pageable);
+
+		return recipes.map(recipe -> WeeklyRecipeResponseDto.builder()
+				.dailyRecipeId(recipe.getId())
+				.title(recipe.getTitle())
+				.likeCount(recipe.getLikeCount())
+				.recipeImageUrl(recipe.getRecipeImageUrl())
+				.build());
 	}
 }
