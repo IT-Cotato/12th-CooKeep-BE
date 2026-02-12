@@ -1,5 +1,6 @@
 package com.cookeep.cookeep.domain.dailyrecipe.application;
 
+import com.cookeep.cookeep.api.dto.response.WeeklyRecipeResponseDto;
 import com.cookeep.cookeep.common.exception.AppException;
 import com.cookeep.cookeep.common.exception.ErrorCode;
 import com.cookeep.cookeep.domain.dailyrecipe.dao.DailyRecipeRepository;
@@ -9,6 +10,8 @@ import com.cookeep.cookeep.domain.dailyrecipe.entity.RecipeBookmark;
 import com.cookeep.cookeep.domain.user.application.UserReader;
 import com.cookeep.cookeep.domain.user.entity.User;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -51,5 +54,19 @@ public class RecipeBookmarkService {
         User user = userReader.readById(userId);
         return recipeBookmarkRepository.existsByDailyRecipeAndUser(
                 dailyRecipeRepository.getReferenceById(dailyRecipeId), user);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<WeeklyRecipeResponseDto> getMyBookmarkedRecipes(Long userId, Pageable pageable) {
+        User user = userReader.readById(userId);
+
+        Page<DailyRecipe> recipes = recipeBookmarkRepository.findMyBookmarkedRecipes(user, pageable);
+
+        return recipes.map(recipe -> WeeklyRecipeResponseDto.builder()
+                .dailyRecipeId(recipe.getId())
+                .title(recipe.getTitle())
+                .likeCount(recipe.getLikeCount())
+                .recipeImageUrl(recipe.getRecipeImageUrl())
+                .build());
     }
 }

@@ -96,7 +96,13 @@ public class RecipeLikeController {
 	@Operation(
 			summary = "내가 좋아요 누른 레시피 목록 조회",
 			description = "사용자가 좋아요를 누른 레시피들을 좋아요가 많은 순서대로 페이징 조회합니다."
-	)
+	)@ApiErrorCodeExamples({
+			ErrorCode.UNAUTHORIZED,
+	})
+	@ApiResponses(value = {
+			@ApiResponse(responseCode = "200", description = "조회 성공"),
+			@ApiResponse(responseCode = "401", description = "인증되지 않은 사용자", content = @Content)
+	})
 	@GetMapping("/my")
 	public ResponseEntity<DataResponse<Page<WeeklyRecipeResponseDto>>> getMyLikedRecipes(
 			@AuthenticationPrincipal(expression = "userId") Long userId,

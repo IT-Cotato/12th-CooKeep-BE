@@ -1,6 +1,7 @@
 package com.cookeep.cookeep.api.controller;
 
 import com.cookeep.cookeep.api.dto.response.RecipeBookmarkResponseDto;
+import com.cookeep.cookeep.api.dto.response.WeeklyRecipeResponseDto;
 import com.cookeep.cookeep.common.dto.DataResponse;
 import com.cookeep.cookeep.common.exception.ErrorCode;
 import com.cookeep.cookeep.config.ApiErrorCodeExamples;
@@ -12,13 +13,15 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @Tag(name = "레시피 북마크", description = "레시피 북마크 관련 API")
 @RestController
-@RequestMapping("/api/daily-recipes/{dailyRecipeId}/bookmarks")
+@RequestMapping("/api/daily-recipes/bookmarks")
 @RequiredArgsConstructor
 public class RecipeBookmarkController {
     private final RecipeBookmarkService recipeBookmarkService;
@@ -38,7 +41,7 @@ public class RecipeBookmarkController {
             @ApiResponse(responseCode = "401", description = "인증되지 않은 사용자", content = @Content),
             @ApiResponse(responseCode = "404", description = "해당 레시피가 존재하지 않음", content = @Content)
     })
-    @PostMapping("/toggle")
+    @PostMapping("/{dailyRecipeId}/toggle")
     public ResponseEntity<DataResponse<RecipeBookmarkResponseDto>> toggleBookmark(
             @AuthenticationPrincipal(expression = "userId") Long userId,
             @Parameter(description = "데일리 레시피 ID", required = true)
@@ -61,7 +64,7 @@ public class RecipeBookmarkController {
             @ApiResponse(responseCode = "401", description = "인증되지 않은 사용자", content = @Content),
             @ApiResponse(responseCode = "404", description = "해당 레시피가 존재하지 않음", content = @Content)
     })
-    @GetMapping("/check")
+    @GetMapping("/{dailyRecipeId}/check")
     public ResponseEntity<DataResponse<RecipeBookmarkResponseDto>> checkBookmark(
             @AuthenticationPrincipal(expression = "userId") Long userId,
             @Parameter(description = "데일리 레시피 ID", required = true)
@@ -69,5 +72,24 @@ public class RecipeBookmarkController {
     ) {
         boolean isBookmarked = recipeBookmarkService.isBookmarked(userId, dailyRecipeId);
         return ResponseEntity.ok(DataResponse.from(RecipeBookmarkResponseDto.from(dailyRecipeId, isBookmarked)));
+    }
+
+    @Operation(
+            summary = "내가 북마크한 레시피 목록 조회",
+            description = "사용자가 북마크한 레시피들을 좋아요가 많은 순서대로 페이징 조회합니다."
+    )
+    @ApiErrorCodeExamples({
+            ErrorCode.UNAUTHORIZED,
+    })
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "조회 성공"),
+            @ApiResponse(responseCode = "401", description = "인증되지 않은 사용자", content = @Content)
+    })
+    @GetMapping("/my")
+    public ResponseEntity<DataResponse<Page<WeeklyRecipeResponseDto>>> getMyBookmarkedRecipes(
+            @AuthenticationPrincipal(expression = "userId") Long userId,
+            @org.springdoc.core.annotations.ParameterObject Pageable pageable
+    ) {
+        return ResponseEntity.ok(DataResponse.from(recipeBookmarkService.getMyBookmarkedRecipes(userId, pageable)));
     }
 }
