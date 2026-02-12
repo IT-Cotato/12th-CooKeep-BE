@@ -1,14 +1,23 @@
 package com.cookeep.cookeep.domain.cookeeps.application;
 
+import com.cookeep.cookeep.api.dto.response.CookeepsRecipeDetailResponseDto;
 import com.cookeep.cookeep.api.dto.response.RankingResponseDto;
 import com.cookeep.cookeep.api.dto.response.RankingResponseDto.RecipeRankDto;
 import com.cookeep.cookeep.api.dto.response.RankingResponseDto.WateringRankDto;
+import com.cookeep.cookeep.api.dto.response.WeeklyRecipeResponseDto;
+import com.cookeep.cookeep.common.exception.AppException;
+import com.cookeep.cookeep.common.exception.ErrorCode;
+import com.cookeep.cookeep.common.util.DateTimeUtils;
+import com.cookeep.cookeep.domain.dailyrecipe.dao.DailyRecipeRepository;
 import com.cookeep.cookeep.domain.dailyrecipe.dao.RecipeLikeRepository;
 import com.cookeep.cookeep.domain.dailyrecipe.entity.DailyRecipe;
 import com.cookeep.cookeep.domain.plant.dao.WateringLogRepository;
 import com.cookeep.cookeep.domain.user.entity.User;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,6 +34,7 @@ public class CookeepsService {
 
 	private final WateringLogRepository wateringLogRepository;
 	private final RecipeLikeRepository recipeLikeRepository;
+	private final DailyRecipeRepository dailyRecipeRepository;
 
 	@Transactional(readOnly = true)
 	public RankingResponseDto getRanking() {
@@ -90,5 +100,52 @@ public class CookeepsService {
 						.build();
 			})
 			.toList();
+	}
+
+	@Transactional(readOnly = true)
+	public Page<WeeklyRecipeResponseDto> getWeeklyRecipes(String filter, Pageable pageable) {
+		// 1. 유틸리티를 사용해 이번 주 월요일 00:00:00 가져오기
+		LocalDateTime start = DateTimeUtils.getStartOfWeek();
+		LocalDateTime end = start.plusDays(7); // 다음 주 월요일 00:00:00 이전까지
+
+		// 2. 필터에 따른 정렬 기준 동적 설정
+		Sort sort = switch (filter) {
+			case "latest" -> Sort.by(Sort.Direction.DESC, "createdAt");
+			case "oldest" -> Sort.by(Sort.Direction.ASC, "createdAt");
+			default -> Sort.by(Sort.Direction.DESC, "likeCount")
+					.and(Sort.by(Sort.Direction.DESC, "createdAt"));
+		};
+
+		// 3. 정렬이 포함된 새로운 Pageable 생성
+		Pageable sortedPageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), sort);
+
+		// 4. 데이터 조회 및 DTO 변환
+		Page<DailyRecipe> recipes = dailyRecipeRepository.findWeeklyPublicRecipes(start, end, sortedPageable);
+
+		// 5. 순위(rank) 계산을 포함하여 변환
+		int startRank = (int) sortedPageable.getOffset() + 1;
+		return recipes.map(recipe -> {
+			int currentIndex = recipes.getContent().indexOf(recipe);
+			return WeeklyRecipeResponseDto.builder()
+					.rank(startRank + currentIndex)
+					.dailyRecipeId(recipe.getId())
+					.title(recipe.getTitle())
+					.likeCount(recipe.getLikeCount())
+					.recipeImageUrl(recipe.getRecipeImageUrl())
+					.build();
+		});
+	}
+
+	@Transactional(readOnly = true)
+	public CookeepsRecipeDetailResponseDto getCookeepsRecipeDetail(Long dailyRecipeId) {
+		DailyRecipe dailyRecipe = dailyRecipeRepository.findById(dailyRecipeId)
+				.orElseThrow(() -> new AppException(ErrorCode.DAILY_RECIPE_NOT_FOUND));
+
+		// 공개되지 않은 레시피는 커뮤니티 상세 조회가 불가능하도록 방어 로직
+		if (!dailyRecipe.getIsPublic()) {
+			throw new AppException(ErrorCode.DAILY_RECIPE_NOT_FOUND); // 혹은 권한 에러
+		}
+
+		return CookeepsRecipeDetailResponseDto.from(dailyRecipe);
 	}
 }
