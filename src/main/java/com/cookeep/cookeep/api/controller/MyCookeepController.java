@@ -1,11 +1,13 @@
 package com.cookeep.cookeep.api.controller;
 
 import com.cookeep.cookeep.api.dto.request.WeeklyGoalRequestDto;
+import com.cookeep.cookeep.api.dto.response.ConsumptionReportResponseDto;
 import com.cookeep.cookeep.api.dto.response.MyProfileResponseDto;
 import com.cookeep.cookeep.common.dto.DataResponse;
 import com.cookeep.cookeep.common.exception.ErrorCode;
 import com.cookeep.cookeep.config.ApiErrorCodeExamples;
 import com.cookeep.cookeep.security.UserPrincipal;
+import com.cookeep.cookeep.domain.mycookeep.application.ConsumptionReportService;
 import com.cookeep.cookeep.domain.mycookeep.application.MyCookeepService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -27,6 +29,7 @@ import org.springframework.web.bind.annotation.*;
 public class MyCookeepController {
 
     private final MyCookeepService myCookeepService;
+    private final ConsumptionReportService consumptionReportService;
 
     @Operation(summary = "마이쿠킵 프로필 조회", description = "닉네임, 프로필 식물 이미지, 가입 일수, 현재 키우는 식물 이름, 이번 주 목표를 조회합니다.")
     @ApiErrorCodeExamples({
@@ -57,6 +60,37 @@ public class MyCookeepController {
         Long userId = principal.userId();
         MyProfileResponseDto response = myCookeepService.getProfile(userId);
 
+        return ResponseEntity.ok(DataResponse.from(response));
+    }
+
+    @Operation(summary = "주간 소비 리포트 조회", description = "이번 주 전체 식재료 소비율과 유통기한 임박 식재료 소비율을 조회합니다.")
+    @ApiErrorCodeExamples({
+            ErrorCode.UNAUTHORIZED,
+            ErrorCode.USER_NOT_FOUND,
+            ErrorCode.INTERNAL_SERVER_ERROR
+    })
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "소비 리포트 조회 성공",
+                    content = @Content(schema = @Schema(implementation = ConsumptionReportResponseDto.class))),
+            @ApiResponse(responseCode = "401", description = """
+                인증 실패입니다. 다음 오류가 발생할 수 있습니다:
+                - UNAUTHORIZED: 인증 정보가 없거나 유효하지 않습니다.
+                """, content = @Content),
+            @ApiResponse(responseCode = "404", description = """
+                리소스를 찾을 수 없습니다. 다음 오류가 발생할 수 있습니다:
+                - USER_NOT_FOUND: 존재하지 않는 사용자입니다.
+                """, content = @Content),
+            @ApiResponse(responseCode = "500", description = """
+                서버 오류입니다. 다음 오류가 발생할 수 있습니다:
+                - INTERNAL_SERVER_ERROR: 서버 내부 오류가 발생했습니다.
+                """, content = @Content)
+    })
+    @GetMapping("/consumption-report")
+    public ResponseEntity<DataResponse<ConsumptionReportResponseDto>> getConsumptionReport(
+            @AuthenticationPrincipal UserPrincipal principal
+    ) {
+        Long userId = principal.userId();
+        ConsumptionReportResponseDto response = consumptionReportService.getReport(userId);
         return ResponseEntity.ok(DataResponse.from(response));
     }
 
