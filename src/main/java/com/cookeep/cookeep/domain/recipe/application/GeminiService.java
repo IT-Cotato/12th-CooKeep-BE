@@ -178,13 +178,21 @@ public class GeminiService {
         4. additional_ingredients에는 레시피에 반드시 필요한 추가 재료만 포함하세요.
            - description 필드는 절대 생성하지 마세요.
            - description은 null로도 생성하지 말고, 아예 포함하지 마세요.
-        5. optional_ingredients에는 생략하거나 대체 가능한 재료만 포함하세요.
+        5. optional_ingredients에는 절대 새로운 재료를 생성하지 마세요.
+           - 반드시 user_ingredients 또는 additional_ingredients에 이미 존재하는 재료만 사용하세요.
+           - 위 두 목록에 없는 새로운 재료를 생성하는 것은 절대 금지합니다.
+           - optional_ingredients에 포함된 재료는 반드시 user_ingredients 또는 additional_ingredients 중 하나와 동일한 name을 가져야 합니다.
+
            - description 필드는 반드시 포함해야 합니다.
-           - description은 반드시 아래 두 형식 중 하나로 작성하세요:
+           - description은 반드시 아래 두 형식 중 하나로만 작성하세요:
+
              1) "이 재료는 [다른 재료]로 대체 가능합니다"
+               - [다른 재료]는 반드시 user_ingredients 또는 additional_ingredients에 존재하는 실제 재료명을 사용하세요.
+               - 존재하지 않는 재료명은 절대 사용하지 마세요.
+
              2) "이 재료는 생략 가능합니다"
-           - [다른 재료]에는 반드시 실제 식재료명을 명시하세요.
-           - 위 형식 외의 문장은 절대 생성하지 마세요.
+             
+            - 위 형식 외의 문장은 절대 생성하지 마세요.
         6. additional_ingredients와 optional_ingredients의 unit은 반드시 아래 목록 중 하나만 사용하세요:
            [개, 팩, 봉지, 병, 묶음, 캔, g, ml, 티스푼, 테이블스푼]
            - 위 목록에 없는 단위는 절대 사용하지 마세요.
