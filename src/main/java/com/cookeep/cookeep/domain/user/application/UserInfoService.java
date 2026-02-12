@@ -3,6 +3,7 @@ package com.cookeep.cookeep.domain.user.application;
 import com.cookeep.cookeep.api.dto.request.NicknameUpdateRequestDto;
 import com.cookeep.cookeep.api.dto.request.SendCodeRequestDTO;
 import com.cookeep.cookeep.api.dto.request.UpdateEmailRequestDTO;
+import com.cookeep.cookeep.api.dto.request.UpdatePasswordRequestDTO;
 import com.cookeep.cookeep.api.dto.request.VerifyCodeRequestDTO;
 import com.cookeep.cookeep.api.dto.response.UserProfileResponseDTO;
 import com.cookeep.cookeep.common.exception.AppException;
@@ -17,6 +18,7 @@ import com.cookeep.cookeep.domain.verification.entity.VerificationPurpose;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.boot.web.error.Error;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,7 +31,9 @@ public class UserInfoService {
     private final UserReader userReader;
     private final SmsVerificationService smsVerificationService;
     private final UserAuthRepository userAuthRepository;
+    private final PasswordEncoder passwordEncoder;
 
+    // 회원 정보 조회
     public UserProfileResponseDTO getMyProfile(Long userId) {
         User user = userReader.readById(userId);
 
@@ -110,6 +114,7 @@ public class UserInfoService {
         user.updatePhoneNumber(newPhoneNumber);
     }
 
+    // 이메일 변경
     @Transactional
     public void updateMyEmail(Long userId, UpdateEmailRequestDTO updateEmailRequestDTO) {
 
@@ -136,5 +141,20 @@ public class UserInfoService {
         }
 
         user.updateEmail(newEmail);
+    }
+
+    // 비밀번호 변경
+    @Transactional
+    public void updateMyPassword(Long userId, UpdatePasswordRequestDTO updatePasswordRequestDTO) {
+        User user = userReader.readById(userId);
+
+        String encodedPassword = passwordEncoder.encode(updatePasswordRequestDTO.password());
+
+        // 기존에 등록되어 있던 비밀번호와 새로 들어온 비밀번호가 동일할 경우
+        if (passwordEncoder.matches(updatePasswordRequestDTO.password(), user.getPassword())) {
+            throw new AppException(ErrorCode.SAME_AS_PREVIOUS_PASSWORD);
+        }
+
+        user.updatePassword(encodedPassword);
     }
 }
