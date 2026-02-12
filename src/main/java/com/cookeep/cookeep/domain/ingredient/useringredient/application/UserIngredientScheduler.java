@@ -2,12 +2,16 @@ package com.cookeep.cookeep.domain.ingredient.useringredient.application;
 
 import com.cookeep.cookeep.domain.ingredient.useringredient.dao.UserIngredientRepository;
 import com.cookeep.cookeep.domain.ingredient.useringredient.entity.UserIngredient;
+import com.cookeep.cookeep.domain.mycookeep.application.ConsumptionReportService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.DayOfWeek;
+import java.time.LocalDate;
+import java.time.temporal.TemporalAdjusters;
 import java.util.List;
 
 // 자정에 모든 식재료 leftDays 필드 업데이트
@@ -17,6 +21,7 @@ import java.util.List;
 public class UserIngredientScheduler {
 
     private final UserIngredientRepository userIngredientRepository;
+    private final ConsumptionReportService consumptionReportService;
 
     /**
      * 매일 자정(00:00)에 모든 식재료의 남은 일수(leftDays) 업데이트
@@ -35,6 +40,18 @@ public class UserIngredientScheduler {
 
             // 각 식재료의 leftDays 업데이트
             allIngredients.forEach(UserIngredient::updateLeftDays);
+
+            // 새로 임박된 식재료의 주간 로그 업데이트 (leftDays <= 3)
+            LocalDate weekStart = LocalDate.now()
+                    .with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
+            List<Long> nearExpiryIds = allIngredients.stream()
+                    .filter(ui -> ui.getLeftDays() <= ConsumptionReportService.NEAR_EXPIRY_THRESHOLD)
+                    .map(UserIngredient::getIngredientId)
+                    .toList();
+            if (!nearExpiryIds.isEmpty()) {
+                consumptionReportService.updateNearExpiryFlags(nearExpiryIds, weekStart);
+                log.info("Updated near-expiry flags for {} ingredients", nearExpiryIds.size());
+            }
 
             log.info("=== Successfully updated leftDays for {} ingredients ===", allIngredients.size());
 
