@@ -137,4 +137,8 @@ public class User extends BaseEntity {
 		this.userStatus = UserStatus.ACTIVE;
 	}
 
+	public void updatePhoneNumber(String phoneNumber) {
+		this.phoneNumber = phoneNumber;
+	}
+
 }

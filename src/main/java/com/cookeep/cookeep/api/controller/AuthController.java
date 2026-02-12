@@ -2,6 +2,7 @@ package com.cookeep.cookeep.api.controller;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -9,6 +10,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.cookeep.cookeep.api.dto.request.LoginRequestDTO;
+import com.cookeep.cookeep.api.dto.request.ResetPasswordRequestDTO;
 import com.cookeep.cookeep.api.dto.request.SignupRequestDTO;
 import com.cookeep.cookeep.api.dto.request.TokenRefreshRequestDTO;
 import com.cookeep.cookeep.api.dto.response.KakaoLoginResponseDTO;
@@ -73,5 +75,18 @@ public class AuthController {
 	})
 	public ResponseEntity<DataResponse<LoginResponseDTO>> login(@Valid @RequestBody LoginRequestDTO loginRequestDTO) {
 		return ResponseEntity.ok(DataResponse.from(authService.login(loginRequestDTO)));
+	}
+
+	@Operation(summary = "비밀번호 초기화 API")
+	@ApiResponses(value = {
+		@ApiResponse(responseCode = "200", description = "비밀번호 초기화 성공"),
+		@ApiResponse(responseCode = "400", description = "요청 파라미터 오류")
+	})
+	@PatchMapping("/password/reset")
+	public ResponseEntity<DataResponse<Void>> resetPassword(
+		@Valid @RequestBody ResetPasswordRequestDTO resetPasswordRequestDTO
+	) {
+		authService.resetPassword(resetPasswordRequestDTO);
+		return ResponseEntity.ok(DataResponse.ok());
 	}
 }

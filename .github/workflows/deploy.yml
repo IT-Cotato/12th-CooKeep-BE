@@ -64,5 +64,8 @@ jobs:
               -e AWS_ACCESS_KEY=${{ secrets.AWS_ACCESS_KEY }} \
               -e AWS_SECRET_KEY=${{ secrets.AWS_SECRET_KEY }} \
               -e S3_BUCKET_NAME=${{ secrets.S3_BUCKET_NAME }} \
+              -e SMS_KEY=${{ secrets.SMS_KEY }} \
+              -e SMS_SECRET=${{ secrets.SMS_SECRET }} \
+              -e SMS_SENDER=${{ secrets.SMS_SENDER }} \
               ${{ secrets.DOCKER_USERNAME }}/cookeep:latest
             docker image prune -f
