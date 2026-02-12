@@ -1,9 +1,12 @@
 package com.cookeep.cookeep.domain.cookeeps.application;
 
+import com.cookeep.cookeep.api.dto.response.CookeepsRecipeDetailResponseDto;
 import com.cookeep.cookeep.api.dto.response.RankingResponseDto;
 import com.cookeep.cookeep.api.dto.response.RankingResponseDto.RecipeRankDto;
 import com.cookeep.cookeep.api.dto.response.RankingResponseDto.WateringRankDto;
 import com.cookeep.cookeep.api.dto.response.WeeklyRecipeResponseDto;
+import com.cookeep.cookeep.common.exception.AppException;
+import com.cookeep.cookeep.common.exception.ErrorCode;
 import com.cookeep.cookeep.common.util.DateTimeUtils;
 import com.cookeep.cookeep.domain.dailyrecipe.dao.DailyRecipeRepository;
 import com.cookeep.cookeep.domain.dailyrecipe.dao.RecipeLikeRepository;
@@ -131,5 +134,18 @@ public class CookeepsService {
 					.recipeImageUrl(recipe.getRecipeImageUrl())
 					.build();
 		});
+	}
+
+	@Transactional(readOnly = true)
+	public CookeepsRecipeDetailResponseDto getCookeepsRecipeDetail(Long dailyRecipeId) {
+		DailyRecipe dailyRecipe = dailyRecipeRepository.findById(dailyRecipeId)
+				.orElseThrow(() -> new AppException(ErrorCode.DAILY_RECIPE_NOT_FOUND));
+
+		// 공개되지 않은 레시피는 커뮤니티 상세 조회가 불가능하도록 방어 로직
+		if (!dailyRecipe.getIsPublic()) {
+			throw new AppException(ErrorCode.DAILY_RECIPE_NOT_FOUND); // 혹은 권한 에러
+		}
+
+		return CookeepsRecipeDetailResponseDto.from(dailyRecipe);
 	}
 }
