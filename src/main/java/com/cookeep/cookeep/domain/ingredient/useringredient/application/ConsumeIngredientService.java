@@ -8,6 +8,7 @@ import com.cookeep.cookeep.domain.cookie.application.CookieService;
 import com.cookeep.cookeep.domain.cookie.entity.CookieLog;
 import com.cookeep.cookeep.domain.ingredient.useringredient.dao.UserIngredientRepository;
 import com.cookeep.cookeep.domain.ingredient.useringredient.entity.UserIngredient;
+import com.cookeep.cookeep.domain.mycookeep.application.ConsumptionReportService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -25,6 +26,7 @@ public class ConsumeIngredientService {
 
     private final UserIngredientRepository userIngredientRepository;
     private final CookieService cookieService;
+    private final ConsumptionReportService consumptionReportService;
 
     // 식재료 섭취 완료
     @Transactional
@@ -62,7 +64,10 @@ public class ConsumeIngredientService {
             grantedTypes.add(dailyType);
         }
 
-        // 4. 재료 삭제
+        // 4. 주간 소비 리포트 기록 (삭제 전에 호출해야 leftDays 읽기 가능)
+        consumptionReportService.markConsumed(userId, userIngredients);
+
+        // 5. 재료 삭제
         userIngredientRepository.deleteAll(userIngredients);
 
         log.info("User {} consumed {} ingredients via manual action. Reward granted: {}, points: {}",
