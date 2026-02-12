@@ -22,7 +22,7 @@ import org.springframework.web.bind.annotation.*;
 
 @Tag(name = "레시피 좋아요", description = "레시피 좋아요 관련 API")
 @RestController
-@RequestMapping("/api/daily-recipes/{dailyRecipeId}/likes")
+@RequestMapping("/api/daily-recipes/likes")
 @RequiredArgsConstructor
 public class RecipeLikeController {
 
@@ -43,7 +43,7 @@ public class RecipeLikeController {
 			@ApiResponse(responseCode = "401", description = "인증 실패", content = @Content),
 			@ApiResponse(responseCode = "404", description = "레시피를 찾을 수 없음", content = @Content)
 	})
-	@PostMapping("/togle")
+	@PostMapping("/{dailyRecipeId}/togle")
 	public ResponseEntity<DataResponse<RecipeLikeResponseDto>> toggleLike(
 		@AuthenticationPrincipal(expression = "userId") Long userId,
 		@Parameter(description = "데일리 레시피 ID", required = true)
@@ -75,7 +75,7 @@ public class RecipeLikeController {
 		@ApiResponse(responseCode = "401", description = "인증 실패", content = @Content),
 		@ApiResponse(responseCode = "404", description = "레시피를 찾을 수 없음", content = @Content)
 	})
-	@GetMapping("/check")
+	@GetMapping("/{dailyRecipeId}/check")
 	public ResponseEntity<DataResponse<RecipeLikeResponseDto>> checkLike(
 		@AuthenticationPrincipal(expression = "userId") Long userId,
 		@Parameter(description = "데일리 레시피 ID", required = true)

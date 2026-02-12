@@ -36,7 +36,7 @@ public class CookeepsController {
 	@GetMapping("/recipes/weekly")
 	public ResponseEntity<DataResponse<Page<WeeklyRecipeResponseDto>>> getWeeklyRecipes(
 			@RequestParam(defaultValue = "likes") String filter,
-			Pageable pageable // 프론트에서 page, size를 넘기면 자동 매핑
+			@org.springdoc.core.annotations.ParameterObject Pageable pageable // 프론트에서 page, size를 넘기면 자동 매핑
 	) {
 		return ResponseEntity.ok(DataResponse.from(cookeepsService.getWeeklyRecipes(filter, pageable)));
 	}
