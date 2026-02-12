@@ -70,8 +70,8 @@ public class SecurityConfig {
 					"/error"
 				).permitAll()
 
-				// auth 경로 중 로그아웃은 로그인한 사용자만 가능하도록 처리
-				.requestMatchers("/api/auth/logout").authenticated()
+				// auth 경로 중 로그아웃, 회원 탈퇴는 로그인한 사용자만 가능하도록 처리
+				.requestMatchers("/api/auth/logout", "/api/auth/withdraw").authenticated()
 
 				// 나머지 auth 경로는 로그인하지 않아도 접근 가능
 				.requestMatchers("/api/auth/**").permitAll()

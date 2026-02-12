@@ -141,4 +141,8 @@ public class User extends BaseEntity {
 		this.phoneNumber = phoneNumber;
 	}
 
+	public void withdraw() {
+		this.userStatus = UserStatus.WITHDRAWN;
+	}
+
 }
