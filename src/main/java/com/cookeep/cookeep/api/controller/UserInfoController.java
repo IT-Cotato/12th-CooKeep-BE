@@ -37,7 +37,7 @@ public class UserInfoController {
         @ApiResponse(responseCode = "401", description = "회원 인증 실패, AccessToken이 없거나 유효하지 않음"),
         @ApiResponse(responseCode = "403", description = "접근 권한 없음")
     })
-    @PostMapping("/profile")
+    @GetMapping("/profile")
     public ResponseEntity<DataResponse<UserProfileResponseDTO>> getMyProfile(
         @AuthenticationPrincipal UserPrincipal principal
     ) {
@@ -91,7 +91,7 @@ public class UserInfoController {
         @ApiResponse(responseCode = "403", description = "접근 권한 없음(소셜 로그인 유저는 이메일 변경 불가 등)"),
         @ApiResponse(responseCode = "409", description = "요청 충돌(이미 사용 중인 이메일 등)")
     })
-    @PostMapping("/email")
+    @PatchMapping("/email")
     public ResponseEntity<DataResponse<Void>> updateMyEmail(
         @AuthenticationPrincipal UserPrincipal principal,
         @Valid @RequestBody UpdateEmailRequestDTO updateEmailRequestDTO
@@ -109,7 +109,7 @@ public class UserInfoController {
         @ApiResponse(responseCode = "401", description = "회원 인증 실패, AccessToken이 없거나 유효하지 않음"),
         @ApiResponse(responseCode = "403", description = "접근 권한 없음(소셜 로그인 유저는 비밀번호 변경 불가 등)")
     })
-    @PostMapping("/password")
+    @PatchMapping("/password")
     public ResponseEntity<DataResponse<Void>> updateMyPassword(
         @AuthenticationPrincipal UserPrincipal principal,
         @Valid @RequestBody UpdatePasswordRequestDTO updatePasswordRequestDTO
