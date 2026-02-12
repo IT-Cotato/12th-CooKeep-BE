@@ -11,6 +11,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -29,9 +30,9 @@ public class MyPlantController {
             @ApiResponse(responseCode = "200", description = "조회 성공")
     })
     @GetMapping
-    public DataResponse<List<MyPlantResponseDto>> getMyPlants(
+    public ResponseEntity<DataResponse<List<MyPlantResponseDto>>> getMyPlants(
             @AuthenticationPrincipal(expression = "userId") Long userId) {
-        return DataResponse.from(userPlantService.getMyPlants(userId));
+        return ResponseEntity.ok(DataResponse.from(userPlantService.getMyPlants(userId)));
     }
 
     @Operation(summary = "현재 키우는 식물 조회", description = "쿠킵스 화면에서 현재 키우고 있는 식물 정보를 조회합니다. 키우는 식물이 없으면 data가 null입니다.")
@@ -39,9 +40,9 @@ public class MyPlantController {
             @ApiResponse(responseCode = "200", description = "조회 성공")
     })
     @GetMapping("/growing-plant")
-    public DataResponse<GrowingPlantResponseDto> getGrowingPlant(
+    public ResponseEntity<DataResponse<GrowingPlantResponseDto>> getGrowingPlant(
             @AuthenticationPrincipal(expression = "userId") Long userId) {
-        return DataResponse.from(userPlantService.getGrowingPlant(userId));
+        return ResponseEntity.ok(DataResponse.from(userPlantService.getGrowingPlant(userId)));
     }
 
     @Operation(summary = "새로운 식물 등록", description = "기본 식물 ID를 경로에 전달하여 새로운 식물을 등록합니다.")
@@ -50,11 +51,11 @@ public class MyPlantController {
             @ApiResponse(responseCode = "404", description = "유저 또는 식물을 찾을 수 없음")
     })
     @PostMapping("/{plantId}") // /api/my-plants/{plantId}
-    public DataResponse<RegisterPlantResponseDto> registerPlant(
+    public ResponseEntity<DataResponse<RegisterPlantResponseDto>> registerPlant(
             @AuthenticationPrincipal(expression = "userId") Long userId,
             @Parameter(description = "기본 식물 ID") @PathVariable long plantId) {
         RegisterPlantResponseDto response = userPlantService.registerPlant(userId, plantId);
-        return DataResponse.from(response);
+        return ResponseEntity.ok(DataResponse.from(response));
     }
 
     @Operation(summary = "프로필 식물 지정", description = "내 보유 식물 ID를 경로에 전달하여 대표 프로필로 설정합니다.")
@@ -64,11 +65,11 @@ public class MyPlantController {
             @ApiResponse(responseCode = "404", description = "유저 또는 식물을 찾을 수 없음")
     })
     @PatchMapping("/{userPlantId}/profile") // /api/my-plants/{userPlantId}/profile
-    public DataResponse<Void> updateProfilePlant(
+    public ResponseEntity<DataResponse<Void>> updateProfilePlant(
             @AuthenticationPrincipal(expression = "userId") Long userId,
             @Parameter(description = "유저 보유 식물 ID (user_plant_id)") @PathVariable long userPlantId) {
         userPlantService.updateProfilePlant(userId, userPlantId);
-        return DataResponse.from(null);
+        return ResponseEntity.ok(DataResponse.from(null));
     }
 
     @Operation(summary = "식물 키우기 포기", description = "성장이 정지된 식물을 포기하고 삭제합니다.")
@@ -79,11 +80,11 @@ public class MyPlantController {
             @ApiResponse(responseCode = "404", description = "보유 식물을 찾을 수 없음")
     })
     @DeleteMapping("/{userPlantId}")
-    public DataResponse<Void> abandonPlant(
+    public ResponseEntity<DataResponse<Void>> abandonPlant(
             @AuthenticationPrincipal(expression = "userId") Long userId,
             @Parameter(description = "포기할 보유 식물 ID") @PathVariable Long userPlantId) {
         userPlantService.abandonPlant(userId, userPlantId);
-        return DataResponse.from(null);
+        return ResponseEntity.ok(DataResponse.from(null));
     }
 
     @Operation(summary = "식물 물 주기", description = "보유한 식물에게 물을 줍니다.")
@@ -94,12 +95,12 @@ public class MyPlantController {
             @ApiResponse(responseCode = "404", description = "식물을 찾을 수 없음")
     })
     @PostMapping("/{userPlantId}/water")
-    public DataResponse<String> giveWater(
+    public ResponseEntity<DataResponse<String>> giveWater(
             @AuthenticationPrincipal(expression = "userId") Long userId,
             @PathVariable Long userPlantId) {
         boolean isFreeWatering = userPlantService.giveWater(userId, userPlantId);
         String message = isFreeWatering ? "무료 물주기가 완료되었습니다." : "물주기가 완료되었습니다.";
-        return DataResponse.from(message);
+        return ResponseEntity.ok(DataResponse.from(message));
     }
 
     @Operation(summary = "식물 다시 살리기", description = "성장이 정지된(isFrozen=true) 식물을 쿠키를 사용하여 다시 살립니다.")
@@ -110,10 +111,10 @@ public class MyPlantController {
             @ApiResponse(responseCode = "404", description = "보유 식물을 찾을 수 없음")
     })
     @PostMapping("/{userPlantId}/revive")
-    public DataResponse<Void> revivePlant(
+    public ResponseEntity<DataResponse<Void>> revivePlant(
             @AuthenticationPrincipal(expression = "userId") Long userId,
             @Parameter(description = "다시 살릴 보유 식물 ID") @PathVariable Long userPlantId) {
         userPlantService.revivePlant(userId, userPlantId);
-        return DataResponse.from(null);
+        return ResponseEntity.ok(DataResponse.from(null));
     }
 }

@@ -12,6 +12,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @Tag(name = "쿠킵스", description = "쿠킵스 관련 API")
@@ -27,17 +28,17 @@ public class CookeepsController {
 		@ApiResponse(responseCode = "200", description = "조회 성공")
 	})
 	@GetMapping("/ranking")
-	public DataResponse<RankingResponseDto> getRanking() {
-		return DataResponse.from(cookeepsService.getRanking());
+	public ResponseEntity<DataResponse<RankingResponseDto>> getRanking() {
+		return ResponseEntity.ok(DataResponse.from(cookeepsService.getRanking()));
 	}
 
 	@Operation(summary = "이번 주 레시피 전체보기", description = "이번 주차에 올라온 레시피들을 정렬 필터와 함께 조회합니다.")
 	@GetMapping("/recipes/weekly")
-	public DataResponse<Page<WeeklyRecipeResponseDto>> getWeeklyRecipes(
+	public ResponseEntity<DataResponse<Page<WeeklyRecipeResponseDto>>> getWeeklyRecipes(
 			@RequestParam(defaultValue = "likes") String filter,
 			Pageable pageable // 프론트에서 page, size를 넘기면 자동 매핑
 	) {
-		return DataResponse.from(cookeepsService.getWeeklyRecipes(filter, pageable));
+		return ResponseEntity.ok(DataResponse.from(cookeepsService.getWeeklyRecipes(filter, pageable)));
 	}
 
 	@Operation(summary = "쿠킵스 레시피 상세 조회", description = "쿠킵스에 공개된 특정 레시피의 상세 내용을 조회합니다.")
@@ -46,9 +47,9 @@ public class CookeepsController {
 			@ApiResponse(responseCode = "404", description = "레시피를 찾을 수 없음")
 	})
 	@GetMapping("/recipes/{dailyRecipeId}")
-	public DataResponse<CookeepsRecipeDetailResponseDto> getCommunityRecipeDetail(
+	public ResponseEntity<DataResponse<CookeepsRecipeDetailResponseDto>> getCommunityRecipeDetail(
 			@PathVariable Long dailyRecipeId
 	) {
-		return DataResponse.from(cookeepsService.getCookeepsRecipeDetail(dailyRecipeId));
+		return ResponseEntity.ok(DataResponse.from(cookeepsService.getCookeepsRecipeDetail(dailyRecipeId)));
 	}
 }

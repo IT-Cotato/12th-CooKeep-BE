@@ -7,6 +7,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -26,9 +27,9 @@ public class CookieController {
             @ApiResponse(responseCode = "401", description = "인증되지 않음")
     })
     @GetMapping
-    public DataResponse<Integer> getMyCookies(
+    public ResponseEntity<DataResponse<Integer>> getMyCookies(
             @AuthenticationPrincipal(expression = "userId") Long userId
     ) {
-        return DataResponse.from(cookieService.getMyCookies(userId));
+        return ResponseEntity.ok(DataResponse.from(cookieService.getMyCookies(userId)));
     }
 }
