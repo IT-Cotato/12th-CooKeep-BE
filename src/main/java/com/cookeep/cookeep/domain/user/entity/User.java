@@ -141,4 +141,7 @@ public class User extends BaseEntity {
 		this.phoneNumber = phoneNumber;
 	}
 
+	public void updateEmail(String email) {
+		this.email = email;
+	}
 }

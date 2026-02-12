@@ -29,4 +29,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
     // 푸시 알림 동의한 사용자 조회
     @Query("SELECT u FROM User u WHERE u.marketingPush = true")
     List<User> findAllByMarketingPushTrue();
+
+    boolean existsByEmail(String email);
 }

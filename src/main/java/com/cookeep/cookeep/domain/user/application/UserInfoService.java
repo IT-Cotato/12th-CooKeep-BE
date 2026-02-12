@@ -2,6 +2,7 @@ package com.cookeep.cookeep.domain.user.application;
 
 import com.cookeep.cookeep.api.dto.request.NicknameUpdateRequestDto;
 import com.cookeep.cookeep.api.dto.request.SendCodeRequestDTO;
+import com.cookeep.cookeep.api.dto.request.UpdateEmailRequestDTO;
 import com.cookeep.cookeep.api.dto.request.VerifyCodeRequestDTO;
 import com.cookeep.cookeep.api.dto.response.UserProfileResponseDTO;
 import com.cookeep.cookeep.common.exception.AppException;
@@ -14,6 +15,8 @@ import com.cookeep.cookeep.domain.verification.application.SmsVerificationServic
 import com.cookeep.cookeep.domain.verification.entity.VerificationPurpose;
 
 import lombok.RequiredArgsConstructor;
+
+import org.springframework.boot.web.error.Error;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -105,5 +108,33 @@ public class UserInfoService {
         smsVerificationService.verifyCode(newPhoneNumber, VerificationPurpose.CHANGE_PHONE, code);
 
         user.updatePhoneNumber(newPhoneNumber);
+    }
+
+    @Transactional
+    public void updateMyEmail(Long userId, UpdateEmailRequestDTO updateEmailRequestDTO) {
+
+        Provider provider = userAuthRepository.findProviderByUserId(userId);
+
+        // 소셜 로그인은 이메일을 변경할 수 없음
+        if (provider != Provider.LOCAL) {
+            throw new AppException(ErrorCode.SOCIAL_USER_EMAIL_CHANGE_NOT_ALLOWED);
+        }
+
+        User user = userReader.readById(userId);
+        String newEmail = updateEmailRequestDTO.email();
+
+        String currentEmail = user.getEmail();
+
+        // 현재 등록된 이메일과 동일한 경우
+        if (newEmail.equals(currentEmail)) {
+            throw new AppException(ErrorCode.SAME_AS_CURRENT_EMAIL);
+        }
+
+        // 이미 등록된 이메일인지 확인
+        if (userRepository.existsByEmail(newEmail)) {
+            throw new AppException(ErrorCode.USER_EMAIL_ALREADY_EXISTS);
+        }
+
+        user.updateEmail(newEmail);
     }
 }
