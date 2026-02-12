@@ -19,6 +19,7 @@ import com.cookeep.cookeep.domain.ingredient.defaultingredient.dao.DefaultIngred
 import com.cookeep.cookeep.domain.ingredient.defaultingredient.entity.DefaultIngredient;
 import com.cookeep.cookeep.domain.ingredient.useringredient.dao.UserIngredientRepository;
 import com.cookeep.cookeep.domain.ingredient.useringredient.entity.UserIngredient;
+import com.cookeep.cookeep.domain.mycookeep.application.ConsumptionReportService;
 import com.cookeep.cookeep.domain.recipe.dao.AiMessageRepository;
 import com.cookeep.cookeep.domain.recipe.dao.AiRecipeRepository;
 import com.cookeep.cookeep.domain.recipe.dao.AiSessionRepository;
@@ -59,6 +60,7 @@ public class AiRecipeService {
     private final DailyCookieGrantRepository dailyCookieGrantRepository;
     private final CookieService cookieService;
     private final YoutubeSearchService youtubeSearchService;
+    private final ConsumptionReportService consumptionReportService;
 
     // sessionId 유무에 따라 신규/재요청 로직 분기
     public AiRecipeResponseDto generateRecipe(Long userId, AiRecipeRequestDto request) {
@@ -621,6 +623,9 @@ public class AiRecipeService {
             log.warn("재료 차감 생략 - 유효한 재료 없음: userId={}", userId);
             return;
         }
+
+        // 주간 소비 리포트 기록 (차감/삭제 전에 호출해야 leftDays 읽기 가능)
+        consumptionReportService.markConsumed(userId, targets);
 
         for (UserIngredient ui : targets) {
             int currentQty = ui.getQuantity();
