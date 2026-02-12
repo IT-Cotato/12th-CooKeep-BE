@@ -3,6 +3,7 @@ package com.cookeep.cookeep.domain.user.application;
 import com.cookeep.cookeep.api.dto.request.NicknameUpdateRequestDto;
 import com.cookeep.cookeep.api.dto.request.SendCodeRequestDTO;
 import com.cookeep.cookeep.api.dto.request.UpdateEmailRequestDTO;
+import com.cookeep.cookeep.api.dto.request.UpdateMarketingPushDTO;
 import com.cookeep.cookeep.api.dto.request.UpdatePasswordRequestDTO;
 import com.cookeep.cookeep.api.dto.request.VerifyCodeRequestDTO;
 import com.cookeep.cookeep.api.dto.response.UserProfileResponseDTO;
@@ -156,5 +157,17 @@ public class UserInfoService {
         }
 
         user.updatePassword(encodedPassword);
+    }
+
+    // 알림설정 변경
+    // 멱등성을 보장하기 위해 최종 상태를 명시적으로 가져옴
+    // 기존 DB에 저장된 상태와 동일할 경우 에러 발생 없이 그대로 업데이트되도록 처리하였음
+    @Transactional
+    public void updateMarketingPush(Long userId, UpdateMarketingPushDTO updateMarketingPushDTO) {
+        User user = userReader.readById(userId);
+
+        Boolean newMarketingPush = updateMarketingPushDTO.marketingPush();
+
+        user.updateMarketingPush(newMarketingPush);
     }
 }
