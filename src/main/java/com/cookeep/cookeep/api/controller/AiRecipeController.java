@@ -261,7 +261,7 @@ public class AiRecipeController {
     }
 
     @Operation(
-            summary = "(MAIN07) AI 대화 세션 즐겨찾기 추가/삭제",
+            summary = "(MAIN07-1) AI 대화 세션 즐겨찾기 추가/삭제",
             description = "특정 세션의 즐겨찾기 상태를 변경합니다. (T -> F / F -> T)"
     )
     @ApiErrorCodeExamples({
@@ -288,18 +288,23 @@ public class AiRecipeController {
     }
 
     @Operation(
-            summary = "(MAIN08) AI 대화 세션 제목 수정",
+            summary = "(MAIN07-2) AI 대화 세션 제목 수정",
             description = "특정 AI 대화 세션의 제목을 수정합니다."
     )
     @ApiErrorCodeExamples({
             ErrorCode.UNAUTHORIZED,
             ErrorCode.AI_SESSION_NOT_FOUND,
             ErrorCode.AI_SESSION_FORBIDDEN,
-            ErrorCode.TITLE_INVALID_VALUE
+            ErrorCode.TITLE_INVALID_VALUE,
+            ErrorCode.TITLE_TOO_LONG
     })
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "세션 제목 수정 성공"),
-            @ApiResponse(responseCode = "400", description = "잘못된 요청 값 (빈 제목 등)", content = @Content),
+            @ApiResponse(responseCode = "400", description = """
+                    잘못된 요청입니다. 다음 오류가 발생할 수 있습니다:
+                    - TITLE_INVALID_VALUE: 세션 제목을 입력해주세요. (빈제목 불가)
+                    - TITLE_TOO_LONG: 세션 제목 최대 길이는 100자입니다.
+                    """, content = @Content),
             @ApiResponse(responseCode = "401", description = "인증 실패", content = @Content),
             @ApiResponse(responseCode = "403", description = "본인의 대화 세션이 아님", content = @Content),
             @ApiResponse(responseCode = "404", description = "세션을 찾을 수 없음", content = @Content)
