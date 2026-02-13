@@ -43,7 +43,7 @@ public enum ErrorCode {
 	INVALID_PHONE_NUMBER(HttpStatus.BAD_REQUEST, "유효하지 않은 전화번호 형식입니다.", "SMS-001"),
 	INVALID_VERIFICATION_CODE(HttpStatus.BAD_REQUEST, "인증번호가 일치하지 않습니다.", "SMS-002"),
 	VERIFICATION_CODE_EXPIRED(HttpStatus.BAD_REQUEST, "인증번호가 만료되었습니다.", "SMS-003"),
-	VERIFICATION_NOT_COMPLETED(HttpStatus.BAD_REQUEST, "전화번호 인증을 실패했습니다.", "SMS-004"),
+	// VERIFICATION_NOT_COMPLETED(HttpStatus.BAD_REQUEST, "전화번호 인증을 실패했습니다.", "SMS-004"),
 	INVALID_QUANTITY(HttpStatus.BAD_REQUEST, "식재료 수량은 0 이상이어야 합니다.", "INGREDIENT_008"),
 	MEMO_TOO_LONG(HttpStatus.BAD_REQUEST, "식재료 메모는 최대 100자까지 입력 가능합니다.", "INGREDIENT_009"),
 	INVALID_DELETE_REQUEST(HttpStatus.BAD_REQUEST, "삭제할 식재료를 입력해주세요.", "INGREDIENT_010"),
@@ -55,6 +55,8 @@ public enum ErrorCode {
 	TITLE_TOO_LONG(HttpStatus.BAD_REQUEST, "레시피 제목은 최대 100글자입니다.", "RECIPE-023"),
 	CANNOT_LIKE_OWN_RECIPE(HttpStatus.BAD_REQUEST, "자신의 레시피에는 좋아요를 누를 수 없습니다.", "DAILY_RECIPE-006"),
 	CANNOT_BOOKMARK_OWN_RECIPE(HttpStatus.BAD_REQUEST, "자신의 레시피에는 북마크를 누를 수 없습니다.", "DAILY_RECIPE-007"),
+	VERIFICATION_NOT_VERIFIED(HttpStatus.BAD_REQUEST, "전화번호 인증이 완료되지 않았습니다.", "SMS-009"),
+
 
 	// 401 UNAUTHORIZED (인증 관련)
 	UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "인증에 실패했습니다.", "AUTH-001"),
@@ -79,6 +81,7 @@ public enum ErrorCode {
 	AI_RECIPE_TITLE_MISSING(HttpStatus.NOT_FOUND, "AI 응답에 레시피 제목이 존재하지 않습니다.", "RECIPE-019"),
 	AI_RECIPE_NOT_FOUND(HttpStatus.NOT_FOUND, "해당 AI 레시피를 찾을 수 없습니다.", "DAILY_RECIPE-002"),
 	DAILY_RECIPE_NOT_FOUND(HttpStatus.NOT_FOUND, "해당 데일리 레시피를 찾을 수 없습니다.", "DAILY_RECIPE-003"),
+	VERIFICATION_NOT_FOUND(HttpStatus.NOT_FOUND, "인증 요청 내역이 없습니다.", "SMS-004"),
 
 	// 409
 	DUPLICATE_CUSTOM_INGREDIENT(HttpStatus.CONFLICT, "이미 등록된 식재료 입니다.", "INGREDIENT-007"),
