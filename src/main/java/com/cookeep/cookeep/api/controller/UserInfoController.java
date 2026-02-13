@@ -1,10 +1,16 @@
 package com.cookeep.cookeep.api.controller;
 
 import com.cookeep.cookeep.api.dto.request.NicknameUpdateRequestDto;
+import com.cookeep.cookeep.api.dto.request.UpdateEmailRequestDTO;
+import com.cookeep.cookeep.api.dto.request.UpdateMarketingPushDTO;
+import com.cookeep.cookeep.api.dto.request.UpdatePasswordRequestDTO;
+import com.cookeep.cookeep.api.dto.response.UserProfileResponseDTO;
 import com.cookeep.cookeep.common.dto.DataResponse;
 import com.cookeep.cookeep.common.exception.ErrorCode;
 import com.cookeep.cookeep.config.ApiErrorCodeExamples;
 import com.cookeep.cookeep.domain.user.application.UserInfoService;
+import com.cookeep.cookeep.security.UserPrincipal;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -23,6 +29,23 @@ import org.springframework.web.bind.annotation.*;
 public class UserInfoController {
 
     private final UserInfoService userInfoService;
+
+    // 회원정보 조회
+    @Operation(summary = "회원정보 조회 API")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "요청 성공"),
+        @ApiResponse(responseCode = "400", description = "요청 파라미터 오류"),
+        @ApiResponse(responseCode = "401", description = "회원 인증 실패, AccessToken이 없거나 유효하지 않음"),
+        @ApiResponse(responseCode = "403", description = "접근 권한 없음")
+    })
+    @GetMapping("/profile")
+    public ResponseEntity<DataResponse<UserProfileResponseDTO>> getMyProfile(
+        @AuthenticationPrincipal UserPrincipal principal
+    ) {
+        Long userId = principal.userId();
+        return ResponseEntity.ok(DataResponse.from(userInfoService.getMyProfile(userId)));
+    }
+
 
     @Operation(summary = "닉네임 수정", description = "사용자의 닉네임을 수정합니다.")
     @ApiErrorCodeExamples({
@@ -57,6 +80,61 @@ public class UserInfoController {
     ) {
         userInfoService.updateNickname(userId, request);
 
+        return ResponseEntity.ok(DataResponse.ok());
+    }
+
+    // 이메일 변경
+    @Operation(summary = "이메일 변경 API")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "요청 성공"),
+        @ApiResponse(responseCode = "400", description = "요청 파라미터 오류(@Valid 검증 실패, 현재 이메일과 동일 등)"),
+        @ApiResponse(responseCode = "401", description = "회원 인증 실패, AccessToken이 없거나 유효하지 않음"),
+        @ApiResponse(responseCode = "403", description = "접근 권한 없음(소셜 로그인 유저는 이메일 변경 불가 등)"),
+        @ApiResponse(responseCode = "409", description = "요청 충돌(이미 사용 중인 이메일 등)")
+    })
+    @PatchMapping("/email")
+    public ResponseEntity<DataResponse<Void>> updateMyEmail(
+        @AuthenticationPrincipal UserPrincipal principal,
+        @Valid @RequestBody UpdateEmailRequestDTO updateEmailRequestDTO
+    ) {
+        Long userId = principal.userId();
+        userInfoService.updateMyEmail(userId, updateEmailRequestDTO);
+        return ResponseEntity.ok(DataResponse.ok());
+    }
+
+    // 비밀번호 변경
+    @Operation(summary = "비밀번호 변경 API")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "요청 성공"),
+        @ApiResponse(responseCode = "400", description = "요청 파라미터 오류(@Valid 검증 실패, 기존 비밀번호와 동일 등)"),
+        @ApiResponse(responseCode = "401", description = "회원 인증 실패, AccessToken이 없거나 유효하지 않음"),
+        @ApiResponse(responseCode = "403", description = "접근 권한 없음(소셜 로그인 유저는 비밀번호 변경 불가 등)")
+    })
+    @PatchMapping("/password")
+    public ResponseEntity<DataResponse<Void>> updateMyPassword(
+        @AuthenticationPrincipal UserPrincipal principal,
+        @Valid @RequestBody UpdatePasswordRequestDTO updatePasswordRequestDTO
+    ) {
+        Long userId = principal.userId();
+        userInfoService.updateMyPassword(userId, updatePasswordRequestDTO);
+        return ResponseEntity.ok(DataResponse.ok());
+    }
+
+    // 알림설정 변경
+    @Operation(summary = "알림설정 변경 API")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "요청 성공"),
+        @ApiResponse(responseCode = "400", description = "요청 파라미터 오류(@Valid 검증 실패 등)"),
+        @ApiResponse(responseCode = "401", description = "회원 인증 실패, AccessToken이 없거나 유효하지 않음")
+    })
+    @PatchMapping("/marketing-push")
+    public ResponseEntity<DataResponse<Void>> updateMarketingPush(
+        @AuthenticationPrincipal UserPrincipal principal,
+        @Valid @RequestBody UpdateMarketingPushDTO updateMarketingPushDTO
+
+    ) {
+        Long userId = principal.userId();
+        userInfoService.updateMarketingPush(userId, updateMarketingPushDTO);
         return ResponseEntity.ok(DataResponse.ok());
     }
 }

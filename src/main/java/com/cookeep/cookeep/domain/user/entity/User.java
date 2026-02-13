@@ -141,4 +141,11 @@ public class User extends BaseEntity {
 		this.phoneNumber = phoneNumber;
 	}
 
+	public void updateEmail(String email) {
+		this.email = email;
+	}
+
+	public void updateMarketingPush(Boolean marketingPush) {
+		this.marketingPush = marketingPush;
+	}
 }

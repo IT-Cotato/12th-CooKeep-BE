@@ -51,6 +51,7 @@ public enum ErrorCode {
 	SAME_AS_PREVIOUS_PASSWORD(HttpStatus.BAD_REQUEST, "기존 등록된 비밀번호와 동일한 비밀번호입니다.", "AUTH-005"),
 	SAME_AS_CURRENT_PHONE_NUMBER(HttpStatus.BAD_REQUEST, "기존 등록된 전화번호와 동일한 전화번호입니다.", "USER-007"),
 	TITLE_INVALID_VALUE(HttpStatus.BAD_REQUEST, "레시피 제목을 입력해주세요.", "RECIPE-022"),
+	SAME_AS_CURRENT_EMAIL(HttpStatus.BAD_REQUEST, "기존 등록된 이메일과 동일한 이메일입니다.", "USER-008"),
 	TITLE_TOO_LONG(HttpStatus.BAD_REQUEST, "레시피 제목은 최대 100글자입니다.", "RECIPE-023"),
 	CANNOT_LIKE_OWN_RECIPE(HttpStatus.BAD_REQUEST, "자신의 레시피에는 좋아요를 누를 수 없습니다.", "DAILY_RECIPE-006"),
 	CANNOT_BOOKMARK_OWN_RECIPE(HttpStatus.BAD_REQUEST, "자신의 레시피에는 북마크를 누를 수 없습니다.", "DAILY_RECIPE-007"),
@@ -65,6 +66,8 @@ public enum ErrorCode {
 	NOT_MY_PLANT(HttpStatus.FORBIDDEN, "해당 식물에 대한 권한이 없습니다.", "PLANT-001"),
 	AI_SESSION_FORBIDDEN(HttpStatus.FORBIDDEN, "본인의 대화 세션이 아닙니다.", "RECIPE-015"),
 	DAILY_RECIPE_FORBIDDEN(HttpStatus.FORBIDDEN, "본인의 레시피가 아닙니다.", "DAILY_RECIPE-001"),
+	CANNOT_LIKE_OWN_RECIPE(HttpStatus.FORBIDDEN, "자신의 레시피에는 좋아요를 누를 수 없습니다.", "DAILY_RECIPE-006"),
+	SOCIAL_USER_EMAIL_CHANGE_NOT_ALLOWED(HttpStatus.FORBIDDEN, "소셜 로그인 사용자는 이메일을 변경할 수 없습니다.", "USER-009"),
 
 	// 404 NOT FOUND
 	NOT_FOUND(HttpStatus.NOT_FOUND, "찾을 수 없습니다.", "COMMON-004"),
