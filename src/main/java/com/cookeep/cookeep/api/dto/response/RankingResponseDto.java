@@ -17,6 +17,7 @@ public class RankingResponseDto {
 		private Integer rank;
 		private String nickname;
 		private String profileImageUrl;
+		private Long wateringCount;
 	}
 
 	@Getter

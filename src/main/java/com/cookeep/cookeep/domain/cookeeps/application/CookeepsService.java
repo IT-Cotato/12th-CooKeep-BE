@@ -62,17 +62,19 @@ public class CookeepsService {
 			.mapToObj(index -> {
 				Object[] row = results.get(index);
 				User user = (User) row[0]; // 유저 객체 추출
+				Long wateringCount = (Long) row[1]; // 물주기 횟수 추출
 
 				// 프로필 이미지 URL 가져오기
 				String profileImageUrl = user.getProfilePlant() != null
 					? user.getProfilePlant().getCurrentImageUrl()
 					: null;
-				
+
 				// DTO로 변환 (rank = 인덱스 + 1 → 1, 2, 3)
 				return WateringRankDto.builder()
 					.rank(index + 1)
 					.nickname(user.getNickname())
 					.profileImageUrl(profileImageUrl)
+					.wateringCount(wateringCount)
 					.build();
 			})
 			.toList();
