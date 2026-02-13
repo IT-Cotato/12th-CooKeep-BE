@@ -100,10 +100,9 @@ public class VerificationController {
 	@Operation(summary = "전화번호 변경 시 SMS 인증 요청 API")
 	@ApiResponses(value = {
 		@ApiResponse(responseCode = "200", description = "요청 성공"),
-		@ApiResponse(responseCode = "400", description = "요청 오류 (형식 오류 또는 인증 실패)"),
+		@ApiResponse(responseCode = "400", description = "요청 오류 (@Valid 검증 실패)"),
 		@ApiResponse(responseCode = "401", description = "회원 인증 실패, AccessToken이 없거나 유효하지 않음"),
 		@ApiResponse(responseCode = "403", description = "접근 권한 없음"),
-		@ApiResponse(responseCode = "404", description = "인증 요청 내역이 없음"),
 		@ApiResponse(responseCode = "409", description = "이미 사용 중인 전화번호"),
 		@ApiResponse(responseCode = "429", description = "인증 재요청이 너무 빠름"),
 		@ApiResponse(responseCode = "500", description = "서버 오류")
@@ -122,7 +121,7 @@ public class VerificationController {
 	@Operation(summary = "전화번호 변경 시 SMS 인증 확인 API")
 	@ApiResponses(value = {
 		@ApiResponse(responseCode = "200", description = "확인 성공"),
-		@ApiResponse(responseCode = "400", description = "요청 파라미터 오류 (인증번호 불일치 또는 만료됨 등)"),
+		@ApiResponse(responseCode = "400", description = "요청 오류 (형식 오류 또는 인증 실패)"),
 		@ApiResponse(responseCode = "401", description = "회원 인증 실패, AccessToken이 없거나 유효하지 않음"),
 		@ApiResponse(responseCode = "403", description = "접근 권한 없음"),
 		@ApiResponse(responseCode = "404", description = "인증 요청 내역이 없음"),
