@@ -408,4 +408,26 @@ public class AuthService {
 
 		user.updatePassword(encodedPassword);
 	}
+
+	@Transactional
+	public void logout(Long userId) {
+		// 로그아웃 시 refreshToken 저장된 userSession 폐기
+		userSessionRepository.deleteByUser_UserId(userId);
+	}
+
+	@Transactional
+	public void withdraw(Long userId) {
+		User user = userReader.readById(userId);
+
+		// 멱등성 보장을 위해 이미 탈퇴된 회원은 성공 처리
+		if (user.getUserStatus() == UserStatus.WITHDRAWN) {
+			userSessionRepository.deleteByUser_UserId(userId);
+			return;
+		}
+
+		user.withdraw();
+
+		// 탈퇴 시 refreshToken도 함께 무효화
+		userSessionRepository.deleteByUser_UserId(userId);
+	}
 }
