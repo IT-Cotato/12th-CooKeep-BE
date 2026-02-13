@@ -69,7 +69,7 @@ public class SmsVerificationService {
 
 		SmsVerification verification = smsVerificationRepository
 			.findTopByPhoneAndPurposeOrderByCreatedAtDesc(phoneNumber, purpose)
-			.orElseThrow(() -> new AppException(ErrorCode.VERIFICATION_NOT_COMPLETED));
+			.orElseThrow(() -> new AppException(ErrorCode.VERIFICATION_NOT_FOUND));
 
 		// 이미 인증이 완료된 경우
 		if (verification.isVerified()) {
@@ -116,14 +116,14 @@ public class SmsVerificationService {
 	@Transactional(readOnly = true)
 	public void assertVerified(String phoneNumber, VerificationPurpose purpose) {
 
-		// 번호 내 인증을 찾을 수 없는 경우
+		// 인증 요청 내역이 없는 경우
 		SmsVerification verification = smsVerificationRepository
 			.findTopByPhoneAndPurposeOrderByCreatedAtDesc(phoneNumber, purpose)
-			.orElseThrow(() -> new AppException(ErrorCode.VERIFICATION_NOT_COMPLETED));
+			.orElseThrow(() -> new AppException(ErrorCode.VERIFICATION_NOT_FOUND));
 
-		// 기존 인증이 만료되지 않은 경우
+		// 아직 인증이 완료되지 않은 경우
 		if (!verification.isVerified()) {
-			throw new AppException(ErrorCode.VERIFICATION_NOT_COMPLETED);
+			throw new AppException(ErrorCode.VERIFICATION_NOT_VERIFIED);
 		}
 
 		// 인증이 만료된 경우 (5분 초과 시 만료)
