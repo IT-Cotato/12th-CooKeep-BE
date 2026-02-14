@@ -231,12 +231,6 @@ public class AiRecipeService {
         String rawContent = getLastAiMessage(session).getContent();
         AiRecipe savedRecipe = saveAdoptedRecipe(session, rawContent, userId);
 
-        // 3. AI 메시지를 레시피로 파싱
-        //GeminiRecipeResponseDto recipe = parseAiMessageToRecipe(getLastAiMessage(session).getContent());
-
-        // 4. ai_recipes 테이블에 저장
-        //AiRecipe savedRecipe = saveAdoptedRecipe(session, recipe, userId);
-
         // 5. USER 채택 메시지 저장
         saveSimpleUserMessage(session, MessageType.ADOPT_RECIPE);
 
@@ -439,16 +433,6 @@ public class AiRecipeService {
     private AiMessage getLastAiMessage(AiSession session) {
         return aiMessageRepository.findTopBySessionAndRoleOrderByCreatedAtDesc(session, Role.AI)
                 .orElseThrow(() -> new AppException(ErrorCode.AI_RESPONSE_INVALID_FORMAT));
-    }
-
-    // AI 메시지를 레시피로 파싱
-    private GeminiRecipeResponseDto parseAiMessageToRecipe(String content) {
-        try {
-            return objectMapper.readValue(content, GeminiRecipeResponseDto.class);
-        } catch (Exception e) {
-            log.error("AI 메시지 파싱 실패", e);
-            throw new AppException(ErrorCode.AI_RESPONSE_PARSE_FAILED);
-        }
     }
 
     // 채택된 레시피 저장
