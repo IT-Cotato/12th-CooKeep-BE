@@ -228,12 +228,14 @@ public class AiRecipeService {
             throw new AppException(ErrorCode.SESSION_ALREADY_COMPLETED);
         }
 
+        String rawContent = getLastAiMessage(session).getContent();
+        AiRecipe savedRecipe = saveAdoptedRecipe(session, rawContent, userId);
+
         // 3. AI 메시지를 레시피로 파싱
-        GeminiRecipeResponseDto recipe =
-                parseAiMessageToRecipe(getLastAiMessage(session).getContent());
+        //GeminiRecipeResponseDto recipe = parseAiMessageToRecipe(getLastAiMessage(session).getContent());
 
         // 4. ai_recipes 테이블에 저장
-        AiRecipe savedRecipe = saveAdoptedRecipe(session, recipe, userId);
+        //AiRecipe savedRecipe = saveAdoptedRecipe(session, recipe, userId);
 
         // 5. USER 채택 메시지 저장
         saveSimpleUserMessage(session, MessageType.ADOPT_RECIPE);
@@ -450,17 +452,19 @@ public class AiRecipeService {
     }
 
     // 채택된 레시피 저장
-    private AiRecipe saveAdoptedRecipe(AiSession session, GeminiRecipeResponseDto recipe, Long userId) {
+    private AiRecipe saveAdoptedRecipe(AiSession session, String rawAiContent, Long userId) {
         try {
-            String ingredientsJson = objectMapper.writeValueAsString(recipe.getIngredients());
-            String stepsJson = objectMapper.writeValueAsString(recipe.getSteps());
-
-            List<YoutubeReferenceDto> youtubeReferences =
-                    youtubeSearchService.searchVideos(recipe.getYoutubeSearchQueries());
-            String youtubeUrlJson = objectMapper.writeValueAsString(youtubeReferences);
+            JsonNode root = objectMapper.readTree(rawAiContent);
+            String title = root.get("title").asText();
+            String ingredientsJson =
+                    objectMapper.writeValueAsString(root.get("ingredients"));
+            String stepsJson =
+                    objectMapper.writeValueAsString(root.get("steps"));
+            String youtubeUrlJson =
+                    objectMapper.writeValueAsString(root.get("youtube_references"));
 
             AiRecipe aiRecipe = AiRecipe.builder()
-                    .title(recipe.getTitle())
+                    .title(title)
                     .ingredientsJson(ingredientsJson)
                     .stepsJson(stepsJson)
                     .youtubeUrlJson(youtubeUrlJson)
