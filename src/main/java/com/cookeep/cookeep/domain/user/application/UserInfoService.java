@@ -208,6 +208,23 @@ public class UserInfoService {
         smsVerificationService.sendCode(phoneNumber, VerificationPurpose.PASSWORD_VERIFICATION);
     }
 
+    // 비밀번호 검증 실패 시 전화번호 인증 확인
+    @Transactional
+    public void verifyPasswordVerificationCode(Long userId, VerifyCodeRequestDTO verifyCodeRequestDTO) {
+        User user = userReader.readById(userId);
+        String phoneNumber = verifyCodeRequestDTO.phoneNumber();
+        String code = verifyCodeRequestDTO.code();
+
+        // 현재 등록된 전화번호와 동일하지 않은 경우
+        if (!phoneNumber.equals(user.getPhoneNumber())) {
+            throw new AppException(ErrorCode.REGISTERED_PHONE_NUMBER_MISMATCH);
+        }
+
+        smsVerificationService.verifyCode(phoneNumber, VerificationPurpose.PASSWORD_VERIFICATION, code);
+
+        user.updatePasswordCnt(0);
+    }
+
     // 비밀번호 변경
     @Transactional
     public void updateMyPassword(Long userId, UpdatePasswordRequestDTO updatePasswordRequestDTO) {
