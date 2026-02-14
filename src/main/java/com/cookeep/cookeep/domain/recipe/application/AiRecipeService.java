@@ -27,7 +27,10 @@ import com.cookeep.cookeep.domain.recipe.dto.*;
 import com.cookeep.cookeep.domain.recipe.entity.*;
 import com.cookeep.cookeep.domain.user.dao.UserRepository;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -130,7 +133,7 @@ public class AiRecipeService {
         );
 
         // 4. AI 메시지 저장
-        saveAiMessage(session, aiResponse, MessageType.INITIAL_REQUEST);
+        //saveAiMessage(session, aiResponse, MessageType.INITIAL_REQUEST);
 
         // 5. 세션 제목 업데이트
         updateSessionTitle(session, aiResponse);
@@ -138,6 +141,8 @@ public class AiRecipeService {
         // 6. 유튜브 검색어로 실제 영상 조회
         List<YoutubeReferenceDto> youtubeReferences =
                 youtubeSearchService.searchVideos(aiResponse.getYoutubeSearchQueries());
+
+        saveAiMessageWithYoutubeReferences(session, aiResponse, youtubeReferences, MessageType.INITIAL_REQUEST);
 
 
         // 7. 응답 반환
@@ -191,7 +196,7 @@ public class AiRecipeService {
         );
 
         // 6. 재요청 메시지 저장
-        saveAiMessage(session, aiResponse, RETRY_REQUEST);
+        //saveAiMessage(session, aiResponse, RETRY_REQUEST);
 
         // 7. 시도 횟수 증가 및 저장
         session.increaseAttempt();
@@ -203,6 +208,8 @@ public class AiRecipeService {
         // 9. 유튜브 검색어로 실제 영상 조회
         List<YoutubeReferenceDto> youtubeReferences =
                 youtubeSearchService.searchVideos(aiResponse.getYoutubeSearchQueries());
+
+        saveAiMessageWithYoutubeReferences(session, aiResponse, youtubeReferences, MessageType.INITIAL_REQUEST);
 
 
         // 10. 응답 반환
@@ -742,5 +749,50 @@ public class AiRecipeService {
 
         log.info("✅ AI 응답 검증 통과");
     }
+
+    // youtube_references(실제 유튜브 링크 결과)를 포함한 JSON을 저장
+    private void saveAiMessageWithYoutubeReferences(
+            AiSession session,
+            GeminiRecipeResponseDto response,
+            List<YoutubeReferenceDto> youtubeReferences,
+            MessageType type
+    ) {
+        try {
+            validateAiResponse(response);
+
+            // Gemini 응답을 JSON으로 변환
+            ObjectNode root = objectMapper.valueToTree(response);
+
+            // 서치쿼리 제거
+            root.remove("youtube_search_queries");
+
+            // 레시피 생성 결과 저장
+            JsonNode refsNode = objectMapper.valueToTree(youtubeReferences);
+            root.set("youtube_references", refsNode);
+
+            // 에러 방지
+            ArrayNode urlArray = objectMapper.createArrayNode();
+            for (YoutubeReferenceDto ref : youtubeReferences) {
+                urlArray.add(ref.getUrl());
+            }
+            root.set("youtube_search_queries", urlArray);
+
+            String json = objectMapper.writeValueAsString(root);
+
+            AiMessage message = AiMessage.builder()
+                    .session(session)
+                    .role(Role.AI)
+                    .messageType(type)
+                    .content(json)
+                    .build();
+
+            aiMessageRepository.save(message);
+
+        } catch (Exception e) {
+            log.error("AI 메시지 저장 실패 (youtube 포함)", e);
+            throw new AppException(ErrorCode.AI_SEARCH_FAILED);
+        }
+    }
+
 
 }
