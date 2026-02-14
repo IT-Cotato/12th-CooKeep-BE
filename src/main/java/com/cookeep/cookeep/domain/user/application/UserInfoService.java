@@ -155,7 +155,8 @@ public class UserInfoService {
     }
 
     // 비밀번호 확인
-    @Transactional
+    // 비밀번호 검증 실패 횟수를 예외 발생 시에도 누적시키기 위해 rollback 제외하였음
+    @Transactional(noRollbackFor = AppException.class)
     public void verifyMyPassword(Long userId, VerifyPasswordRequestDTO verifyPasswordRequestDTO) {
         User user = userReader.readById(userId);
 
