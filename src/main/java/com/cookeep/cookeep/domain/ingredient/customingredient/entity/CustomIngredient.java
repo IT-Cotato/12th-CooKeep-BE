@@ -50,6 +50,6 @@ public class CustomIngredient {
         this.storage = storage;
         this.category = category;
         this.userId = userId;
-        this.imageUrl = "https://cookeep-images.s3.ap-northeast-2.amazonaws.com/ingredients/0a0cc3bd-1ade-46ed-897e-ba89ec09b7c0.png"; // 디폴트 이미지 임시 url
+        this.imageUrl = "https://cookeep-images.s3.ap-northeast-2.amazonaws.com/ingredients/94607c20-030c-4992-89e7-de5390e202b1.png"; // 디폴트 이미지 임시 url
     }
 }
