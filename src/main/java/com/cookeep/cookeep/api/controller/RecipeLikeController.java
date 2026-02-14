@@ -43,7 +43,7 @@ public class RecipeLikeController {
 			@ApiResponse(responseCode = "401", description = "인증 실패", content = @Content),
 			@ApiResponse(responseCode = "404", description = "레시피를 찾을 수 없음", content = @Content)
 	})
-	@PostMapping("/{dailyRecipeId}/togle")
+	@PostMapping("/{dailyRecipeId}/toggle")
 	public ResponseEntity<DataResponse<RecipeLikeResponseDto>> toggleLike(
 		@AuthenticationPrincipal(expression = "userId") Long userId,
 		@Parameter(description = "데일리 레시피 ID", required = true)
