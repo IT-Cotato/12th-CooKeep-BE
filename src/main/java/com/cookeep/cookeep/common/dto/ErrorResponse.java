@@ -52,4 +52,17 @@ public class ErrorResponse extends BaseResponse {
 			errorCode.getHttpStatus()
 		);
 	}
+
+	// 추가 에러 정보(시도 횟수 등)를 포함한 ErrorResponse 생성 메서드
+	public static ErrorResponse ofWithErrors(ErrorCode errorCode, Map<String, String> errors, HttpServletRequest request) {
+		return new ErrorResponse(
+			errorCode.getCode(),
+			errorCode.getMessage(),
+			request.getMethod(),
+			request.getRequestURI(),
+			errors,
+			errorCode.getHttpStatus()
+		);
+	}
+
 }
