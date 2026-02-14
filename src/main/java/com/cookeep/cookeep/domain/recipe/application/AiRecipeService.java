@@ -132,16 +132,14 @@ public class AiRecipeService {
                 request.getDifficulty()
         );
 
-        // 4. AI 메시지 저장
-        //saveAiMessage(session, aiResponse, MessageType.INITIAL_REQUEST);
-
-        // 5. 세션 제목 업데이트
+        // 4. 세션 제목 업데이트
         updateSessionTitle(session, aiResponse);
 
-        // 6. 유튜브 검색어로 실제 영상 조회
+        // 5. 유튜브 검색어로 실제 영상 조회
         List<YoutubeReferenceDto> youtubeReferences =
                 youtubeSearchService.searchVideos(aiResponse.getYoutubeSearchQueries());
 
+        // 6. 레시피 저장
         saveAiMessageWithYoutubeReferences(session, aiResponse, youtubeReferences, MessageType.INITIAL_REQUEST);
 
 
@@ -195,21 +193,19 @@ public class AiRecipeService {
                 excludedTitles
         );
 
-        // 6. 재요청 메시지 저장
-        //saveAiMessage(session, aiResponse, RETRY_REQUEST);
-
-        // 7. 시도 횟수 증가 및 저장
+        // 6. 시도 횟수 증가 및 저장
         session.increaseAttempt();
         aiSessionRepository.save(session);
 
-        // 8. 세션 제목 업데이트
+        // 7. 세션 제목 업데이트
         updateSessionTitle(session, aiResponse);
 
-        // 9. 유튜브 검색어로 실제 영상 조회
+        // 8. 유튜브 검색어로 실제 영상 조회
         List<YoutubeReferenceDto> youtubeReferences =
                 youtubeSearchService.searchVideos(aiResponse.getYoutubeSearchQueries());
 
-        saveAiMessageWithYoutubeReferences(session, aiResponse, youtubeReferences, MessageType.INITIAL_REQUEST);
+        // 9. 재요청 레시피 저장
+        saveAiMessageWithYoutubeReferences(session, aiResponse, youtubeReferences, MessageType.RETRY_REQUEST);
 
 
         // 10. 응답 반환
@@ -435,27 +431,6 @@ public class AiRecipeService {
                 })
                 .filter(title -> title != null && !title.isBlank())
                 .collect(Collectors.toList());
-    }
-
-    // AI 메시지 저장 (MessageType 포함)
-    private void saveAiMessage(AiSession session, GeminiRecipeResponseDto response, MessageType type) {
-        try {
-            validateAiResponse(response);
-            String json = objectMapper.writeValueAsString(response);
-
-            AiMessage message = AiMessage.builder()
-                    .session(session)
-                    .role(Role.AI)
-                    .messageType(type)
-                    .content(json)
-                    .build();
-
-            aiMessageRepository.save(message);
-
-        } catch (Exception e) {
-            log.error("AI 메시지 저장 실패", e);
-            throw new AppException(ErrorCode.AI_SEARCH_FAILED);
-        }
     }
 
     // 마지막 AI 메시지 조회
