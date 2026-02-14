@@ -27,7 +27,10 @@ import com.cookeep.cookeep.domain.recipe.dto.*;
 import com.cookeep.cookeep.domain.recipe.entity.*;
 import com.cookeep.cookeep.domain.user.dao.UserRepository;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -129,15 +132,15 @@ public class AiRecipeService {
                 request.getDifficulty()
         );
 
-        // 4. AI 메시지 저장
-        saveAiMessage(session, aiResponse, MessageType.INITIAL_REQUEST);
-
-        // 5. 세션 제목 업데이트
+        // 4. 세션 제목 업데이트
         updateSessionTitle(session, aiResponse);
 
-        // 6. 유튜브 검색어로 실제 영상 조회
+        // 5. 유튜브 검색어로 실제 영상 조회
         List<YoutubeReferenceDto> youtubeReferences =
                 youtubeSearchService.searchVideos(aiResponse.getYoutubeSearchQueries());
+
+        // 6. 레시피 저장
+        saveAiMessageWithYoutubeReferences(session, aiResponse, youtubeReferences, MessageType.INITIAL_REQUEST);
 
 
         // 7. 응답 반환
@@ -190,19 +193,19 @@ public class AiRecipeService {
                 excludedTitles
         );
 
-        // 6. 재요청 메시지 저장
-        saveAiMessage(session, aiResponse, RETRY_REQUEST);
-
-        // 7. 시도 횟수 증가 및 저장
+        // 6. 시도 횟수 증가 및 저장
         session.increaseAttempt();
         aiSessionRepository.save(session);
 
-        // 8. 세션 제목 업데이트
+        // 7. 세션 제목 업데이트
         updateSessionTitle(session, aiResponse);
 
-        // 9. 유튜브 검색어로 실제 영상 조회
+        // 8. 유튜브 검색어로 실제 영상 조회
         List<YoutubeReferenceDto> youtubeReferences =
                 youtubeSearchService.searchVideos(aiResponse.getYoutubeSearchQueries());
+
+        // 9. 재요청 레시피 저장
+        saveAiMessageWithYoutubeReferences(session, aiResponse, youtubeReferences, MessageType.RETRY_REQUEST);
 
 
         // 10. 응답 반환
@@ -225,12 +228,8 @@ public class AiRecipeService {
             throw new AppException(ErrorCode.SESSION_ALREADY_COMPLETED);
         }
 
-        // 3. AI 메시지를 레시피로 파싱
-        GeminiRecipeResponseDto recipe =
-                parseAiMessageToRecipe(getLastAiMessage(session).getContent());
-
-        // 4. ai_recipes 테이블에 저장
-        AiRecipe savedRecipe = saveAdoptedRecipe(session, recipe, userId);
+        String rawContent = getLastAiMessage(session).getContent();
+        AiRecipe savedRecipe = saveAdoptedRecipe(session, rawContent, userId);
 
         // 5. USER 채택 메시지 저장
         saveSimpleUserMessage(session, MessageType.ADOPT_RECIPE);
@@ -430,52 +429,26 @@ public class AiRecipeService {
                 .collect(Collectors.toList());
     }
 
-    // AI 메시지 저장 (MessageType 포함)
-    private void saveAiMessage(AiSession session, GeminiRecipeResponseDto response, MessageType type) {
-        try {
-            validateAiResponse(response);
-            String json = objectMapper.writeValueAsString(response);
-
-            AiMessage message = AiMessage.builder()
-                    .session(session)
-                    .role(Role.AI)
-                    .messageType(type)
-                    .content(json)
-                    .build();
-
-            aiMessageRepository.save(message);
-
-        } catch (Exception e) {
-            log.error("AI 메시지 저장 실패", e);
-            throw new AppException(ErrorCode.AI_SEARCH_FAILED);
-        }
-    }
-
     // 마지막 AI 메시지 조회
     private AiMessage getLastAiMessage(AiSession session) {
         return aiMessageRepository.findTopBySessionAndRoleOrderByCreatedAtDesc(session, Role.AI)
                 .orElseThrow(() -> new AppException(ErrorCode.AI_RESPONSE_INVALID_FORMAT));
     }
 
-    // AI 메시지를 레시피로 파싱
-    private GeminiRecipeResponseDto parseAiMessageToRecipe(String content) {
-        try {
-            return objectMapper.readValue(content, GeminiRecipeResponseDto.class);
-        } catch (Exception e) {
-            log.error("AI 메시지 파싱 실패", e);
-            throw new AppException(ErrorCode.AI_RESPONSE_PARSE_FAILED);
-        }
-    }
-
     // 채택된 레시피 저장
-    private AiRecipe saveAdoptedRecipe(AiSession session, GeminiRecipeResponseDto recipe, Long userId) {
+    private AiRecipe saveAdoptedRecipe(AiSession session, String rawAiContent, Long userId) {
         try {
-            String ingredientsJson = objectMapper.writeValueAsString(recipe.getIngredients());
-            String stepsJson = objectMapper.writeValueAsString(recipe.getSteps());
-            String youtubeUrlJson = objectMapper.writeValueAsString(recipe.getYoutubeSearchQueries());
+            JsonNode root = objectMapper.readTree(rawAiContent);
+            String title = root.get("title").asText();
+            String ingredientsJson =
+                    objectMapper.writeValueAsString(root.get("ingredients"));
+            String stepsJson =
+                    objectMapper.writeValueAsString(root.get("steps"));
+            String youtubeUrlJson =
+                    objectMapper.writeValueAsString(root.get("youtube_references"));
 
             AiRecipe aiRecipe = AiRecipe.builder()
-                    .title(recipe.getTitle())
+                    .title(title)
                     .ingredientsJson(ingredientsJson)
                     .stepsJson(stepsJson)
                     .youtubeUrlJson(youtubeUrlJson)
@@ -739,5 +712,50 @@ public class AiRecipeService {
 
         log.info("✅ AI 응답 검증 통과");
     }
+
+    // youtube_references(실제 유튜브 링크 결과)를 포함한 JSON을 저장
+    private void saveAiMessageWithYoutubeReferences(
+            AiSession session,
+            GeminiRecipeResponseDto response,
+            List<YoutubeReferenceDto> youtubeReferences,
+            MessageType type
+    ) {
+        try {
+            validateAiResponse(response);
+
+            // Gemini 응답을 JSON으로 변환
+            ObjectNode root = objectMapper.valueToTree(response);
+
+            // 서치쿼리 제거
+            root.remove("youtube_search_queries");
+
+            // 레시피 생성 결과 저장
+            JsonNode refsNode = objectMapper.valueToTree(youtubeReferences);
+            root.set("youtube_references", refsNode);
+
+            // 에러 방지
+            ArrayNode urlArray = objectMapper.createArrayNode();
+            for (YoutubeReferenceDto ref : youtubeReferences) {
+                urlArray.add(ref.getUrl());
+            }
+            root.set("youtube_search_queries", urlArray);
+
+            String json = objectMapper.writeValueAsString(root);
+
+            AiMessage message = AiMessage.builder()
+                    .session(session)
+                    .role(Role.AI)
+                    .messageType(type)
+                    .content(json)
+                    .build();
+
+            aiMessageRepository.save(message);
+
+        } catch (Exception e) {
+            log.error("AI 메시지 저장 실패 (youtube 포함)", e);
+            throw new AppException(ErrorCode.AI_SEARCH_FAILED);
+        }
+    }
+
 
 }

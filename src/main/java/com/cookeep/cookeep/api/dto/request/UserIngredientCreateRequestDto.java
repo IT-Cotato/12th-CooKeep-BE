@@ -48,7 +48,7 @@ public class UserIngredientCreateRequestDto {
     @NotNull(message = "단위는 필수입니다.")
     @Schema(
             description = "수량 단위",
-            example = "EA",
+            example = "PIECE",
             allowableValues = {"PIECE", "PACK", "BAG", "BOTTLE", "BUNDLE", "CAN", "GRAM", "MILLILITER"},
             requiredMode = Schema.RequiredMode.REQUIRED
     )
