@@ -154,4 +154,12 @@ public class User extends BaseEntity {
 	public void updateMarketingPush(Boolean marketingPush) {
 		this.marketingPush = marketingPush;
 	}
+
+	public void updatePasswordCnt(Integer passwordCnt) {
+		this.passwordCnt = passwordCnt;
+	}
+
+	public void updateUserStatus(UserStatus userStatus) {
+		this.userStatus = userStatus;
+	}
 }

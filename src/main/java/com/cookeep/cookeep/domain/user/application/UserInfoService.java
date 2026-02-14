@@ -1,11 +1,15 @@
 package com.cookeep.cookeep.domain.user.application;
 
+import java.util.Map;
+import java.util.Optional;
+
 import com.cookeep.cookeep.api.dto.request.NicknameUpdateRequestDto;
 import com.cookeep.cookeep.api.dto.request.SendCodeRequestDTO;
 import com.cookeep.cookeep.api.dto.request.UpdateEmailRequestDTO;
 import com.cookeep.cookeep.api.dto.request.UpdateMarketingPushDTO;
 import com.cookeep.cookeep.api.dto.request.UpdatePasswordRequestDTO;
 import com.cookeep.cookeep.api.dto.request.VerifyCodeRequestDTO;
+import com.cookeep.cookeep.api.dto.request.VerifyPasswordRequestDTO;
 import com.cookeep.cookeep.api.dto.response.UserProfileResponseDTO;
 import com.cookeep.cookeep.common.exception.AppException;
 import com.cookeep.cookeep.common.exception.ErrorCode;
@@ -13,16 +17,19 @@ import com.cookeep.cookeep.domain.user.dao.UserAuthRepository;
 import com.cookeep.cookeep.domain.user.dao.UserRepository;
 import com.cookeep.cookeep.domain.user.entity.Provider;
 import com.cookeep.cookeep.domain.user.entity.User;
+import com.cookeep.cookeep.domain.user.entity.UserStatus;
 import com.cookeep.cookeep.domain.verification.application.SmsVerificationService;
 import com.cookeep.cookeep.domain.verification.entity.VerificationPurpose;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.boot.web.error.Error;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -33,6 +40,9 @@ public class UserInfoService {
     private final SmsVerificationService smsVerificationService;
     private final UserAuthRepository userAuthRepository;
     private final PasswordEncoder passwordEncoder;
+
+    // 비밀번호 입력 최대 시도 횟수
+    private static final int MAX_ATTEMPTS = 5;
 
     // 회원 정보 조회
     public UserProfileResponseDTO getMyProfile(Long userId) {
@@ -142,6 +152,45 @@ public class UserInfoService {
         }
 
         user.updateEmail(newEmail);
+    }
+
+    // 비밀번호 확인
+    @Transactional
+    public void verifyMyPassword(Long userId, VerifyPasswordRequestDTO verifyPasswordRequestDTO) {
+        User user = userReader.readById(userId);
+
+        if (passwordEncoder.matches(verifyPasswordRequestDTO.password(), user.getPassword())) {
+            // 기존 비밀번호와 일치할 경우 passwordCnt 초기화
+            user.updatePasswordCnt(0);
+            return;
+        }
+
+        // null일 경우 0으로 세팅 후 +1, 값이 있을 경우 해당 값을 가져오고 + 1
+        int passwordCnt = Optional.ofNullable(user.getPasswordCnt()).orElse(0) + 1;
+
+        // 5회 틀릴 경우 LOCK
+        // 동시/중복 요청 고려하여 >=로 판별
+        if (passwordCnt >= MAX_ATTEMPTS) {
+            user.updatePasswordCnt(MAX_ATTEMPTS);
+            user.updateUserStatus(UserStatus.LOCK);
+            log.warn("Password verification locked. userId={}", userId);
+            throw new AppException(
+                ErrorCode.PASSWORD_VERIFICATION_LOCKED,
+                Map.of(
+                    "failedCount", String.valueOf(MAX_ATTEMPTS),
+                    "maxCount", String.valueOf(MAX_ATTEMPTS)
+                )
+            );
+        } else {
+            user.updatePasswordCnt(passwordCnt);
+            throw new AppException(
+                ErrorCode.PASSWORD_MISMATCH,
+                Map.of(
+                    "failedCount", String.valueOf(passwordCnt),
+                    "maxCount", String.valueOf(MAX_ATTEMPTS)
+                )
+            );
+        }
     }
 
     // 비밀번호 변경
