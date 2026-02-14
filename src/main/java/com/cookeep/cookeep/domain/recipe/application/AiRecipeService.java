@@ -472,7 +472,10 @@ public class AiRecipeService {
         try {
             String ingredientsJson = objectMapper.writeValueAsString(recipe.getIngredients());
             String stepsJson = objectMapper.writeValueAsString(recipe.getSteps());
-            String youtubeUrlJson = objectMapper.writeValueAsString(recipe.getYoutubeSearchQueries());
+
+            List<YoutubeReferenceDto> youtubeReferences =
+                    youtubeSearchService.searchVideos(recipe.getYoutubeSearchQueries());
+            String youtubeUrlJson = objectMapper.writeValueAsString(youtubeReferences);
 
             AiRecipe aiRecipe = AiRecipe.builder()
                     .title(recipe.getTitle())
