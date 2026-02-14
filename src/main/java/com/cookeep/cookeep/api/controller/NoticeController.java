@@ -26,8 +26,8 @@ import lombok.RequiredArgsConstructor;
 public class NoticeController {
 	private final NoticeService noticeService;
 
-	// 회원정보 조회
-	@Operation(summary = "회원정보 조회 API")
+	// 공지사항 조회
+	@Operation(summary = "공지사항 조회 API")
 	@ApiResponses(value = {
 		@ApiResponse(responseCode = "200", description = "요청 성공"),
 		@ApiResponse(responseCode = "401", description = "회원 인증 실패 (AccessToken이 없거나 유효하지 않음)")
