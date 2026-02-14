@@ -169,12 +169,14 @@ public class UserInfoService {
         // null일 경우 0으로 세팅 후 +1, 값이 있을 경우 해당 값을 가져오고 + 1
         int passwordCnt = Optional.ofNullable(user.getPasswordCnt()).orElse(0) + 1;
 
-        // 5회 틀릴 경우 LOCK
+        // 5회 틀릴 경우
         // 동시/중복 요청 고려하여 >=로 판별
         if (passwordCnt >= MAX_ATTEMPTS) {
             user.updatePasswordCnt(MAX_ATTEMPTS);
-            user.updateUserStatus(UserStatus.LOCK);
-            log.warn("Password verification locked. userId={}", userId);
+
+            // 비밀번호 변경 플로우 내 LOCK 정책은 보류하였음
+            // user.updateUserStatus(UserStatus.LOCK);
+            // log.warn("Password verification locked. userId={}", userId);
             throw new AppException(
                 ErrorCode.PASSWORD_VERIFICATION_LOCKED,
                 Map.of(
@@ -182,16 +184,15 @@ public class UserInfoService {
                     "maxCount", String.valueOf(MAX_ATTEMPTS)
                 )
             );
-        } else {
-            user.updatePasswordCnt(passwordCnt);
-            throw new AppException(
-                ErrorCode.PASSWORD_MISMATCH,
-                Map.of(
-                    "failedCount", String.valueOf(passwordCnt),
-                    "maxCount", String.valueOf(MAX_ATTEMPTS)
-                )
-            );
         }
+        user.updatePasswordCnt(passwordCnt);
+        throw new AppException(
+            ErrorCode.PASSWORD_MISMATCH,
+            Map.of(
+                "failedCount", String.valueOf(passwordCnt),
+                "maxCount", String.valueOf(MAX_ATTEMPTS)
+            )
+        );
     }
 
     // 비밀번호 변경
