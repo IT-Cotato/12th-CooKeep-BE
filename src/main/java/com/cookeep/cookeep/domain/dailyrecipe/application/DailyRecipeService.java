@@ -39,10 +39,10 @@ public class DailyRecipeService {
     private final UserReader userReader;
     private final ObjectMapper objectMapper;
 
-    // 채택된 AI 레시피 목록 조회 (데일리 레시피 미등록 건만)
+    // 채택된 AI 레시피 목록 조회
     @Transactional(readOnly = true)
     public List<AiRecipe> getAdoptedAiRecipes(Long userId) {
-        return aiRecipeRepository.findAvailableByUserId(userId);
+        return aiRecipeRepository.findAllByUserId(userId);
     }
 
     // 채택된 AI 레시피 상세 조회 (레시피 선택 후 내용 확인)
@@ -63,11 +63,6 @@ public class DailyRecipeService {
         // 본인의 AI 레시피인지 확인
         if (!aiRecipe.getUserId().equals(userId)) {
             throw new AppException(ErrorCode.DAILY_RECIPE_FORBIDDEN);
-        }
-
-        // 이미 데일리 레시피로 등록된 AI 레시피인지 확인
-        if (dailyRecipeRepository.existsByAiRecipe(aiRecipe)) {
-            throw new AppException(ErrorCode.DAILY_RECIPE_ALREADY_EXISTS);
         }
 
         // AI 레시피 내용 스냅샷 생성
