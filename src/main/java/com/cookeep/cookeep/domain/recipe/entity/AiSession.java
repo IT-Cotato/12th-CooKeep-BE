@@ -68,6 +68,9 @@ public class AiSession {
     @Builder.Default
     private Boolean hasUrgentIngredient = false;
 
+    @OneToMany(mappedBy = "session", cascade = CascadeType.REMOVE, orphanRemoval = true)
+    private List<AiRecipe> aiRecipes;
+
     // Domain Logic
     public void pin() {
         this.isPinned = true;

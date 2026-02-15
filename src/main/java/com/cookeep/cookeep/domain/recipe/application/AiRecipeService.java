@@ -12,6 +12,7 @@ import com.cookeep.cookeep.domain.cookie.dao.CookieLogRepository;
 import com.cookeep.cookeep.domain.cookie.dao.DailyCookieGrantRepository;
 import com.cookeep.cookeep.domain.cookie.entity.CookieLog;
 import com.cookeep.cookeep.domain.cookie.entity.DailyCookieGrant;
+import com.cookeep.cookeep.domain.dailyrecipe.dao.DailyRecipeRepository;
 import com.cookeep.cookeep.domain.ingredient.common.domain.Type;
 import com.cookeep.cookeep.domain.ingredient.customingredient.dao.CustomIngredientRepository;
 import com.cookeep.cookeep.domain.ingredient.customingredient.entity.CustomIngredient;
@@ -60,10 +61,10 @@ public class AiRecipeService {
     private final UserIngredientRepository userIngredientRepository;
     private final DefaultIngredientRepository defaultIngredientRepository;
     private final CustomIngredientRepository customIngredientRepository;
-    private final DailyCookieGrantRepository dailyCookieGrantRepository;
     private final CookieService cookieService;
     private final YoutubeSearchService youtubeSearchService;
     private final ConsumptionReportService consumptionReportService;
+    private final DailyRecipeRepository dailyRecipeRepository;
 
     // sessionId 유무에 따라 신규/재요청 로직 분기
     public AiRecipeResponseDto generateRecipe(Long userId, AiRecipeRequestDto request) {
@@ -316,6 +317,11 @@ public class AiRecipeService {
         // 2. 본인 세션인지 확인
         if (!session.getUserId().equals(userId)) {
             throw new AppException(ErrorCode.AI_SESSION_FORBIDDEN);
+        }
+
+        // 데일리레시피 등록 여부 검사
+        if (dailyRecipeRepository.existsByAiRecipe_Session_Id(sessionId)) {
+            throw new AppException(ErrorCode.RECIPE_DELETE_NOT_ALLOWED);
         }
 
         // 3. 연관 레시피&메시지 삭제

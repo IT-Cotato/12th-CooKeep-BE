@@ -240,10 +240,12 @@ public class AiRecipeController {
     @ApiErrorCodeExamples({
             ErrorCode.UNAUTHORIZED,
             ErrorCode.AI_SESSION_NOT_FOUND,
-            ErrorCode.AI_SESSION_FORBIDDEN
+            ErrorCode.AI_SESSION_FORBIDDEN,
+            ErrorCode.RECIPE_DELETE_NOT_ALLOWED
     })
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "세션 삭제 성공"),
+            @ApiResponse(responseCode = "400", description = "데이터무결성 예외(데일리레시피)", content = @Content),
             @ApiResponse(responseCode = "401", description = "인증 실패", content = @Content),
             @ApiResponse(responseCode = "403", description = "본인의 대화 세션이 아님", content = @Content),
             @ApiResponse(responseCode = "404", description = "세션을 찾을 수 없음", content = @Content)
