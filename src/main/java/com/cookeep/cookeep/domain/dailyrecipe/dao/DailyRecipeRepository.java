@@ -47,4 +47,13 @@ public interface DailyRecipeRepository extends JpaRepository<DailyRecipe, Long> 
 
     boolean existsByAiRecipe_Session_Id(Long sessionId);
 
+    // 이번 주 공개 레시피 중 좋아요 랭킹 Top N 조회 (좋아요 내림차순, 동점 시 등록 오래된 순)
+    @Query("SELECT dr FROM DailyRecipe dr WHERE dr.isPublic = true " +
+            "AND dr.createdAt >= :start AND dr.createdAt < :end " +
+            "ORDER BY dr.likeCount DESC, dr.createdAt ASC")
+    List<DailyRecipe> findTopRankedRecipes(
+            @Param("start") LocalDateTime start,
+            @Param("end") LocalDateTime end,
+            Pageable pageable);
+
 }

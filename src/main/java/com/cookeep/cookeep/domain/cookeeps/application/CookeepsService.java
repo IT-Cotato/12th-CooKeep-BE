@@ -9,7 +9,7 @@ import com.cookeep.cookeep.common.exception.AppException;
 import com.cookeep.cookeep.common.exception.ErrorCode;
 import com.cookeep.cookeep.common.util.DateTimeUtils;
 import com.cookeep.cookeep.domain.dailyrecipe.dao.DailyRecipeRepository;
-import com.cookeep.cookeep.domain.dailyrecipe.dao.RecipeLikeRepository;
+
 import com.cookeep.cookeep.domain.dailyrecipe.entity.DailyRecipe;
 import com.cookeep.cookeep.domain.plant.dao.WateringLogRepository;
 import com.cookeep.cookeep.domain.user.entity.User;
@@ -33,7 +33,6 @@ import java.util.stream.IntStream;
 public class CookeepsService {
 
 	private final WateringLogRepository wateringLogRepository;
-	private final RecipeLikeRepository recipeLikeRepository;
 	private final DailyRecipeRepository dailyRecipeRepository;
 
 	@Transactional(readOnly = true)
@@ -81,23 +80,19 @@ public class CookeepsService {
 	}
 
 	private List<RecipeRankDto> getRecipeRanking(LocalDateTime weekStart, LocalDateTime weekEnd) {
-		// 1단계: 이번 주 좋아요 상위 3개 레시피 조회
-		List<Object[]> results = recipeLikeRepository.findTopLikedRecipes(
+		// 이번 주 공개 레시피 중 좋아요 상위 3개 조회 (좋아요 내림차순, 동점 시 등록 오래된 순)
+		List<DailyRecipe> results = dailyRecipeRepository.findTopRankedRecipes(
 			weekStart, weekEnd, PageRequest.of(0, 3));
-		
-		// 2단계: 인덱스를 포함한 스트림 처리
+
 		return IntStream.range(0, results.size())
 			.mapToObj(index -> {
-				Object[] row = results.get(index);
-				DailyRecipe recipe = (DailyRecipe) row[0]; // 레시피 객체 추출
-				Long likeCount = (Long) row[1]; // 좋아요 수 추출
-				
-				// DTO로 변환 (rank = 인덱스 + 1 → 1, 2, 3)
+				DailyRecipe recipe = results.get(index);
+
 				return RecipeRankDto.builder()
 						.dailyRecipeId(recipe.getId())
 						.rank(index + 1)
 						.title(recipe.getTitle())
-						.likeCount(likeCount)
+						.likeCount(recipe.getLikeCount().longValue())
 						.recipeImageUrl(recipe.getRecipeImageUrl())
 						.build();
 			})
