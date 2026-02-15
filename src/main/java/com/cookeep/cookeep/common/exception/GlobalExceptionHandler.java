@@ -27,11 +27,16 @@ public class GlobalExceptionHandler {
 	public ResponseEntity<ErrorResponse> handleAppCustomException(AppException e, HttpServletRequest request) {
 		log.error("AppException 발생: {}", e.getErrorCode().getMessage());
 		log.error("에러가 발생한 지점 {}, {}", request.getMethod(), request.getRequestURI());
-		ErrorResponse errorResponse = ErrorResponse.of(e.getErrorCode(), request);
+
+		ErrorResponse errorResponse = (e.getErrors() == null)
+			? ErrorResponse.of(e.getErrorCode(), request)
+			: ErrorResponse.ofWithErrors(e.getErrorCode(), e.getErrors(), request);
+
 		return ResponseEntity
 			.status(e.getErrorCode().getHttpStatus())
 			.body(errorResponse);
 	}
+
 
 	// JWT 토큰 관련 예외 처리
 	// - JwtException: io.jsonwebtoken 라이브러리의 모든 JWT 예외

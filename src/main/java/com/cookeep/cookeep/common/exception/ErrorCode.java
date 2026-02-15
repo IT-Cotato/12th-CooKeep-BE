@@ -56,7 +56,8 @@ public enum ErrorCode {
 	CANNOT_LIKE_OWN_RECIPE(HttpStatus.BAD_REQUEST, "자신의 레시피에는 좋아요를 누를 수 없습니다.", "DAILY_RECIPE-006"),
 	CANNOT_BOOKMARK_OWN_RECIPE(HttpStatus.BAD_REQUEST, "자신의 레시피에는 북마크를 누를 수 없습니다.", "DAILY_RECIPE-007"),
 	VERIFICATION_NOT_VERIFIED(HttpStatus.BAD_REQUEST, "전화번호 인증이 완료되지 않았습니다.", "SMS-009"),
-
+	PASSWORD_MISMATCH(HttpStatus.BAD_REQUEST, "현재 비밀번호가 일치하지 않습니다.", "AUTH-006"),
+	REGISTERED_PHONE_NUMBER_MISMATCH(HttpStatus.BAD_REQUEST, "회원정보에 등록된 전화번호와 일치하지 않습니다.", "AUTH-008"),
 
 	// 401 UNAUTHORIZED (인증 관련)
 	UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "인증에 실패했습니다.", "AUTH-001"),
@@ -93,6 +94,10 @@ public enum ErrorCode {
 	USER_EMAIL_REGISTERED_WITH_KAKAO_GOOGLE(HttpStatus.CONFLICT,"이미 카카오와 구글로 가입된 이메일입니다.", "USER-006"),
 	WEEKLY_GOAL_ALREADY_EXISTS(HttpStatus.CONFLICT, "이번 주 목표가 이미 설정되어 있습니다.", "WEEKLY_GOAL-001"),
 	DAILY_RECIPE_ALREADY_EXISTS(HttpStatus.CONFLICT, "이미 데일리 레시피로 등록된 AI 레시피입니다.", "DAILY_RECIPE-005"),
+
+	// 423
+	PASSWORD_VERIFICATION_LOCKED(HttpStatus.LOCKED, "비밀번호 입력 횟수를 초과했습니다. 본인인증 후 다시 시도해주세요.", "AUTH-007"),
+
 	// 429
 	SMS_RESEND_TOO_FAST(HttpStatus.TOO_MANY_REQUESTS, "인증번호 재전송 요청이 너무 빠릅니다. 잠시 후 다시 시도해주세요.", "SMS-005"),
 	SMS_TOO_MANY_ATTEMPTS(HttpStatus.TOO_MANY_REQUESTS, "인증 시도 횟수를 초과하였습니다. 잠시 후 다시 시도해주세요.", "SMS-006"),

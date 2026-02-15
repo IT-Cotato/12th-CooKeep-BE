@@ -137,4 +137,45 @@ public class VerificationController {
 		userInfoService.verifyChangePhoneCode(userId, verifyCodeRequestDTO);
 		return ResponseEntity.ok(DataResponse.ok());
 	}
+
+	// 비밀번호 검증 실패 시 전화번호 인증 요청
+	@Operation(summary = "비밀번호 검증 실패 시 전화번호 인증 요청 API")
+	@ApiResponses(value = {
+		@ApiResponse(responseCode = "200", description = "요청 성공"),
+		@ApiResponse(responseCode = "400", description = "요청 오류 (@Valid 검증 실패, 전화번호 불일치)"),
+		@ApiResponse(responseCode = "401", description = "회원 인증 실패, AccessToken이 없거나 유효하지 않음"),
+		@ApiResponse(responseCode = "403", description = "접근 권한 없음"),
+		@ApiResponse(responseCode = "429", description = "인증 재요청이 너무 빠름"),
+		@ApiResponse(responseCode = "500", description = "서버 오류")
+	})
+	@PostMapping("/users/me/password/send-code")
+	public ResponseEntity<DataResponse<Void>> sendPasswordVerificationCode(
+		@AuthenticationPrincipal UserPrincipal principal,
+		@Valid @RequestBody SendCodeRequestDTO sendCodeRequestDTO
+	) {
+		Long userId = principal.userId();
+		userInfoService.sendPasswordVerificationCode(userId, sendCodeRequestDTO);
+		return ResponseEntity.ok(DataResponse.ok());
+	}
+
+	// 비밀번호 검증 실패 시 전화번호 인증 확인
+	@Operation(summary = "비밀번호 검증 실패 시 전화번호 인증 확인 API")
+	@ApiResponses(value = {
+		@ApiResponse(responseCode = "200", description = "확인 성공"),
+		@ApiResponse(responseCode = "400", description = "요청 오류 (형식 오류 또는 인증 실패, 전화번호 불일치)"),
+		@ApiResponse(responseCode = "401", description = "회원 인증 실패, AccessToken이 없거나 유효하지 않음"),
+		@ApiResponse(responseCode = "403", description = "접근 권한 없음"),
+		@ApiResponse(responseCode = "404", description = "인증 요청 내역이 없음"),
+		@ApiResponse(responseCode = "429", description = "인증 시도 횟수 초과"),
+		@ApiResponse(responseCode = "500", description = "서버 오류")
+	})
+	@PostMapping("/users/me/password/verify-code")
+	public ResponseEntity<DataResponse<Void>> verifyPasswordVerificationCode(
+		@AuthenticationPrincipal UserPrincipal principal,
+		@Valid @RequestBody VerifyCodeRequestDTO verifyCodeRequestDTO
+	) {
+		Long userId = principal.userId();
+		userInfoService.verifyPasswordVerificationCode(userId, verifyCodeRequestDTO);
+		return ResponseEntity.ok(DataResponse.ok());
+	}
 }

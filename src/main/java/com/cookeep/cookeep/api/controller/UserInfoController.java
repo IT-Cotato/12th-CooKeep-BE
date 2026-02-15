@@ -4,6 +4,7 @@ import com.cookeep.cookeep.api.dto.request.NicknameUpdateRequestDto;
 import com.cookeep.cookeep.api.dto.request.UpdateEmailRequestDTO;
 import com.cookeep.cookeep.api.dto.request.UpdateMarketingPushDTO;
 import com.cookeep.cookeep.api.dto.request.UpdatePasswordRequestDTO;
+import com.cookeep.cookeep.api.dto.request.VerifyPasswordRequestDTO;
 import com.cookeep.cookeep.api.dto.response.UserProfileResponseDTO;
 import com.cookeep.cookeep.common.dto.DataResponse;
 import com.cookeep.cookeep.common.exception.ErrorCode;
@@ -101,6 +102,26 @@ public class UserInfoController {
         userInfoService.updateMyEmail(userId, updateEmailRequestDTO);
         return ResponseEntity.ok(DataResponse.ok());
     }
+
+    // 비밀번호 확인
+    @Operation(summary =  "비밀번호 확인 API")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "요청 성공"),
+        @ApiResponse(responseCode = "400", description = "요청 파라미터 오류(@Valid 검증 실패, 비밀번호 불일치)"),
+        @ApiResponse(responseCode = "401", description = "회원 인증 실패, AccessToken이 없거나 유효하지 않음"),
+        @ApiResponse(responseCode = "403", description = "접근 권한 없음"),
+        @ApiResponse(responseCode = "423", description = "비밀번호 검증 시도 가능 횟수 초과")
+    })
+    @PostMapping("/password/verify")
+    public ResponseEntity<DataResponse<Void>> verifyMyPassword(
+        @AuthenticationPrincipal UserPrincipal principal,
+        @Valid @RequestBody VerifyPasswordRequestDTO verifyPasswordRequestDTO
+    ) {
+        Long userId = principal.userId();
+        userInfoService.verifyMyPassword(userId, verifyPasswordRequestDTO);
+        return ResponseEntity.ok(DataResponse.ok());
+    }
+
 
     // 비밀번호 변경
     @Operation(summary = "비밀번호 변경 API")
