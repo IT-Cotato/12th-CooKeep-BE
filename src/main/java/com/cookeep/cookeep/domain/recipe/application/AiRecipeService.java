@@ -12,6 +12,7 @@ import com.cookeep.cookeep.domain.cookie.dao.CookieLogRepository;
 import com.cookeep.cookeep.domain.cookie.dao.DailyCookieGrantRepository;
 import com.cookeep.cookeep.domain.cookie.entity.CookieLog;
 import com.cookeep.cookeep.domain.cookie.entity.DailyCookieGrant;
+import com.cookeep.cookeep.domain.dailyrecipe.dao.DailyRecipeRepository;
 import com.cookeep.cookeep.domain.ingredient.common.domain.Type;
 import com.cookeep.cookeep.domain.ingredient.customingredient.dao.CustomIngredientRepository;
 import com.cookeep.cookeep.domain.ingredient.customingredient.entity.CustomIngredient;
@@ -60,10 +61,10 @@ public class AiRecipeService {
     private final UserIngredientRepository userIngredientRepository;
     private final DefaultIngredientRepository defaultIngredientRepository;
     private final CustomIngredientRepository customIngredientRepository;
-    private final DailyCookieGrantRepository dailyCookieGrantRepository;
     private final CookieService cookieService;
     private final YoutubeSearchService youtubeSearchService;
     private final ConsumptionReportService consumptionReportService;
+    private final DailyRecipeRepository dailyRecipeRepository;
 
     // sessionId 유무에 따라 신규/재요청 로직 분기
     public AiRecipeResponseDto generateRecipe(Long userId, AiRecipeRequestDto request) {
@@ -318,12 +319,18 @@ public class AiRecipeService {
             throw new AppException(ErrorCode.AI_SESSION_FORBIDDEN);
         }
 
+        // 데일리레시피 등록 여부 검사
+        if (dailyRecipeRepository.existsByAiRecipe_Session_Id(sessionId)) {
+            throw new AppException(ErrorCode.RECIPE_DELETE_NOT_ALLOWED);
+        }
+
         // 3. 연관 레시피&메시지 삭제
         aiRecipeRepository.deleteBySessionId(sessionId);
         aiMessageRepository.deleteBySessionId(sessionId);
 
         // 4. 세션 삭제
         aiSessionRepository.delete(session);
+
     }
 
     // (MAIN07) AI 대화 세션 즐겨찾기 추가/삭제
@@ -726,19 +733,9 @@ public class AiRecipeService {
             // Gemini 응답을 JSON으로 변환
             ObjectNode root = objectMapper.valueToTree(response);
 
-            // 서치쿼리 제거
-            root.remove("youtube_search_queries");
-
             // 레시피 생성 결과 저장
             JsonNode refsNode = objectMapper.valueToTree(youtubeReferences);
             root.set("youtube_references", refsNode);
-
-            // 에러 방지
-            ArrayNode urlArray = objectMapper.createArrayNode();
-            for (YoutubeReferenceDto ref : youtubeReferences) {
-                urlArray.add(ref.getUrl());
-            }
-            root.set("youtube_search_queries", urlArray);
 
             String json = objectMapper.writeValueAsString(root);
 

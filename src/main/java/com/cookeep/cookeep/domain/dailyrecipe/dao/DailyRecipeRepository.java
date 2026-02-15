@@ -44,4 +44,7 @@ public interface DailyRecipeRepository extends JpaRepository<DailyRecipe, Long> 
             @Param("start") LocalDateTime start,
             @Param("end") LocalDateTime end,
             Pageable pageable);
+
+    boolean existsByAiRecipe_Session_Id(Long sessionId);
+
 }
