@@ -324,6 +324,7 @@ public class AiRecipeService {
 
         // 4. 세션 삭제
         aiSessionRepository.delete(session);
+
     }
 
     // (MAIN07) AI 대화 세션 즐겨찾기 추가/삭제
