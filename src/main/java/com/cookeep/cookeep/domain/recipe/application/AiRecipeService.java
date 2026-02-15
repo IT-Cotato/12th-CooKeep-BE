@@ -727,19 +727,9 @@ public class AiRecipeService {
             // Gemini 응답을 JSON으로 변환
             ObjectNode root = objectMapper.valueToTree(response);
 
-            // 서치쿼리 제거
-            root.remove("youtube_search_queries");
-
             // 레시피 생성 결과 저장
             JsonNode refsNode = objectMapper.valueToTree(youtubeReferences);
             root.set("youtube_references", refsNode);
-
-            // 에러 방지
-            ArrayNode urlArray = objectMapper.createArrayNode();
-            for (YoutubeReferenceDto ref : youtubeReferences) {
-                urlArray.add(ref.getUrl());
-            }
-            root.set("youtube_search_queries", urlArray);
 
             String json = objectMapper.writeValueAsString(root);
 
