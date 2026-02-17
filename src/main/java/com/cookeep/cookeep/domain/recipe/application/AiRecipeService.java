@@ -692,13 +692,13 @@ public class AiRecipeService {
                                 (desc.endsWith("로 대체 가능합니다")
                                         || desc.equals("이 재료는 생략 가능합니다"));
 
-                if (ing.getQuantity() <= 0) {
+                if (ing.getQuantity() != null && ing.getQuantity() <= 0) {
                     log.error("❌ optional_ingredients quantity <= 0: name={}, quantity={}",
                             ing.getName(), ing.getQuantity());
                     throw new AppException(ErrorCode.AI_RESPONSE_INVALID_FORMAT);
                 }
 
-                if (!allowedUnits.contains(ing.getUnit())) {
+                if (ing.getUnit() != null && !allowedUnits.contains(ing.getUnit())) {
                     log.error("❌ optional_ingredients 허용되지 않은 unit: name={}, unit={}",
                             ing.getName(), ing.getUnit());
                     throw new AppException(ErrorCode.AI_RESPONSE_INVALID_FORMAT);
