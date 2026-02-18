@@ -42,4 +42,17 @@ public class AiRecipe {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "ai_sessions_id", nullable = false)
     private AiSession session;
+
+    @Column(name = "youtube_search_queries", columnDefinition = "TEXT")
+    private String youtubeSearchQueries;
+
+
+    public String getYoutubeSearchQueries() {
+        return youtubeSearchQueries;
+    }
+
+    public void setYoutubeSearchQueries(String youtubeSearchQueries) {
+        this.youtubeSearchQueries = youtubeSearchQueries;
+    }
+
 }

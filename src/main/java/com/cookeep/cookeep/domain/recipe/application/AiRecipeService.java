@@ -453,6 +453,8 @@ public class AiRecipeService {
                     objectMapper.writeValueAsString(root.get("steps"));
             String youtubeUrlJson =
                     objectMapper.writeValueAsString(root.get("youtube_references"));
+            String youtubeSearchQueriesJson =
+                    objectMapper.writeValueAsString(root.get("youtube_search_queries"));
 
             AiRecipe aiRecipe = AiRecipe.builder()
                     .title(title)
@@ -462,6 +464,8 @@ public class AiRecipeService {
                     .userId(userId)
                     .session(session)
                     .build();
+
+            aiRecipe.setYoutubeSearchQueries(youtubeSearchQueriesJson);
 
             return aiRecipeRepository.save(aiRecipe);
         } catch (Exception e) {
