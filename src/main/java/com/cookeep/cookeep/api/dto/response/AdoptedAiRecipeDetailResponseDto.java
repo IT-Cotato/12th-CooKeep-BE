@@ -37,6 +37,9 @@ public class AdoptedAiRecipeDetailResponseDto {
     @Schema(description = "채택 시각", example = "2026-02-07T14:30:00")
     private LocalDateTime createdAt;
 
+    @Schema(description = "유튜브 서치 쿼리", example = "\"아보카도 토스트 만들기\",\"초간단 아보카도 레시피\",\"아보카도 식빵 요리\"")
+    private Object youtubeSearchQueries;
+
     public static AdoptedAiRecipeDetailResponseDto from(AiRecipe aiRecipe) {
         return AdoptedAiRecipeDetailResponseDto.builder()
                 .aiRecipeId(aiRecipe.getId())
@@ -44,6 +47,7 @@ public class AdoptedAiRecipeDetailResponseDto {
                 .ingredientsJson(aiRecipe.getIngredientsJson())
                 .stepsJson(aiRecipe.getStepsJson())
                 .youtubeUrlJson(aiRecipe.getYoutubeUrlJson())
+                .youtubeSearchQueries(aiRecipe.getYoutubeSearchQueries())
                 .createdAt(aiRecipe.getCreatedAt())
                 .build();
     }
