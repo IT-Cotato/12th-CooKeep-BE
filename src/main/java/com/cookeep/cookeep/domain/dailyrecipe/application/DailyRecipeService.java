@@ -183,6 +183,9 @@ public class DailyRecipeService {
             if (aiRecipe.getYoutubeUrlJson() != null) {
                 contentMap.put("youtubeReferences", objectMapper.readTree(aiRecipe.getYoutubeUrlJson()));
             }
+            if (aiRecipe.getYoutubeSearchQueries() != null) {
+                contentMap.put("youtubeSearchQueries", objectMapper.readTree(aiRecipe.getYoutubeSearchQueries()));
+            }
             return objectMapper.writeValueAsString(contentMap);
         } catch (Exception e) {
             log.error("AI 레시피 내용 스냅샷 생성 실패", e);
