@@ -64,6 +64,8 @@ public class IngredientListService {
                         .imageUrl(ingredient.getImageUrl())
                         .category(ingredient.getCategory())
                         .unit(ingredient.getUnit() != null ? ingredient.getUnit().name() : Unit.PIECE.name())
+                        .expirationDays(ingredient.getDefaultExpirationDays())
+                        .storage(ingredient.getDefaultStorage())
                         .build())
         );
         customIngredients.forEach(ingredient ->
@@ -74,6 +76,8 @@ public class IngredientListService {
                         .imageUrl(ingredient.getImageUrl())
                         .category(ingredient.getCategory())
                         .unit(Unit.PIECE.name())
+                        .expirationDays(ingredient.getExpirationDays())
+                        .storage(ingredient.getStorage())
                         .build())
         );
 

@@ -1,6 +1,7 @@
 package com.cookeep.cookeep.api.dto.response;
 
 import com.cookeep.cookeep.domain.ingredient.common.domain.Category;
+import com.cookeep.cookeep.domain.ingredient.common.domain.Storage;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -104,6 +105,16 @@ public class IngredientListResponseDto {
                 requiredMode = Schema.RequiredMode.NOT_REQUIRED
         )
         private String unit;
+
+        @Schema(description = "유통기한 (일)",
+                example = "7",
+                requiredMode = Schema.RequiredMode.REQUIRED)
+        private Integer expirationDays;
+
+        @Schema(description = "보관 장소",
+                example = "FRIDGE",
+                requiredMode = Schema.RequiredMode.REQUIRED)
+        private Storage storage;
 
     }
 
