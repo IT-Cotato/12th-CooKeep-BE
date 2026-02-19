@@ -98,6 +98,13 @@ public class IngredientListResponseDto {
         )
         private Category category;
 
+        @Schema(
+                description = "기본 단위",
+                example = "개",
+                requiredMode = Schema.RequiredMode.NOT_REQUIRED
+        )
+        private String unit;
+
     }
 
 }
