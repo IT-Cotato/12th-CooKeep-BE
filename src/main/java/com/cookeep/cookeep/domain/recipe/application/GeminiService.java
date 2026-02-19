@@ -11,9 +11,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 
 import java.net.URI;
 import java.util.List;
@@ -82,6 +84,16 @@ public class GeminiService {
             log.info("Gemini raw response = {}", response);
 
             return parseResponse(response);
+
+        } catch (WebClientResponseException e) {
+
+            if (e.getStatusCode() == HttpStatus.TOO_MANY_REQUESTS) {
+                log.error("Gemini 429 Rate Limit 발생");
+                throw new AppException(ErrorCode.AI_RATE_LIMIT_EXCEEDED);
+            }
+
+            log.error("Gemini API 호출 실패 - status={}", e.getStatusCode(), e);
+            throw new AppException(ErrorCode.AI_SEARCH_FAILED);
 
         } catch (Exception e) {
             log.error("Gemini API 호출 실패", e);

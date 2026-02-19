@@ -18,7 +18,6 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
-import io.swagger.v3.oas.annotations.security.SecurityRequirements;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -36,7 +35,6 @@ import org.springframework.web.bind.annotation.*;
 public class AiRecipeController {
 
     private final AiRecipeService aiRecipeService;
-    private final JwtTokenProvider jwtTokenProvider;
 
     @Operation(
             summary = "(MAIN05-01)AI 레시피 생성",
@@ -51,7 +49,8 @@ public class AiRecipeController {
             ErrorCode.AI_RESPONSE_PARSE_FAILED,
             ErrorCode.AI_RESPONSE_INVALID_FORMAT,
             ErrorCode.INTERNAL_SERVER_ERROR,
-            ErrorCode.UNAUTHORIZED
+            ErrorCode.UNAUTHORIZED,
+            ErrorCode.AI_RATE_LIMIT_EXCEEDED
     })
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "AI 레시피 생성 성공"),
@@ -68,6 +67,10 @@ public class AiRecipeController {
             @ApiResponse(responseCode = "404", description = """
                     리소스를 찾을 수 없습니다. 다음 오류가 발생할 수 있습니다:
                     - INGREDIENT_NOT_FOUND: 유저가 보유한 재료를 찾을 수 없습니다.
+                    """, content = @Content),
+            @ApiResponse(responseCode = "429", description = """
+                    AI 토큰 만료입니다.
+                    - AI_RATE_LIMIT_EXCEEDED: AI 요청 횟수를 초과하였습니다.
                     """, content = @Content),
             @ApiResponse(responseCode = "500", description = """
                     서버 오류입니다. 다음 오류가 발생할 수 있습니다:
@@ -105,7 +108,8 @@ public class AiRecipeController {
             ErrorCode.AI_RECIPE_TITLE_MISSING,
             ErrorCode.AI_RESPONSE_PARSE_FAILED,
             ErrorCode.INTERNAL_SERVER_ERROR,
-            ErrorCode.UNAUTHORIZED
+            ErrorCode.UNAUTHORIZED,
+            ErrorCode.AI_RATE_LIMIT_EXCEEDED
     })
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "AI 레시피 재생성 성공"),
@@ -125,6 +129,10 @@ public class AiRecipeController {
                     리소스를 찾을 수 없습니다. 다음 오류가 발생할 수 있습니다:
                     - AI_SESSION_NOT_FOUND: AI 레시피 세션을 찾을 수 없습니다.
                     - AI_RECIPE_TITLE_MISSING: AI 응답에 레시피 제목이 존재하지 않습니다.
+                    """, content = @Content),
+            @ApiResponse(responseCode = "429", description = """
+                    AI 토큰 만료입니다.
+                    - AI_RATE_LIMIT_EXCEEDED: AI 요청 횟수를 초과하였습니다.
                     """, content = @Content),
             @ApiResponse(responseCode = "500", description = """
                     서버 오류입니다. 다음 오류가 발생할 수 있습니다:

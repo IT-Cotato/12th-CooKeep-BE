@@ -102,6 +102,7 @@ public enum ErrorCode {
 	// 429
 	SMS_RESEND_TOO_FAST(HttpStatus.TOO_MANY_REQUESTS, "인증번호 재전송 요청이 너무 빠릅니다. 잠시 후 다시 시도해주세요.", "SMS-005"),
 	SMS_TOO_MANY_ATTEMPTS(HttpStatus.TOO_MANY_REQUESTS, "인증 시도 횟수를 초과하였습니다. 잠시 후 다시 시도해주세요.", "SMS-006"),
+	AI_RATE_LIMIT_EXCEEDED(HttpStatus.TOO_MANY_REQUESTS, "AI API rate limit exceeded", "RECIPE-25"),
 
 	//500
 	FILE_UPLOAD_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "파일 업로드에 실패했습니다.", "FILE-001"),
