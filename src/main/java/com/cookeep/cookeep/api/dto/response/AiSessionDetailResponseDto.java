@@ -27,6 +27,9 @@ public class AiSessionDetailResponseDto {
     )
     private Long sessionId;
 
+    @Schema(description = "세션 완료 여부", example = "true")
+    private boolean isCompleted;
+
     @Schema(
             description = "개별 메시지 목록",
             requiredMode = Schema.RequiredMode.REQUIRED

@@ -4,6 +4,7 @@ import com.cookeep.cookeep.api.dto.response.IngredientListResponseDto;
 import com.cookeep.cookeep.common.exception.AppException;
 import com.cookeep.cookeep.common.exception.ErrorCode;
 import com.cookeep.cookeep.domain.ingredient.common.domain.Category;
+import com.cookeep.cookeep.domain.ingredient.common.domain.Unit;
 import com.cookeep.cookeep.domain.ingredient.customingredient.dao.CustomIngredientRepository;
 import com.cookeep.cookeep.domain.ingredient.customingredient.entity.CustomIngredient;
 import com.cookeep.cookeep.domain.ingredient.defaultingredient.dao.DefaultIngredientRepository;
@@ -62,6 +63,7 @@ public class IngredientListService {
                         .name(ingredient.getIngredient())
                         .imageUrl(ingredient.getImageUrl())
                         .category(ingredient.getCategory())
+                        .unit(ingredient.getUnit() != null ? ingredient.getUnit().name() : Unit.PIECE.name())
                         .build())
         );
         customIngredients.forEach(ingredient ->
@@ -71,6 +73,7 @@ public class IngredientListService {
                         .name(ingredient.getName())
                         .imageUrl(ingredient.getImageUrl())
                         .category(ingredient.getCategory())
+                        .unit(Unit.PIECE.name())
                         .build())
         );
 
