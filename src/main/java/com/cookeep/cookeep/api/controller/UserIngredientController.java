@@ -1,7 +1,9 @@
 package com.cookeep.cookeep.api.controller;
 
 import com.cookeep.cookeep.api.dto.request.UserIngredientCreateRequestDto;
+import com.cookeep.cookeep.api.dto.request.UserIngredientListCreateRequestDto;
 import com.cookeep.cookeep.api.dto.response.UserIngredientCreateResponseDto;
+import com.cookeep.cookeep.api.dto.response.UserIngredientListCreateResponseDto;
 import com.cookeep.cookeep.common.dto.DataResponse;
 import com.cookeep.cookeep.common.exception.ErrorCode;
 import com.cookeep.cookeep.config.ApiErrorCodeExamples;
@@ -27,7 +29,6 @@ import org.springframework.web.bind.annotation.*;
 public class UserIngredientController {
 
     private final UserIngredientService userIngredientService;
-    private final JwtTokenProvider jwtTokenProvider;
 
     @Operation(
             summary = "유저 식재료 등록",
@@ -58,11 +59,11 @@ public class UserIngredientController {
                     """, content = @Content)
     })
     @PostMapping
-    public ResponseEntity<DataResponse<UserIngredientCreateResponseDto>> createUserIngredient(
+    public ResponseEntity<DataResponse<UserIngredientListCreateResponseDto>> createUserIngredients(
             @AuthenticationPrincipal(expression = "userId") Long userId,
-            @RequestBody @Valid UserIngredientCreateRequestDto request
+            @RequestBody @Valid UserIngredientListCreateRequestDto request
     ) {
-        UserIngredientCreateResponseDto response = userIngredientService.create(userId, request);
+        UserIngredientListCreateResponseDto response = userIngredientService.createAll(userId, request.getIngredients());
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)
