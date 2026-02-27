@@ -1,19 +1,15 @@
 package com.cookeep.cookeep.api.controller;
 
-import com.cookeep.cookeep.api.dto.request.UserIngredientCreateRequestDto;
 import com.cookeep.cookeep.api.dto.request.UserIngredientListCreateRequestDto;
-import com.cookeep.cookeep.api.dto.response.UserIngredientCreateResponseDto;
 import com.cookeep.cookeep.api.dto.response.UserIngredientListCreateResponseDto;
 import com.cookeep.cookeep.common.dto.DataResponse;
 import com.cookeep.cookeep.common.exception.ErrorCode;
 import com.cookeep.cookeep.config.ApiErrorCodeExamples;
-import com.cookeep.cookeep.security.JwtTokenProvider;
 import com.cookeep.cookeep.domain.ingredient.useringredient.application.UserIngredientService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
-import io.swagger.v3.oas.annotations.security.SecurityRequirements;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -37,13 +33,14 @@ public class UserIngredientController {
     @ApiErrorCodeExamples({
             ErrorCode.USER_NOT_FOUND,
             ErrorCode.INGREDIENT_REFERENCE_NOT_FOUND,
-            ErrorCode.INTERNAL_SERVER_ERROR
+            ErrorCode.INTERNAL_SERVER_ERROR,
+            ErrorCode.INVALID_INGREDIENT_REQUEST
     })
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "식재료 등록 성공"),
             @ApiResponse(responseCode = "400", description = """
                     잘못된 요청입니다. 다음 오류가 발생할 수 있습니다:
-                    - (Validation/Jackson) 필수값 누락 또는 ENUM 값 오류
+                    - INVALID_INGREDIENT_REQUEST: 필수값 누락 또는 ENUM 값 오류
                     """, content = @Content),
             @ApiResponse(responseCode = "401", description = """
                     인증 실패입니다.
@@ -61,7 +58,7 @@ public class UserIngredientController {
     @PostMapping
     public ResponseEntity<DataResponse<UserIngredientListCreateResponseDto>> createUserIngredients(
             @AuthenticationPrincipal(expression = "userId") Long userId,
-            @RequestBody @Valid UserIngredientListCreateRequestDto request
+            @RequestBody UserIngredientListCreateRequestDto request
     ) {
         UserIngredientListCreateResponseDto response = userIngredientService.createAll(userId, request.getIngredients());
 
