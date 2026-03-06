@@ -1,8 +1,11 @@
 package com.cookeep.cookeep.domain.ingredient.useringredient.application;
 
 import com.cookeep.cookeep.api.dto.request.UserIngredientCreateRequestDto;
+import com.cookeep.cookeep.api.dto.request.UserIngredientPreviewRequestDto;
 import com.cookeep.cookeep.api.dto.response.UserIngredientCreateResponseDto;
 import com.cookeep.cookeep.api.dto.response.UserIngredientListCreateResponseDto;
+import com.cookeep.cookeep.api.dto.response.UserIngredientListPreviewResponseDto;
+import com.cookeep.cookeep.api.dto.response.UserIngredientPreviewResponseDto;
 import com.cookeep.cookeep.common.exception.AppException;
 import com.cookeep.cookeep.common.exception.ErrorCode;
 import com.cookeep.cookeep.domain.ingredient.common.domain.Storage;
@@ -36,6 +39,34 @@ public class UserIngredientServiceImpl implements UserIngredientService {
     private final CustomIngredientRepository customIngredientRepository;
     private final UserRepository userRepository;
 
+    // 1. 기본 정보 조회 (저장 안 함)
+    @Override
+    @Transactional(readOnly = true)
+    public UserIngredientListPreviewResponseDto previewAll(List<UserIngredientPreviewRequestDto> requests) {
+        List<UserIngredientPreviewResponseDto> results = requests.stream()
+                .map(this::previewOne)
+                .toList();
+
+        return UserIngredientListPreviewResponseDto.of(results);
+    }
+
+    private UserIngredientPreviewResponseDto previewOne(UserIngredientPreviewRequestDto req) {
+        if (req.getType() == Type.DEFAULT) {
+            DefaultIngredient ref = defaultIngredientRepository.findById(req.getReferenceId())
+                    .orElseThrow(() -> new AppException(ErrorCode.INGREDIENT_REFERENCE_NOT_FOUND));
+            return UserIngredientPreviewResponseDto.ofDefault(ref);
+
+        } else if (req.getType() == Type.CUSTOM) {
+            CustomIngredient ref = customIngredientRepository.findById(req.getReferenceId())
+                    .orElseThrow(() -> new AppException(ErrorCode.INGREDIENT_REFERENCE_NOT_FOUND));
+            return UserIngredientPreviewResponseDto.ofCustom(ref);
+
+        } else {
+            throw new AppException(ErrorCode.INVALID_INGREDIENT_REQUEST);
+        }
+    }
+
+    // 2. 최종등록
     @Override
     public UserIngredientListCreateResponseDto createAll(Long userId, List<UserIngredientCreateRequestDto> requests) {
         // 유저 존재 검증
