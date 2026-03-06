@@ -40,7 +40,7 @@ public class UserIngredientPreviewResponseDto {
     @Schema(description = "기본 만료일 (오늘 + expirationDays, yyyy-MM-dd)", example = "2026-03-06", type = "string", format = "date")
     private LocalDate defaultExpirationDate;
 
-    // ── 팩토리 메서드 ─────────────────────────────────────────────────────────
+    // 식재료를 객체로 생성
 
     public static UserIngredientPreviewResponseDto ofDefault(DefaultIngredient ref) {
         LocalDate expiration = calcExpiration(ref.getDefaultExpirationDays());

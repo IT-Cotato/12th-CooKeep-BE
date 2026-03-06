@@ -82,18 +82,8 @@ public class UserIngredientServiceImpl implements UserIngredientService {
 
     private UserIngredientCreateResponseDto createOne(User user, UserIngredientCreateRequestDto req) {
 
-        // null 요청 자체 검증
-        if (req == null) {
-            throw new AppException(ErrorCode.INVALID_INGREDIENT_REQUEST);
-        }
-
-        // type 필수 검증
-        if (req.getType() == null) {
-            throw new AppException(ErrorCode.INVALID_INGREDIENT_REQUEST);
-        }
-
-        // referenceId 필수 검증
-        if (req.getReferenceId() == null) {
+        // null 요청 & type & referenceId 검증
+        if (req == null || req.getType() == null || req.getReferenceId() == null) {
             throw new AppException(ErrorCode.INVALID_INGREDIENT_REQUEST);
         }
 
