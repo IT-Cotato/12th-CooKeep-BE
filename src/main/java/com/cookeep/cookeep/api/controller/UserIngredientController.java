@@ -51,9 +51,11 @@ public class UserIngredientController {
     })
     @PostMapping("/preview")
     public ResponseEntity<DataResponse<UserIngredientListPreviewResponseDto>> previewUserIngredients(
+            @AuthenticationPrincipal(expression = "userId") Long userId,
             @RequestBody @Valid UserIngredientListPreviewRequestDto request
     ) {
-        UserIngredientListPreviewResponseDto response = userIngredientService.previewAll(request.getIngredients());
+        UserIngredientListPreviewResponseDto response =
+                userIngredientService.previewAll(userId, request.getIngredients());
 
         return ResponseEntity
                 .status(HttpStatus.OK)

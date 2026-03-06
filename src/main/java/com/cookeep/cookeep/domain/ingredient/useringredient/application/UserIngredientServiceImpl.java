@@ -42,22 +42,23 @@ public class UserIngredientServiceImpl implements UserIngredientService {
     // 1. 기본 정보 조회 (저장 안 함)
     @Override
     @Transactional(readOnly = true)
-    public UserIngredientListPreviewResponseDto previewAll(List<UserIngredientPreviewRequestDto> requests) {
+    public UserIngredientListPreviewResponseDto previewAll(Long userId, List<UserIngredientPreviewRequestDto> requests) {
         List<UserIngredientPreviewResponseDto> results = requests.stream()
-                .map(this::previewOne)
+                .map(req -> previewOne(userId, req))
                 .toList();
 
         return UserIngredientListPreviewResponseDto.of(results);
     }
 
-    private UserIngredientPreviewResponseDto previewOne(UserIngredientPreviewRequestDto req) {
+    private UserIngredientPreviewResponseDto previewOne(Long userId, UserIngredientPreviewRequestDto req) {
         if (req.getType() == Type.DEFAULT) {
             DefaultIngredient ref = defaultIngredientRepository.findById(req.getReferenceId())
                     .orElseThrow(() -> new AppException(ErrorCode.INGREDIENT_REFERENCE_NOT_FOUND));
             return UserIngredientPreviewResponseDto.ofDefault(ref);
 
         } else if (req.getType() == Type.CUSTOM) {
-            CustomIngredient ref = customIngredientRepository.findById(req.getReferenceId())
+            CustomIngredient ref = customIngredientRepository
+                    .findByIdAndUserId(req.getReferenceId(), userId)
                     .orElseThrow(() -> new AppException(ErrorCode.INGREDIENT_REFERENCE_NOT_FOUND));
             return UserIngredientPreviewResponseDto.ofCustom(ref);
 
