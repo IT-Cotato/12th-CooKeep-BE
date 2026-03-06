@@ -48,6 +48,9 @@ public class UserIngredientCreateResponseDto {
     @Schema(description = "식재료 이미지 URL", example = "https://s3.amazonaws.com/cookeep/ingredients/carrot.png")
     private String imageUrl;
 
+    @Schema(description = "등록일", example = "2026-03-06", type = "string", format = "date")
+    private LocalDate createdAt;
+
     public static UserIngredientCreateResponseDto of(
             UserIngredient userIngredient,
             String ingredientName,
@@ -64,7 +67,8 @@ public class UserIngredientCreateResponseDto {
                 userIngredient.getExpirationDate(),
                 userIngredient.getLeftDays(),
                 userIngredient.getMemo(),
-                imageUrl
+                imageUrl,
+                userIngredient.getCreatedAt().toLocalDate()
         );
     }
 }
