@@ -65,6 +65,10 @@ public class DailyRecipe extends BaseEntity {
         }
     }
 
+    public void clearRecipeImageUrl() {
+        this.recipeImageUrl = null;
+    }
+
     public void incrementLikeCount() {
         this.likeCount++;
     }
