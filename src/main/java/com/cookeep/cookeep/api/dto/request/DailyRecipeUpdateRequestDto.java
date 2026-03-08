@@ -32,4 +32,11 @@ public class DailyRecipeUpdateRequestDto {
             requiredMode = Schema.RequiredMode.NOT_REQUIRED
     )
     private String recipeImageUrl;
+
+    @Schema(
+            description = "요리 사진 삭제 여부 (true 시 기존 사진을 S3에서 삭제하고 DB에서 제거)",
+            example = "true",
+            requiredMode = Schema.RequiredMode.NOT_REQUIRED
+    )
+    private Boolean deleteRecipeImage;
 }
