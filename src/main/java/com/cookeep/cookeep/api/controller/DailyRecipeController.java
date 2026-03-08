@@ -173,7 +173,8 @@ public class DailyRecipeController {
             @Valid @RequestBody DailyRecipeUpdateRequestDto request
     ) {
         DailyRecipe dailyRecipe = dailyRecipeService.updateDailyRecipe(
-                userId, dailyRecipeId, request.getTitle(), request.getDescription(), request.getRecipeImageUrl()
+                userId, dailyRecipeId, request.getTitle(), request.getDescription(),
+                request.getRecipeImageUrl(), request.getDeleteRecipeImage()
         );
 
         return ResponseEntity.ok(DataResponse.from(DailyRecipeDetailResponseDto.from(dailyRecipe)));
