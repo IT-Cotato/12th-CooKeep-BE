@@ -103,10 +103,16 @@ public class DailyRecipeService {
                 .orElseThrow(() -> new AppException(ErrorCode.DAILY_RECIPE_NOT_FOUND));
     }
 
-    // 데일리 레시피 수정 (제목, 한줄평)
-    public DailyRecipe updateDailyRecipe(Long userId, Long dailyRecipeId, String title, String description) {
-        if ((title == null || title.isBlank()) && (description == null || description.isBlank())) {
+    // 데일리 레시피 수정 (제목, 한줄평, 사진)
+    public DailyRecipe updateDailyRecipe(Long userId, Long dailyRecipeId, String title, String description, String recipeImageUrl) {
+        if ((title == null || title.isBlank())
+                && (description == null || description.isBlank())
+                && (recipeImageUrl == null || recipeImageUrl.isBlank())) {
             throw new AppException(ErrorCode.DAILY_RECIPE_UPDATE_FIELDS_REQUIRED);
+        }
+
+        if (title != null && title.isBlank()) {
+            throw new AppException(ErrorCode.DAILY_RECIPE_TITLE_BLANK);
         }
 
         User user = userReader.readById(userId);
@@ -114,7 +120,16 @@ public class DailyRecipeService {
         DailyRecipe dailyRecipe = dailyRecipeRepository.findByIdAndUser(dailyRecipeId, user)
                 .orElseThrow(() -> new AppException(ErrorCode.DAILY_RECIPE_NOT_FOUND));
 
-        dailyRecipe.updateTitleAndDescription(title, description);
+        // 기존에 사진이 없었고 새로 사진을 추가하는 경우 쿠키 지급
+        boolean isNewPhotoAdded = (dailyRecipe.getRecipeImageUrl() == null || dailyRecipe.getRecipeImageUrl().isBlank())
+                && (recipeImageUrl != null && !recipeImageUrl.isBlank());
+
+        dailyRecipe.updateTitleAndDescription(title, description, recipeImageUrl);
+
+        if (isNewPhotoAdded) {
+            cookieService.updateCookie(userId, CookieLog.CookieLogType.BASIC_FOOD_PHOTO_REG);
+        }
+
         return dailyRecipe;
     }
 
