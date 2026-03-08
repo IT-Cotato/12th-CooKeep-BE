@@ -129,17 +129,23 @@ public class DailyRecipeService {
         // 사진 삭제 요청: S3 삭제 후 DB null 업데이트
         if (isDeleteImage && dailyRecipe.getRecipeImageUrl() != null) {
             s3Service.delete(dailyRecipe.getRecipeImageUrl());
-            dailyRecipe.clearRecipeImageUrl();
+            dailyRecipe.updateRecipeImageUrl(null);
+        }
+
+        if (title != null) {
+            dailyRecipe.updateTitle(title);
+        }
+        if (description != null) {
+            dailyRecipe.updateDescription(description);
         }
 
         // 기존에 사진이 없었고 새로 사진을 추가하는 경우 쿠키 지급
-        boolean isNewPhotoAdded = (dailyRecipe.getRecipeImageUrl() == null || dailyRecipe.getRecipeImageUrl().isBlank())
-                && (recipeImageUrl != null && !recipeImageUrl.isBlank());
-
-        dailyRecipe.updateTitleAndDescription(title, description, recipeImageUrl);
-
-        if (isNewPhotoAdded) {
-            cookieService.updateCookie(userId, CookieLog.CookieLogType.BASIC_FOOD_PHOTO_REG);
+        if (recipeImageUrl != null && !recipeImageUrl.isBlank()) {
+            boolean isNewPhotoAdded = dailyRecipe.getRecipeImageUrl() == null || dailyRecipe.getRecipeImageUrl().isBlank();
+            dailyRecipe.updateRecipeImageUrl(recipeImageUrl);
+            if (isNewPhotoAdded) {
+                cookieService.updateCookie(userId, CookieLog.CookieLogType.BASIC_FOOD_PHOTO_REG);
+            }
         }
 
         return dailyRecipe;
