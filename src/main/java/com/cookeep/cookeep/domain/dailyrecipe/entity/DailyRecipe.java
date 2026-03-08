@@ -53,12 +53,15 @@ public class DailyRecipe extends BaseEntity {
         this.isPublic = isPublic;
     }
 
-    public void updateTitleAndDescription(String title, String description) {
+    public void updateTitleAndDescription(String title, String description, String recipeImageUrl) {
         if (title != null && !title.isBlank()) {
             this.title = title;
         }
         if (description != null) {
             this.description = description;
+        }
+        if (recipeImageUrl != null && !recipeImageUrl.isBlank()) {
+            this.recipeImageUrl = recipeImageUrl;
         }
     }
 
