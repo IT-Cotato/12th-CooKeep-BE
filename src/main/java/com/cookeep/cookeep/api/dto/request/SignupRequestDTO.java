@@ -19,10 +19,10 @@ public record SignupRequestDTO(
 	@Email(message = "이메일 주소를 다시 확인해주세요")
 	String email,
 
-	// 영문, 숫자 포함 8자 이상 값
+	// 영문, 숫자 포함 8자 이상 값, 특수문자는 선택사항
 	@NotBlank(message = "비밀번호는 필수 입력 값입니다.")
 	@Pattern(
-		regexp = "^(?=.*[A-Za-z])(?=.*\\d)[A-Za-z\\d]{8,}$",
+		regexp = "^(?=.*[A-Za-z])(?=.*\\d).{8,}$",
 		message = "영문, 숫자 포함 8자 이상의 비밀번호를 사용해주세요"
 	)
 	String password,
