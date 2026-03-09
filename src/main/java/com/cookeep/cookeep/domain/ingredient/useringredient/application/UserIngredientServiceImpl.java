@@ -83,17 +83,10 @@ public class UserIngredientServiceImpl implements UserIngredientService {
 
     private UserIngredientCreateResponseDto createOne(User user, UserIngredientCreateRequestDto req) {
 
-        // null 요청 & type & referenceId 검증
-        if (req == null || req.getType() == null || req.getReferenceId() == null) {
-            throw new AppException(ErrorCode.INVALID_INGREDIENT_REQUEST);
-        }
-
         if (req.getType() == Type.DEFAULT) {
             return createFromDefault(user, req);
-        } else if (req.getType() == Type.CUSTOM) {
-            return createFromCustom(user, req);
         } else {
-            throw new AppException(ErrorCode.INVALID_INGREDIENT_REQUEST);
+            return createFromCustom(user, req);
         }
 
     }
