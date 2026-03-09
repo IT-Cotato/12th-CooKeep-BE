@@ -56,6 +56,7 @@ public enum ErrorCode {
 	CANNOT_LIKE_OWN_RECIPE(HttpStatus.BAD_REQUEST, "자신의 레시피에는 좋아요를 누를 수 없습니다.", "DAILY_RECIPE-006"),
 	CANNOT_BOOKMARK_OWN_RECIPE(HttpStatus.BAD_REQUEST, "자신의 레시피에는 북마크를 누를 수 없습니다.", "DAILY_RECIPE-007"),
 	DAILY_RECIPE_TITLE_BLANK(HttpStatus.BAD_REQUEST, "레시피 제목은 빈 값으로 수정할 수 없습니다.", "DAILY_RECIPE-008"),
+	DAILY_RECIPE_IMAGE_SAME_URL(HttpStatus.BAD_REQUEST, "기존 사진과 동일한 URL로 변경할 수 없습니다.", "DAILY_RECIPE-009"),
 	VERIFICATION_NOT_VERIFIED(HttpStatus.BAD_REQUEST, "전화번호 인증이 완료되지 않았습니다.", "SMS-009"),
 	PASSWORD_MISMATCH(HttpStatus.BAD_REQUEST, "현재 비밀번호가 일치하지 않습니다.", "AUTH-006"),
 	REGISTERED_PHONE_NUMBER_MISMATCH(HttpStatus.BAD_REQUEST, "회원정보에 등록된 전화번호와 일치하지 않습니다.", "AUTH-008"),

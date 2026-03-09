@@ -141,6 +141,9 @@ public class DailyRecipeService {
 
         // 기존에 사진이 없었고 새로 사진을 추가하는 경우 쿠키 지급
         if (recipeImageUrl != null && !recipeImageUrl.isBlank()) {
+            if (recipeImageUrl.equals(dailyRecipe.getRecipeImageUrl())) {
+                throw new AppException(ErrorCode.DAILY_RECIPE_IMAGE_SAME_URL);
+            }
             boolean isNewPhotoAdded = dailyRecipe.getRecipeImageUrl() == null || dailyRecipe.getRecipeImageUrl().isBlank();
             dailyRecipe.updateRecipeImageUrl(recipeImageUrl);
             if (isNewPhotoAdded) {
