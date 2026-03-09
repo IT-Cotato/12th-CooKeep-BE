@@ -23,7 +23,7 @@ public class CustomIngredientCreateResponseDto {
 
     @Schema(
             description = "커스텀 식재료 이름",
-            example = "두쫀쿠"
+            example = "킹스베리딸기"
     )
     private String name;
 
@@ -41,7 +41,7 @@ public class CustomIngredientCreateResponseDto {
 
     @Schema(
             description = "식재료 카테고리",
-            example = "PROCESSED"
+            example = "FRUIT"
     )
     private Category category;
 

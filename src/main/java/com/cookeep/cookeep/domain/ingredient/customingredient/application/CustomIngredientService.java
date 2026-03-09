@@ -67,4 +67,19 @@ public class CustomIngredientService {
         return CustomIngredientCreateResponseDto.from(saved);
 
     }
+
+    public void delete(Long userId, Long customIngredientId) {
+
+        // 1. 유저 인증 확인
+        if (userId == null) {
+            throw new AppException(ErrorCode.UNAUTHORIZED);
+        }
+
+        // 2. 커스텀 식재료 존재 여부 + 소유자 검증 (한 번에)
+        CustomIngredient ingredient = repository.findByIdAndUserId(customIngredientId, userId)
+                .orElseThrow(() -> new AppException(ErrorCode.INGREDIENT_REFERENCE_NOT_FOUND));
+
+        // 3. 삭제
+        repository.delete(ingredient);
+    }
 }
