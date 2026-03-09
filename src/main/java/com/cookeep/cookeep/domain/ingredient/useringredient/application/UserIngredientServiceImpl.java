@@ -125,7 +125,8 @@ public class UserIngredientServiceImpl implements UserIngredientService {
     }
 
     private UserIngredientCreateResponseDto createFromCustom(User user, UserIngredientCreateRequestDto req) {
-        CustomIngredient ref = customIngredientRepository.findById(req.getReferenceId())
+        CustomIngredient ref = customIngredientRepository
+                .findByIdAndUserId(req.getReferenceId(), user.getUserId())
                 .orElseThrow(() -> new AppException(ErrorCode.INGREDIENT_REFERENCE_NOT_FOUND));
 
         int quantity = req.getQuantity()!= null ? req.getQuantity():DEFAULT_QUANTITY;
