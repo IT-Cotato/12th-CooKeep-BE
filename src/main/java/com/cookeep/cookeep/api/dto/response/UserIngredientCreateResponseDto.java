@@ -15,7 +15,7 @@ import java.time.LocalDate;
 )
 public class UserIngredientCreateResponseDto {
 
-    @Schema(description = "식재료 타입", example = "CUSTOM")
+    @Schema(description = "식재료 타입", example = "DEFAULT")
     private String type;
 
     @Schema(description = "유저 식재료(UserIngredient DB) ID", example = "1")
@@ -24,7 +24,7 @@ public class UserIngredientCreateResponseDto {
     @Schema(description = "참조 ID (요청에서 전달한 referenceId)", example = "3")
     private Long referenceId;
 
-    @Schema(description = "식재료 이름", example = "두쫀쿠")
+    @Schema(description = "식재료 이름", example = "시금치")
     private String name;
 
     @Schema(description = "수량", example = "2")
@@ -36,7 +36,7 @@ public class UserIngredientCreateResponseDto {
     @Schema(description = "보관 장소", example = "FRIDGE")
     private String storage;
 
-    @Schema(description = "만료일 (yyyy-MM-dd)", example = "2026-01-20", type = "string", format = "date")
+    @Schema(description = "만료일 (yyyy-MM-dd)", example = "2026-04-20", type = "string", format = "date")
     private LocalDate expirationDate;
 
     @Schema(description = "남은 일수(만료일까지)", example = "4")
@@ -47,6 +47,9 @@ public class UserIngredientCreateResponseDto {
 
     @Schema(description = "식재료 이미지 URL", example = "https://s3.amazonaws.com/cookeep/ingredients/carrot.png")
     private String imageUrl;
+
+    @Schema(description = "등록일", example = "2026-03-06", type = "string", format = "date")
+    private LocalDate createdAt;
 
     public static UserIngredientCreateResponseDto of(
             UserIngredient userIngredient,
@@ -64,7 +67,8 @@ public class UserIngredientCreateResponseDto {
                 userIngredient.getExpirationDate(),
                 userIngredient.getLeftDays(),
                 userIngredient.getMemo(),
-                imageUrl
+                imageUrl,
+                userIngredient.getCreatedAt().toLocalDate()
         );
     }
 }
