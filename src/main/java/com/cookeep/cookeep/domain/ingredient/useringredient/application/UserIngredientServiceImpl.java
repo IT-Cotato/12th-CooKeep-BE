@@ -17,6 +17,7 @@ import com.cookeep.cookeep.domain.ingredient.defaultingredient.dao.DefaultIngred
 import com.cookeep.cookeep.domain.ingredient.defaultingredient.entity.DefaultIngredient;
 import com.cookeep.cookeep.domain.ingredient.useringredient.dao.UserIngredientRepository;
 import com.cookeep.cookeep.domain.ingredient.useringredient.entity.UserIngredient;
+import com.cookeep.cookeep.domain.mycookeep.application.ConsumptionReportService;
 import com.cookeep.cookeep.domain.user.dao.UserRepository;
 import com.cookeep.cookeep.domain.user.entity.User;
 import lombok.RequiredArgsConstructor;
@@ -37,6 +38,7 @@ public class UserIngredientServiceImpl implements UserIngredientService {
     private final UserIngredientRepository userIngredientRepository;
     private final DefaultIngredientRepository defaultIngredientRepository;
     private final CustomIngredientRepository customIngredientRepository;
+    private final ConsumptionReportService consumptionReportService;
     private final UserRepository userRepository;
 
     // 1. 기본 정보 조회 (저장 안 함)
@@ -112,7 +114,10 @@ public class UserIngredientServiceImpl implements UserIngredientService {
                 .memo(memo)
                 .build();
 
-        userIngredientRepository.save(entity);
+        UserIngredient saved = userIngredientRepository.save(entity);
+
+        // 주간 소비 리포트용 로그 생성
+        consumptionReportService.createLogForNewIngredient(user, saved);
 
         return UserIngredientCreateResponseDto.of(entity, ref.getIngredient(), ref.getImageUrl());
     }
@@ -139,7 +144,10 @@ public class UserIngredientServiceImpl implements UserIngredientService {
                 .memo(memo)
                 .build();
 
-        userIngredientRepository.save(entity);
+        UserIngredient saved = userIngredientRepository.save(entity);
+
+        // 주간 소비 리포트용 로그 생성
+        consumptionReportService.createLogForNewIngredient(user, saved);
 
         return UserIngredientCreateResponseDto.of(entity, ref.getName(), ref.getImageUrl());
     }
