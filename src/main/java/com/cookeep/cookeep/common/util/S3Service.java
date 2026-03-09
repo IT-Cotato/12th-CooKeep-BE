@@ -59,12 +59,17 @@ public class S3Service {
 	public void delete(String imageUrl) {
 		String key = extractKeyFromUrl(imageUrl);
 
-		DeleteObjectRequest request = DeleteObjectRequest.builder()
-			.bucket(bucket)
-			.key(key)
-			.build();
+		try {
+			DeleteObjectRequest request = DeleteObjectRequest.builder()
+				.bucket(bucket)
+				.key(key)
+				.build();
 
-		s3Client.deleteObject(request);
+			s3Client.deleteObject(request);
+		} catch (Exception e) {
+			log.error("S3 delete failed. bucket={}, key={}", bucket, key, e);
+			throw new AppException(ErrorCode.FILE_DELETE_ERROR);
+		}
 	}
 
 	private String extractExtension(String filename) {

@@ -11,6 +11,7 @@ import com.cookeep.cookeep.domain.recipe.dao.AiRecipeRepository;
 import com.cookeep.cookeep.domain.recipe.entity.AiRecipe;
 import com.cookeep.cookeep.domain.user.application.UserReader;
 import com.cookeep.cookeep.domain.user.entity.User;
+import com.cookeep.cookeep.common.util.S3Service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -38,6 +39,7 @@ public class DailyRecipeService {
     private final CookieService cookieService;
     private final UserReader userReader;
     private final ObjectMapper objectMapper;
+    private final S3Service s3Service;
 
     // 채택된 AI 레시피 목록 조회
     @Transactional(readOnly = true)
@@ -103,10 +105,20 @@ public class DailyRecipeService {
                 .orElseThrow(() -> new AppException(ErrorCode.DAILY_RECIPE_NOT_FOUND));
     }
 
-    // 데일리 레시피 수정 (제목, 한줄평)
-    public DailyRecipe updateDailyRecipe(Long userId, Long dailyRecipeId, String title, String description) {
-        if ((title == null || title.isBlank()) && (description == null || description.isBlank())) {
+    // 데일리 레시피 수정 (제목, 한줄평, 사진)
+    public DailyRecipe updateDailyRecipe(Long userId, Long dailyRecipeId, String title, String description,
+                                         String recipeImageUrl, Boolean deleteRecipeImage) {
+        boolean isDeleteImage = Boolean.TRUE.equals(deleteRecipeImage);
+
+        if ((title == null || title.isBlank())
+                && (description == null || description.isBlank())
+                && (recipeImageUrl == null || recipeImageUrl.isBlank())
+                && !isDeleteImage) {
             throw new AppException(ErrorCode.DAILY_RECIPE_UPDATE_FIELDS_REQUIRED);
+        }
+
+        if (title != null && title.isBlank()) {
+            throw new AppException(ErrorCode.DAILY_RECIPE_TITLE_BLANK);
         }
 
         User user = userReader.readById(userId);
@@ -114,7 +126,31 @@ public class DailyRecipeService {
         DailyRecipe dailyRecipe = dailyRecipeRepository.findByIdAndUser(dailyRecipeId, user)
                 .orElseThrow(() -> new AppException(ErrorCode.DAILY_RECIPE_NOT_FOUND));
 
-        dailyRecipe.updateTitleAndDescription(title, description);
+        // 사진 삭제 요청: S3 삭제 후 DB null 업데이트
+        if (isDeleteImage && dailyRecipe.getRecipeImageUrl() != null) {
+            s3Service.delete(dailyRecipe.getRecipeImageUrl());
+            dailyRecipe.updateRecipeImageUrl(null);
+        }
+
+        if (title != null) {
+            dailyRecipe.updateTitle(title);
+        }
+        if (description != null) {
+            dailyRecipe.updateDescription(description);
+        }
+
+        // 기존에 사진이 없었고 새로 사진을 추가하는 경우 쿠키 지급
+        if (recipeImageUrl != null && !recipeImageUrl.isBlank()) {
+            if (recipeImageUrl.equals(dailyRecipe.getRecipeImageUrl())) {
+                throw new AppException(ErrorCode.DAILY_RECIPE_IMAGE_SAME_URL);
+            }
+            boolean isNewPhotoAdded = dailyRecipe.getRecipeImageUrl() == null || dailyRecipe.getRecipeImageUrl().isBlank();
+            dailyRecipe.updateRecipeImageUrl(recipeImageUrl);
+            if (isNewPhotoAdded) {
+                cookieService.updateCookie(userId, CookieLog.CookieLogType.BASIC_FOOD_PHOTO_REG);
+            }
+        }
+
         return dailyRecipe;
     }
 

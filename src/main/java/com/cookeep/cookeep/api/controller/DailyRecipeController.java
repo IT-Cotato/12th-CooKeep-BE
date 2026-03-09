@@ -152,7 +152,9 @@ public class DailyRecipeController {
 
     @Operation(
             summary = "데일리 레시피 수정",
-            description = "데일리 레시피의 제목과 한줄평을 수정합니다."
+            description = "데일리 레시피의 제목, 한줄평, 요리 사진을 수정합니다. " +
+                    "요리 사진은 이미지 업로드 API로 먼저 업로드 후 URL을 전달하는 방식입니다. " +
+                    "기존에 사진이 없었던 레시피에 사진을 새로 추가하면 쿠키가 지급됩니다."
     )
     @ApiErrorCodeExamples({
             ErrorCode.UNAUTHORIZED,
@@ -171,7 +173,8 @@ public class DailyRecipeController {
             @Valid @RequestBody DailyRecipeUpdateRequestDto request
     ) {
         DailyRecipe dailyRecipe = dailyRecipeService.updateDailyRecipe(
-                userId, dailyRecipeId, request.getTitle(), request.getDescription()
+                userId, dailyRecipeId, request.getTitle(), request.getDescription(),
+                request.getRecipeImageUrl(), request.getDeleteRecipeImage()
         );
 
         return ResponseEntity.ok(DataResponse.from(DailyRecipeDetailResponseDto.from(dailyRecipe)));

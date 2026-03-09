@@ -47,7 +47,7 @@ public enum ErrorCode {
 	INVALID_QUANTITY(HttpStatus.BAD_REQUEST, "식재료 수량은 0 이상이어야 합니다.", "INGREDIENT_008"),
 	MEMO_TOO_LONG(HttpStatus.BAD_REQUEST, "식재료 메모는 최대 100자까지 입력 가능합니다.", "INGREDIENT_009"),
 	INVALID_DELETE_REQUEST(HttpStatus.BAD_REQUEST, "삭제할 식재료를 입력해주세요.", "INGREDIENT_010"),
-	DAILY_RECIPE_UPDATE_FIELDS_REQUIRED(HttpStatus.BAD_REQUEST, "수정할 항목(제목 또는 한줄평)을 입력해주세요.", "DAILY_RECIPE-004"),
+	DAILY_RECIPE_UPDATE_FIELDS_REQUIRED(HttpStatus.BAD_REQUEST, "수정할 항목(제목 또는 한줄평 또는 이미지)을 입력해주세요.", "DAILY_RECIPE-004"),
 	SAME_AS_PREVIOUS_PASSWORD(HttpStatus.BAD_REQUEST, "기존 등록된 비밀번호와 동일한 비밀번호입니다.", "AUTH-005"),
 	SAME_AS_CURRENT_PHONE_NUMBER(HttpStatus.BAD_REQUEST, "기존 등록된 전화번호와 동일한 전화번호입니다.", "USER-007"),
 	TITLE_INVALID_VALUE(HttpStatus.BAD_REQUEST, "레시피 제목을 입력해주세요.", "RECIPE-022"),
@@ -55,6 +55,8 @@ public enum ErrorCode {
 	TITLE_TOO_LONG(HttpStatus.BAD_REQUEST, "레시피 제목은 최대 100글자입니다.", "RECIPE-023"),
 	CANNOT_LIKE_OWN_RECIPE(HttpStatus.BAD_REQUEST, "자신의 레시피에는 좋아요를 누를 수 없습니다.", "DAILY_RECIPE-006"),
 	CANNOT_BOOKMARK_OWN_RECIPE(HttpStatus.BAD_REQUEST, "자신의 레시피에는 북마크를 누를 수 없습니다.", "DAILY_RECIPE-007"),
+	DAILY_RECIPE_TITLE_BLANK(HttpStatus.BAD_REQUEST, "레시피 제목은 빈 값으로 수정할 수 없습니다.", "DAILY_RECIPE-008"),
+	DAILY_RECIPE_IMAGE_SAME_URL(HttpStatus.BAD_REQUEST, "기존 사진과 동일한 URL로 변경할 수 없습니다.", "DAILY_RECIPE-009"),
 	VERIFICATION_NOT_VERIFIED(HttpStatus.BAD_REQUEST, "전화번호 인증이 완료되지 않았습니다.", "SMS-009"),
 	PASSWORD_MISMATCH(HttpStatus.BAD_REQUEST, "현재 비밀번호가 일치하지 않습니다.", "AUTH-006"),
 	REGISTERED_PHONE_NUMBER_MISMATCH(HttpStatus.BAD_REQUEST, "회원정보에 등록된 전화번호와 일치하지 않습니다.", "AUTH-008"),
@@ -107,6 +109,7 @@ public enum ErrorCode {
 
 	//500
 	FILE_UPLOAD_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "파일 업로드에 실패했습니다.", "FILE-001"),
+	FILE_DELETE_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "파일 삭제에 실패했습니다.", "FILE-002"),
 	AI_SEARCH_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "AI 요청 또는 저장 처리에 실패했습니다.","RECIPE-012"),
 	AI_RESPONSE_PARSE_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "AI 응답 파싱에 실패했습니다.","RECIPE-013"),
 	AI_RESPONSE_INVALID_FORMAT(HttpStatus.INTERNAL_SERVER_ERROR, "AI 응답 형식이 올바르지 않습니다.","RECIPE-014"),

@@ -25,4 +25,18 @@ public class DailyRecipeUpdateRequestDto {
             requiredMode = Schema.RequiredMode.NOT_REQUIRED
     )
     private String description;
+
+    @Schema(
+            description = "요리 사진 URL (이미지 업로드 API로 먼저 업로드 후 전달)",
+            example = "https://cdn.cookeep.com/images/abc123.jpg",
+            requiredMode = Schema.RequiredMode.NOT_REQUIRED
+    )
+    private String recipeImageUrl;
+
+    @Schema(
+            description = "요리 사진 삭제 여부 (true 시 기존 사진을 S3에서 삭제하고 DB에서 제거)",
+            example = "true",
+            requiredMode = Schema.RequiredMode.NOT_REQUIRED
+    )
+    private Boolean deleteRecipeImage;
 }
