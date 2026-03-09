@@ -20,7 +20,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
-@Tag( name = "(MAIN01) 커스텀 재료 등록", description = "커스텀 식재료 관리 API")
+@Tag( name = "(MAIN01-1) 커스텀 재료 등록", description = "커스텀 식재료 관리 API")
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/users/me/ingredients/custom")
