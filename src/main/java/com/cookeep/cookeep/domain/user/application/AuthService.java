@@ -21,7 +21,7 @@ import com.cookeep.cookeep.api.dto.request.SendCodeRequestDTO;
 import com.cookeep.cookeep.api.dto.request.SignupRequestDTO;
 import com.cookeep.cookeep.api.dto.request.TokenRefreshRequestDTO;
 import com.cookeep.cookeep.api.dto.request.VerifyCodeRequestDTO;
-import com.cookeep.cookeep.api.dto.response.KakaoLoginResponseDTO;
+import com.cookeep.cookeep.api.dto.response.SocialLoginResponseDTO;
 import com.cookeep.cookeep.api.dto.response.LoginResponseDTO;
 import com.cookeep.cookeep.api.dto.response.SignUpResponseDTO;
 import com.cookeep.cookeep.api.dto.response.TokenRefreshResponseDTO;
@@ -138,7 +138,7 @@ public class AuthService {
 
 	// 카카오 로그인
 	@Transactional
-	public KakaoLoginResponseDTO kakaoLogin(String code, String redirectUri) {
+	public SocialLoginResponseDTO kakaoLogin(String code, String redirectUri) {
 		String kakaoAccessToken = kakaoOAuthProvider.getKakaoAccessToken(code, redirectUri);
 		KakaoUserInfoResponseDTO userInfo = kakaoOAuthProvider.getKakaoUserInfo(kakaoAccessToken);
 
@@ -180,7 +180,7 @@ public class AuthService {
 				: NextStep.ONBOARDING;
 		}
 
-		return new KakaoLoginResponseDTO(
+		return new SocialLoginResponseDTO(
 			user.getUserId(), tokenPair.accessToken(), tokenPair.refreshToken(),
 			userStatus, nextStep
 		);
