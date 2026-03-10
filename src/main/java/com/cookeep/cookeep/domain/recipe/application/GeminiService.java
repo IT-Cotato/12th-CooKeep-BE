@@ -175,10 +175,14 @@ public class GeminiService {
         return "당신은 요리 레시피 전문가입니다.\n\n" +
                 "[난이도] " + difficulty.name() + "\n" +
                 exclusionBlock + "\n" +
-                "[규칙]\n" +
+                "[재료 구성 규칙]\n" +
+                // 규칙 1: user_ingredients — 원본 데이터 그대로 사용
                 "1. user_ingredients의 ingredientId, name, unit은 아래 데이터 값 그대로 사용하세요. quantity는 0보다 큰 양수로 생성하세요.\n" +
-                "2. additional_ingredients는 레시피에 반드시 필요한 추가 재료만 포함하세요.\n" +
-                "3. optional_ingredients는 user_ingredients 또는 additional_ingredients에 이미 존재하는 재료만 사용하세요. " +
+                // 규칙 2: additional_ingredients — 레시피에 필요한 추가 재료 (필수/선택/대체 포함)
+                "2. additional_ingredients는 레시피에 필요한 추가 재료 목록입니다. 필수 재료뿐 아니라 없어도 되는 재료나 다른 재료로 대체 가능한 재료도 모두 이 목록에 먼저 추가하세요.\n" +
+                // 규칙 3: optional_ingredients — additional_ingredients에서만 선택
+                "3. optional_ingredients는 additional_ingredients에 이미 추가한 재료 중 일부를 선택해서 '생략 가능' 또는 '대체 가능' 여부를 표시하는 목록입니다. " +
+                "additional_ingredients에 없는 새로운 재료를 이 목록에 추가하는 것은 절대 금지합니다. " +
                 "description은 \"이 재료는 [대체재료]로 대체 가능합니다\" 또는 \"이 재료는 생략 가능합니다\" 중 하나로만 작성하세요.\n" +
                 "4. youtube_search_queries는 한국어 검색어 1~3개를 작성하세요.\n" +
                 "5. steps는 단계별 조리 방법을 작성하세요.\n\n" +
