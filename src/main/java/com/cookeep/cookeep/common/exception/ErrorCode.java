@@ -118,7 +118,7 @@ public enum ErrorCode {
 	INGREDIENTS_JSON_CONVERSION_FAILED(HttpStatus.INTERNAL_SERVER_ERROR,"재료 JSON 변환에 실패했습니다.","RECIPE-021"),
 	SMS_PROVIDER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "SMS 서비스 오류가 발생했습니다.", "SMS-007"),
 	SMS_SEND_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "인증번호 발송 중 오류가 발생했습니다.", "SMS-008"),
-	USERAUTH_DOES_NOT_EXIST (HttpStatus.INTERNAL_SERVER_ERROR, "UserAuth 정보가 존재하지 않습니다.", "AUTH-003"),
+	USERAUTH_DOES_NOT_EXIST (HttpStatus.INTERNAL_SERVER_ERROR, "UserAuth 정보가 존재하지 않습니다.", "AUTH-009"),
 
 
 	// 503 SERVICE_UNAVAILABLE
