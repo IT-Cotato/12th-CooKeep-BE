@@ -7,6 +7,8 @@ import com.cookeep.cookeep.domain.cookie.application.CookieService;
 import com.cookeep.cookeep.domain.cookie.entity.CookieLog;
 import com.cookeep.cookeep.domain.dailyrecipe.dao.DailyRecipeRepository;
 import com.cookeep.cookeep.domain.dailyrecipe.entity.DailyRecipe;
+import com.cookeep.cookeep.domain.onboarding.application.WeeklyGoalService;
+import com.cookeep.cookeep.domain.onboarding.entity.GoalActionType;
 import com.cookeep.cookeep.domain.recipe.dao.AiRecipeRepository;
 import com.cookeep.cookeep.domain.recipe.entity.AiRecipe;
 import com.cookeep.cookeep.domain.user.application.UserReader;
@@ -37,9 +39,12 @@ public class DailyRecipeService {
     private final DailyRecipeRepository dailyRecipeRepository;
     private final AiRecipeRepository aiRecipeRepository;
     private final CookieService cookieService;
+    private final WeeklyGoalService weeklyGoalService;
     private final UserReader userReader;
     private final ObjectMapper objectMapper;
     private final S3Service s3Service;
+
+    public record DailyRecipeResult(DailyRecipe dailyRecipe, boolean weeklyGoalAchieved) {}
 
     // 채택된 AI 레시피 목록 조회
     @Transactional(readOnly = true)
@@ -55,8 +60,8 @@ public class DailyRecipeService {
     }
 
     // 데일리 레시피 등록
-    public DailyRecipe createDailyRecipe(Long userId, Long aiRecipeId, String title,
-                                         String description, String recipeImageUrl, Boolean isPublic) {
+    public DailyRecipeResult createDailyRecipe(Long userId, Long aiRecipeId, String title,
+                                               String description, String recipeImageUrl, Boolean isPublic) {
         User user = userReader.readById(userId);
 
         AiRecipe aiRecipe = aiRecipeRepository.findById(aiRecipeId)
@@ -88,12 +93,14 @@ public class DailyRecipeService {
         // 쿠키 지급: 레시피 기록 (1개)
         cookieService.updateCookie(userId, CookieLog.CookieLogType.BASIC_LOAD_RECIPE);
 
-        // 쿠키 추가 지급: 음식 사진 등록 시 (1개)
+        // 쿠키 추가 지급: 음식 사진 등록 시 (1개) + 주간 목표 진행
+        boolean goalAchieved = false;
         if (recipeImageUrl != null && !recipeImageUrl.isBlank()) {
             cookieService.updateCookie(userId, CookieLog.CookieLogType.BASIC_FOOD_PHOTO_REG);
+            goalAchieved = weeklyGoalService.handleGoalProgress(userId, GoalActionType.PHOTO_RECORD);
         }
 
-        return dailyRecipe;
+        return new DailyRecipeResult(dailyRecipe, goalAchieved);
     }
 
     // 데일리 레시피 상세 조회
@@ -106,8 +113,8 @@ public class DailyRecipeService {
     }
 
     // 데일리 레시피 수정 (제목, 한줄평, 사진)
-    public DailyRecipe updateDailyRecipe(Long userId, Long dailyRecipeId, String title, String description,
-                                         String recipeImageUrl, Boolean deleteRecipeImage) {
+    public DailyRecipeResult updateDailyRecipe(Long userId, Long dailyRecipeId, String title, String description,
+                                               String recipeImageUrl, Boolean deleteRecipeImage) {
         boolean isDeleteImage = Boolean.TRUE.equals(deleteRecipeImage);
 
         if ((title == null || title.isBlank())
@@ -139,7 +146,8 @@ public class DailyRecipeService {
             dailyRecipe.updateDescription(description);
         }
 
-        // 기존에 사진이 없었고 새로 사진을 추가하는 경우 쿠키 지급
+        // 기존에 사진이 없었고 새로 사진을 추가하는 경우 쿠키 지급 + 주간 목표 진행
+        boolean goalAchieved = false;
         if (recipeImageUrl != null && !recipeImageUrl.isBlank()) {
             if (recipeImageUrl.equals(dailyRecipe.getRecipeImageUrl())) {
                 throw new AppException(ErrorCode.DAILY_RECIPE_IMAGE_SAME_URL);
@@ -148,10 +156,11 @@ public class DailyRecipeService {
             dailyRecipe.updateRecipeImageUrl(recipeImageUrl);
             if (isNewPhotoAdded) {
                 cookieService.updateCookie(userId, CookieLog.CookieLogType.BASIC_FOOD_PHOTO_REG);
+                goalAchieved = weeklyGoalService.handleGoalProgress(userId, GoalActionType.PHOTO_RECORD);
             }
         }
 
-        return dailyRecipe;
+        return new DailyRecipeResult(dailyRecipe, goalAchieved);
     }
 
     // 데일리 레시피 공개 범위 수정

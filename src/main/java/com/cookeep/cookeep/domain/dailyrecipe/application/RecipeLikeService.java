@@ -7,6 +7,8 @@ import com.cookeep.cookeep.domain.dailyrecipe.dao.DailyRecipeRepository;
 import com.cookeep.cookeep.domain.dailyrecipe.dao.RecipeLikeRepository;
 import com.cookeep.cookeep.domain.dailyrecipe.entity.DailyRecipe;
 import com.cookeep.cookeep.domain.dailyrecipe.entity.RecipeLike;
+import com.cookeep.cookeep.domain.onboarding.application.WeeklyGoalService;
+import com.cookeep.cookeep.domain.onboarding.entity.GoalActionType;
 import com.cookeep.cookeep.domain.user.application.UserReader;
 import com.cookeep.cookeep.domain.user.entity.User;
 import lombok.RequiredArgsConstructor;
@@ -23,9 +25,12 @@ public class RecipeLikeService {
 	private final RecipeLikeRepository recipeLikeRepository;
 	private final DailyRecipeRepository dailyRecipeRepository;
 	private final UserReader userReader;
+	private final WeeklyGoalService weeklyGoalService;
+
+	public record ToggleLikeResult(boolean isLiked, boolean weeklyGoalAchieved) {}
 
 	// 좋아요 추가/삭제 토글
-	public boolean toggleLike(Long userId, Long dailyRecipeId) {
+	public ToggleLikeResult toggleLike(Long userId, Long dailyRecipeId) {
 		User user = userReader.readById(userId);
 		DailyRecipe dailyRecipe = dailyRecipeRepository.findById(dailyRecipeId)
 			.orElseThrow(() -> new AppException(ErrorCode.DAILY_RECIPE_NOT_FOUND));
@@ -41,7 +46,8 @@ public class RecipeLikeService {
 		if (existingLike.isPresent()) {
 			recipeLikeRepository.delete(existingLike.get());
 			dailyRecipe.decrementLikeCount();
-			return false; // 좋아요 취소
+			weeklyGoalService.handleGoalUndo(userId, GoalActionType.RECIPE_LIKE);
+			return new ToggleLikeResult(false, false); // 좋아요 취소
 		}
 
 		// 좋아요 추가
@@ -51,7 +57,8 @@ public class RecipeLikeService {
 			.build();
 		recipeLikeRepository.save(recipeLike);
 		dailyRecipe.incrementLikeCount();
-		return true; // 좋아요 추가
+		boolean goalAchieved = weeklyGoalService.handleGoalProgress(userId, GoalActionType.RECIPE_LIKE);
+		return new ToggleLikeResult(true, goalAchieved); // 좋아요 추가
 	}
 
 	// 특정 레시피의 좋아요 수 조회
