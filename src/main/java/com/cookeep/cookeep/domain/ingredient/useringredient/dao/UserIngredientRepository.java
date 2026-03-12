@@ -70,24 +70,16 @@ public interface UserIngredientRepository extends JpaRepository<UserIngredient, 
 
     // 카테고리별 분류 + 이름 검색 (storage 있을 때)
     @Query("""
-        SELECT ui FROM UserIngredient ui
-        WHERE ui.user.userId = :userId
-        AND ui.storage = :storage
-        AND (
-            EXISTS (
-                SELECT 1 FROM DefaultIngredient di
-                WHERE di.id = ui.referenceId
-                AND ui.type = 'DEFAULT'
-                AND LOWER(di.ingredient) LIKE LOWER(CONCAT('%', :searchQuery, '%'))
-            )
-            OR EXISTS (
-                SELECT 1 FROM CustomIngredient ci
-                WHERE ci.id = ui.referenceId
-                AND ui.type = 'CUSTOM'
-                AND LOWER(ci.name) LIKE LOWER(CONCAT('%', :searchQuery, '%'))
-            )
-        )
-    """)
+    SELECT ui FROM UserIngredient ui
+    LEFT JOIN DefaultIngredient di ON di.id = ui.referenceId AND ui.type = 'DEFAULT'
+    LEFT JOIN CustomIngredient ci ON ci.id = ui.referenceId AND ui.type = 'CUSTOM'
+    WHERE ui.user.userId = :userId
+    AND ui.storage = :storage
+    AND (
+        LOWER(di.ingredient) LIKE LOWER(CONCAT('%', :searchQuery, '%'))
+        OR LOWER(ci.name) LIKE LOWER(CONCAT('%', :searchQuery, '%'))
+    )
+""")
     Page<UserIngredient> searchIngredientsWithStorage(
             @Param("userId") Long userId,
             @Param("searchQuery") String searchQuery,
@@ -97,23 +89,15 @@ public interface UserIngredientRepository extends JpaRepository<UserIngredient, 
 
     // storage 없을 때 (전체 검색)
     @Query("""
-        SELECT ui FROM UserIngredient ui
-        WHERE ui.user.userId = :userId
-        AND (
-            EXISTS (
-                SELECT 1 FROM DefaultIngredient di
-                WHERE di.id = ui.referenceId
-                AND ui.type = 'DEFAULT'
-                AND LOWER(di.ingredient) LIKE LOWER(CONCAT('%', :searchQuery, '%'))
-            )
-            OR EXISTS (
-                SELECT 1 FROM CustomIngredient ci
-                WHERE ci.id = ui.referenceId
-                AND ui.type = 'CUSTOM'
-                AND LOWER(ci.name) LIKE LOWER(CONCAT('%', :searchQuery, '%'))
-            )
-        )
-    """)
+    SELECT ui FROM UserIngredient ui
+    LEFT JOIN DefaultIngredient di ON di.id = ui.referenceId AND ui.type = 'DEFAULT'
+    LEFT JOIN CustomIngredient ci ON ci.id = ui.referenceId AND ui.type = 'CUSTOM'
+    WHERE ui.user.userId = :userId
+    AND (
+        LOWER(di.ingredient) LIKE LOWER(CONCAT('%', :searchQuery, '%'))
+        OR LOWER(ci.name) LIKE LOWER(CONCAT('%', :searchQuery, '%'))
+    )
+""")
     Page<UserIngredient> searchIngredientsWithoutStorage(
             @Param("userId") Long userId,
             @Param("searchQuery") String searchQuery,
