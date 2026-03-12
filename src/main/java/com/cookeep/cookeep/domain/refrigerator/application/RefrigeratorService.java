@@ -134,6 +134,7 @@ public class RefrigeratorService {
                 .memo(userIngredient.getMemo())
                 .aiTip(aiTip)
                 .imageUrl(imageUrl)
+                .createdAt(userIngredient.getCreatedAt().toLocalDate())
                 .build();
     }
 

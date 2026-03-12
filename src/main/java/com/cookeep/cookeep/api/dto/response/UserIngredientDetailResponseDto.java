@@ -89,4 +89,7 @@ public class UserIngredientDetailResponseDto {
             requiredMode = Schema.RequiredMode.REQUIRED
     )
     private String imageUrl;
+
+    @Schema(description = "등록일자", example = "2026-04-12", type = "string", format = "date")
+    private LocalDate createdAt;
 }
