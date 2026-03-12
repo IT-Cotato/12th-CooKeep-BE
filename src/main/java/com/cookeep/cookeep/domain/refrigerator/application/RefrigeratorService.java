@@ -163,8 +163,9 @@ public class RefrigeratorService {
         Pageable pageable = PageRequest.of(page, size, sortCriteria);
 
         // 검색 실행
-        Page<UserIngredient> searchResults = userIngredientRepository
-                .searchIngredients(userId, processedQuery, storage, pageable);
+        Page<UserIngredient> searchResults = (storage != null)
+                ? userIngredientRepository.searchIngredientsWithStorage(userId, processedQuery, storage, pageable)
+                : userIngredientRepository.searchIngredientsWithoutStorage(userId, processedQuery, pageable);
 
         // 결과 변환
         List<RefrigeratorSearchResponseDto.SearchResultItem> items = searchResults.getContent()
