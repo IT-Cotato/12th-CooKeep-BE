@@ -61,6 +61,12 @@ public class WeeklyGoal extends BaseEntity {
 		}
 	}
 
+	public void decrementCount() {
+		if (!this.isAchieved && this.currentCount > 0) {
+			this.currentCount--;
+		}
+	}
+
 	public void initWeekStartDate() {
 		// 현재 날짜를 받아와서 해당 주차 시작일(월요일)로 값을 설정함
 		this.weekStartDate = LocalDate.now()
