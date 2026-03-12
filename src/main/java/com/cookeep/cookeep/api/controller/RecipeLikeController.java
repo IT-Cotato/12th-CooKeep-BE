@@ -49,13 +49,14 @@ public class RecipeLikeController {
 		@Parameter(description = "데일리 레시피 ID", required = true)
 		@PathVariable Long dailyRecipeId
 	) {
-		boolean isLiked = recipeLikeService.toggleLike(userId, dailyRecipeId);
+		RecipeLikeService.ToggleLikeResult result = recipeLikeService.toggleLike(userId, dailyRecipeId);
 		long likeCount = recipeLikeService.getLikeCount(dailyRecipeId);
 
 		RecipeLikeResponseDto response = RecipeLikeResponseDto.from(
 			dailyRecipeId,
-			isLiked,
-			(int) likeCount
+			result.isLiked(),
+			(int) likeCount,
+			result.weeklyGoalAchieved()
 		);
 
 		return ResponseEntity.ok(DataResponse.from(response));

@@ -27,12 +27,16 @@ public class DailyRecipeCreateResponseDto {
     @Schema(description = "등록 시각", example = "2026-02-07T14:30:00")
     private LocalDateTime createdAt;
 
-    public static DailyRecipeCreateResponseDto from(DailyRecipe dailyRecipe) {
+    @Schema(description = "이번 액션으로 주간 목표 달성 여부", example = "false")
+    private boolean weeklyGoalAchieved;
+
+    public static DailyRecipeCreateResponseDto from(DailyRecipe dailyRecipe, boolean weeklyGoalAchieved) {
         return DailyRecipeCreateResponseDto.builder()
                 .dailyRecipeId(dailyRecipe.getId())
                 .title(dailyRecipe.getTitle())
                 .message("새로운 데일리 레시피가 등록되었습니다.")
                 .createdAt(dailyRecipe.getCreatedAt())
+                .weeklyGoalAchieved(weeklyGoalAchieved)
                 .build();
     }
 }

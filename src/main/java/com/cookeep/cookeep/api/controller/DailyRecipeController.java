@@ -113,7 +113,7 @@ public class DailyRecipeController {
             @AuthenticationPrincipal(expression = "userId") Long userId,
             @Valid @RequestBody DailyRecipeCreateRequestDto request
     ) {
-        DailyRecipe dailyRecipe = dailyRecipeService.createDailyRecipe(
+        DailyRecipeService.DailyRecipeResult result = dailyRecipeService.createDailyRecipe(
                 userId,
                 request.getAiRecipeId(),
                 request.getTitle(),
@@ -123,7 +123,7 @@ public class DailyRecipeController {
         );
 
         return ResponseEntity.status(201)
-                .body(DataResponse.created(DailyRecipeCreateResponseDto.from(dailyRecipe)));
+                .body(DataResponse.created(DailyRecipeCreateResponseDto.from(result.dailyRecipe(), result.weeklyGoalAchieved())));
     }
 
     @Operation(
@@ -172,12 +172,12 @@ public class DailyRecipeController {
             @PathVariable Long dailyRecipeId,
             @Valid @RequestBody DailyRecipeUpdateRequestDto request
     ) {
-        DailyRecipe dailyRecipe = dailyRecipeService.updateDailyRecipe(
+        DailyRecipeService.DailyRecipeResult result = dailyRecipeService.updateDailyRecipe(
                 userId, dailyRecipeId, request.getTitle(), request.getDescription(),
                 request.getRecipeImageUrl(), request.getDeleteRecipeImage()
         );
 
-        return ResponseEntity.ok(DataResponse.from(DailyRecipeDetailResponseDto.from(dailyRecipe)));
+        return ResponseEntity.ok(DataResponse.from(DailyRecipeDetailResponseDto.from(result.dailyRecipe(), result.weeklyGoalAchieved())));
     }
 
     @Operation(
