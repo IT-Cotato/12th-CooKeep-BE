@@ -41,7 +41,14 @@ public class DailyRecipeDetailResponseDto {
     @Schema(description = "등록 시각", example = "2026-02-07T14:30:00")
     private LocalDateTime createdAt;
 
+    @Schema(description = "이번 액션으로 주간 목표 달성 여부 (수정 시에만 유효)", example = "false")
+    private boolean weeklyGoalAchieved;
+
     public static DailyRecipeDetailResponseDto from(DailyRecipe dailyRecipe) {
+        return from(dailyRecipe, false);
+    }
+
+    public static DailyRecipeDetailResponseDto from(DailyRecipe dailyRecipe, boolean weeklyGoalAchieved) {
         return DailyRecipeDetailResponseDto.builder()
                 .dailyRecipeId(dailyRecipe.getId())
                 .title(dailyRecipe.getTitle())
@@ -51,6 +58,7 @@ public class DailyRecipeDetailResponseDto {
                 .isPublic(dailyRecipe.getIsPublic())
                 .aiRecipeId(dailyRecipe.getAiRecipe() != null ? dailyRecipe.getAiRecipe().getId() : null)
                 .createdAt(dailyRecipe.getCreatedAt())
+                .weeklyGoalAchieved(weeklyGoalAchieved)
                 .build();
     }
 }
