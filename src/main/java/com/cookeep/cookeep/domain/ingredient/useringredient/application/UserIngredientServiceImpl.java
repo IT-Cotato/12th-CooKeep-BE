@@ -40,6 +40,7 @@ public class UserIngredientServiceImpl implements UserIngredientService {
     private final CustomIngredientRepository customIngredientRepository;
     private final ConsumptionReportService consumptionReportService;
     private final UserRepository userRepository;
+    private final RecentIngredientService recentIngredientService;
 
     // 1. 기본 정보 조회 (저장 안 함)
     @Override
@@ -76,24 +77,37 @@ public class UserIngredientServiceImpl implements UserIngredientService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
 
+        // 등록 배치 UUID 생성
+        String batchId = RecentIngredientService.generateBatchId();
+
         List<UserIngredientCreateResponseDto> results = requests.stream()
-                .map(req -> createOne(user, req))
+                .map(req -> createOne(user, req, batchId))
                 .toList();
+
+        // 최신 배치 ID 저장 (upsert)
+        recentIngredientService.saveBatch(userId, batchId);
 
         return UserIngredientListCreateResponseDto.of(results);
     }
 
-    private UserIngredientCreateResponseDto createOne(User user, UserIngredientCreateRequestDto req) {
+    private UserIngredientCreateResponseDto createOne(
+            User user,
+            UserIngredientCreateRequestDto req,
+            String batchId) {
 
         if (req.getType() == Type.DEFAULT) {
-            return createFromDefault(user, req);
+            return createFromDefault(user, req, batchId);
         } else {
-            return createFromCustom(user, req);
+            return createFromCustom(user, req, batchId);
         }
 
     }
 
-    private UserIngredientCreateResponseDto createFromDefault(User user, UserIngredientCreateRequestDto req) {
+    private UserIngredientCreateResponseDto createFromDefault(
+            User user,
+            UserIngredientCreateRequestDto req,
+            String batchId) {
+
         DefaultIngredient ref = defaultIngredientRepository.findById(req.getReferenceId())
                 .orElseThrow(() -> new AppException(ErrorCode.INGREDIENT_REFERENCE_NOT_FOUND));
 
@@ -112,6 +126,7 @@ public class UserIngredientServiceImpl implements UserIngredientService {
                 .storage(storage)
                 .expirationDate(expiration)
                 .memo(memo)
+                .batchId(batchId)
                 .build();
 
         UserIngredient saved = userIngredientRepository.save(entity);
@@ -122,7 +137,12 @@ public class UserIngredientServiceImpl implements UserIngredientService {
         return UserIngredientCreateResponseDto.of(entity, ref.getIngredient(), ref.getImageUrl());
     }
 
-    private UserIngredientCreateResponseDto createFromCustom(User user, UserIngredientCreateRequestDto req) {
+    private UserIngredientCreateResponseDto createFromCustom(
+            User user,
+            UserIngredientCreateRequestDto req,
+            String batchId
+            ) {
+
         CustomIngredient ref = customIngredientRepository
                 .findByIdAndUserId(req.getReferenceId(), user.getUserId())
                 .orElseThrow(() -> new AppException(ErrorCode.INGREDIENT_REFERENCE_NOT_FOUND));
@@ -142,6 +162,7 @@ public class UserIngredientServiceImpl implements UserIngredientService {
                 .storage(storage)
                 .expirationDate(expiration)
                 .memo(memo)
+                .batchId(batchId)
                 .build();
 
         UserIngredient saved = userIngredientRepository.save(entity);
