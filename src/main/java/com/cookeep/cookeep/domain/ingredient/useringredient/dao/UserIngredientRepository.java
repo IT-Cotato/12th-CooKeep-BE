@@ -132,4 +132,17 @@ public interface UserIngredientRepository extends JpaRepository<UserIngredient, 
             @Param("expirationDate") LocalDate expirationDate
     );
 
+    // 최근 식재료 조회 (batchId에 해당하는 식재료 응답)
+    @Query("""
+        SELECT ui
+        FROM UserIngredient ui
+        WHERE ui.user.userId = :userId
+          AND ui.batchId = :batchId
+        ORDER BY ui.ingredientId ASC
+    """)
+    List<UserIngredient> findByUserIdAndBatchId(
+            @Param("userId") Long userId,
+            @Param("batchId") String batchId
+    );
+
 }
