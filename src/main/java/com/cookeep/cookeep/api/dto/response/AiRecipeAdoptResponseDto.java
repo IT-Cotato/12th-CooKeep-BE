@@ -43,4 +43,8 @@ public class AiRecipeAdoptResponseDto {
             requiredMode = Schema.RequiredMode.REQUIRED
     )
     private LocalDateTime completedAt;
+
+    @Schema(description = "이번 채택으로 주간 목표 달성 여부", example = "false")
+    private boolean weeklyGoalAchieved;
+
 }
