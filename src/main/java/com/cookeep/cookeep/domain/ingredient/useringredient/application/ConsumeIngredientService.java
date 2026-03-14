@@ -78,13 +78,17 @@ public class ConsumeIngredientService {
                 .filter(ui -> ui.getLeftDays() == 0)
                 .count();
 
+        boolean weeklyGoalAchieved = false;
         // 재료 소비(1개) n(소비 재료 수)번 호출하여 카운트
         for (int i = 0; i < urgentCount; i++) {
-            weeklyGoalService.handleGoalProgress(userId, GoalActionType.USE_EXPIRING_INGREDIENT);
+            // 목표 달성 시점에 true로 갱신
+            if (weeklyGoalService.handleGoalProgress(userId, GoalActionType.USE_EXPIRING_INGREDIENT)) {
+                weeklyGoalAchieved = true;
+            }
         }
 
-        log.info("User {} consumed {} ingredients via manual action. Reward granted: {}, points: {}",
-                userId, userIngredients.size(), granted, points);
+        log.info("User {} consumed {} ingredients via manual action. Reward granted: {}, points: {}, urgentCount: {}",
+                userId, userIngredients.size(), granted, points, urgentCount);
 
         return ConsumeIngredientsResponseDto.of(granted, points, grantedTypes);
     }
