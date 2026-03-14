@@ -238,6 +238,137 @@ class WeeklyGoalServiceTest {
         }
     }
 
+    @Nested
+    @DisplayName("handleGoalProgress - COOKING 목표")
+    class CookingGoal {
+
+        @Test
+        @DisplayName("COOKING 목표 달성 시 true를 반환하고 쿠키를 지급한다")
+        void COOKING_목표달성_true반환_쿠키지급() {
+            WeeklyGoal goal = buildGoal(GoalActionType.COOKING, 3, 2); // 2/3 진행 중
+            given(weeklyGoalRepository.findFirstByUserAndWeekStartDateOrderByCreatedAtDesc(user, weekStart))
+                    .willReturn(Optional.of(goal));
+
+            boolean result = weeklyGoalService.handleGoalProgress(1L, GoalActionType.COOKING);
+
+            assertThat(result).isTrue();
+            assertThat(goal.getCurrentCount()).isEqualTo(3);
+            assertThat(goal.isAchieved()).isTrue();
+            verify(cookieService).updateCookie(1L, CookieLog.CookieLogType.BONUS_WEEKLY_GOAL_ACHIEVE);
+        }
+
+        @Test
+        @DisplayName("COOKING 목표 타입 불일치 시 false를 반환한다")
+        void COOKING_목표타입불일치_false반환() {
+            WeeklyGoal goal = buildGoal(GoalActionType.RECIPE_LIKE, 1, 0);
+            given(weeklyGoalRepository.findFirstByUserAndWeekStartDateOrderByCreatedAtDesc(user, weekStart))
+                    .willReturn(Optional.of(goal));
+
+            boolean result = weeklyGoalService.handleGoalProgress(1L, GoalActionType.COOKING);
+
+            assertThat(result).isFalse();
+            assertThat(goal.getCurrentCount()).isZero();
+            verifyNoInteractions(cookieService);
+        }
+
+        @Test
+        @DisplayName("COOKING 목표 미달성 카운트 증가 시 false를 반환한다")
+        void COOKING_카운트증가_미달성_false반환() {
+            WeeklyGoal goal = buildGoal(GoalActionType.COOKING, 5, 0);
+            given(weeklyGoalRepository.findFirstByUserAndWeekStartDateOrderByCreatedAtDesc(user, weekStart))
+                    .willReturn(Optional.of(goal));
+
+            boolean result = weeklyGoalService.handleGoalProgress(1L, GoalActionType.COOKING);
+
+            assertThat(result).isFalse();
+            assertThat(goal.getCurrentCount()).isEqualTo(1);
+            assertThat(goal.isAchieved()).isFalse();
+            verifyNoInteractions(cookieService);
+        }
+
+        @Test
+        @DisplayName("COOKING 이미 달성된 목표는 추가 카운트 없이 false를 반환한다")
+        void COOKING_이미달성_false반환() {
+            WeeklyGoal goal = buildGoal(GoalActionType.COOKING, 1, 0);
+            goal.incrementCount(); // isAchieved=true
+
+            given(weeklyGoalRepository.findFirstByUserAndWeekStartDateOrderByCreatedAtDesc(user, weekStart))
+                    .willReturn(Optional.of(goal));
+
+            boolean result = weeklyGoalService.handleGoalProgress(1L, GoalActionType.COOKING);
+
+            assertThat(result).isFalse();
+            assertThat(goal.getCurrentCount()).isEqualTo(1); // 그대로
+            verifyNoInteractions(cookieService);
+        }
+    }
+
+    @Nested
+    @DisplayName("handleGoalProgress - USE_EXPIRING_INGREDIENT 목표")
+    class UseExpiringIngredientGoal {
+
+        @Test
+        @DisplayName("USE_EXPIRING_INGREDIENT 목표 달성 시 true를 반환하고 쿠키를 지급한다")
+        void 임박재료_목표달성_true반환_쿠키지급() {
+            WeeklyGoal goal = buildGoal(GoalActionType.USE_EXPIRING_INGREDIENT, 2, 1); // 1/2 진행 중
+            given(weeklyGoalRepository.findFirstByUserAndWeekStartDateOrderByCreatedAtDesc(user, weekStart))
+                    .willReturn(Optional.of(goal));
+
+            boolean result = weeklyGoalService.handleGoalProgress(1L, GoalActionType.USE_EXPIRING_INGREDIENT);
+
+            assertThat(result).isTrue();
+            assertThat(goal.getCurrentCount()).isEqualTo(2);
+            assertThat(goal.isAchieved()).isTrue();
+            verify(cookieService).updateCookie(1L, CookieLog.CookieLogType.BONUS_WEEKLY_GOAL_ACHIEVE);
+        }
+
+        @Test
+        @DisplayName("임박 재료 3개를 1개씩 호출하면 쿠키는 목표 달성 시 1회만 지급된다")
+        void 임박재료_3회호출_쿠키_1회지급() {
+            WeeklyGoal goal = buildGoal(GoalActionType.USE_EXPIRING_INGREDIENT, 3, 0);
+            given(weeklyGoalRepository.findFirstByUserAndWeekStartDateOrderByCreatedAtDesc(user, weekStart))
+                    .willReturn(Optional.of(goal));
+
+            weeklyGoalService.handleGoalProgress(1L, GoalActionType.USE_EXPIRING_INGREDIENT); // 1/3
+            weeklyGoalService.handleGoalProgress(1L, GoalActionType.USE_EXPIRING_INGREDIENT); // 2/3
+            weeklyGoalService.handleGoalProgress(1L, GoalActionType.USE_EXPIRING_INGREDIENT); // 3/3 달성
+
+            assertThat(goal.isAchieved()).isTrue();
+            verify(cookieService, times(1))
+                    .updateCookie(1L, CookieLog.CookieLogType.BONUS_WEEKLY_GOAL_ACHIEVE);
+        }
+
+        @Test
+        @DisplayName("USE_EXPIRING_INGREDIENT 목표 타입 불일치 시 false를 반환한다")
+        void 임박재료_타입불일치_false반환() {
+            WeeklyGoal goal = buildGoal(GoalActionType.COOKING, 1, 0);
+            given(weeklyGoalRepository.findFirstByUserAndWeekStartDateOrderByCreatedAtDesc(user, weekStart))
+                    .willReturn(Optional.of(goal));
+
+            boolean result = weeklyGoalService.handleGoalProgress(1L, GoalActionType.USE_EXPIRING_INGREDIENT);
+
+            assertThat(result).isFalse();
+            assertThat(goal.getCurrentCount()).isZero();
+            verifyNoInteractions(cookieService);
+        }
+
+        @Test
+        @DisplayName("달성 이후 추가 호출 시 쿠키가 중복 지급되지 않는다")
+        void 달성후_추가호출_쿠키_중복지급없음() {
+            WeeklyGoal goal = buildGoal(GoalActionType.USE_EXPIRING_INGREDIENT, 1, 0);
+            given(weeklyGoalRepository.findFirstByUserAndWeekStartDateOrderByCreatedAtDesc(user, weekStart))
+                    .willReturn(Optional.of(goal));
+
+            weeklyGoalService.handleGoalProgress(1L, GoalActionType.USE_EXPIRING_INGREDIENT); // 달성
+            weeklyGoalService.handleGoalProgress(1L, GoalActionType.USE_EXPIRING_INGREDIENT); // 추가 호출
+            weeklyGoalService.handleGoalProgress(1L, GoalActionType.USE_EXPIRING_INGREDIENT); // 추가 호출
+
+            // 쿠키는 최초 달성 시 1회만 지급
+            verify(cookieService, times(1))
+                    .updateCookie(1L, CookieLog.CookieLogType.BONUS_WEEKLY_GOAL_ACHIEVE);
+        }
+    }
+
     // 테스트용 WeeklyGoal 빌더 헬퍼
     private WeeklyGoal buildGoal(GoalActionType actionType, int targetCount, int initialCount) {
         WeeklyGoal goal = WeeklyGoal.builder()
