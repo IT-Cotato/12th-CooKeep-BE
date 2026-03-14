@@ -24,7 +24,7 @@ public class CookeepsController {
 
 	private final CookeepsService cookeepsService;
 
-	@Operation(summary = "이번 주 랭킹 조회", description = "이번 주 물주기 횟수 Top 3 유저와 좋아요 Top 3 레시피를 조회합니다.")
+	@Operation(summary = "쿠킵스 랭킹 조회", description = "이번 달 물주기 횟수 Top 3 유저와 이번주 좋아요 Top 3 레시피를 조회합니다.")
 	@ApiResponses(value = {
 		@ApiResponse(responseCode = "200", description = "조회 성공")
 	})
