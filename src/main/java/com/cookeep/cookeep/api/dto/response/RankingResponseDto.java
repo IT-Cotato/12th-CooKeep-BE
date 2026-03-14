@@ -10,6 +10,7 @@ import java.util.List;
 public class RankingResponseDto {
 	private List<WateringRankDto> wateringRanking;
 	private List<RecipeRankDto> recipeRanking;
+	private Long myWateringCount;
 
 	@Getter
 	@Builder

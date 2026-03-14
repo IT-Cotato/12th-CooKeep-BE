@@ -36,7 +36,7 @@ public class CookeepsService {
 	private final DailyRecipeRepository dailyRecipeRepository;
 
 	@Transactional(readOnly = true)
-	public RankingResponseDto getRanking() {
+	public RankingResponseDto getRanking(Long userId) {
 		LocalDateTime monthStart = LocalDate.now().withDayOfMonth(1).atStartOfDay();
 		LocalDateTime monthEnd = monthStart.plusMonths(1);
 
@@ -47,10 +47,12 @@ public class CookeepsService {
 
 		List<WateringRankDto> wateringRanking = getWateringRanking(monthStart, monthEnd);
 		List<RecipeRankDto> recipeRanking = getRecipeRanking(weekStart, weekEnd);
+		Long myWateringCount = wateringLogRepository.countByUserAndMonth(userId, monthStart, monthEnd);
 
 		return RankingResponseDto.builder()
 			.wateringRanking(wateringRanking)
 			.recipeRanking(recipeRanking)
+			.myWateringCount(myWateringCount)
 			.build();
 	}
 

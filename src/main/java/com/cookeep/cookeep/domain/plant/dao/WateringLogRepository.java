@@ -14,6 +14,15 @@ import java.util.List;
 public interface WateringLogRepository extends JpaRepository<WateringLog, Long> {
     boolean existsByUserUserId(Long userId);
 
+    // 특정 유저의 이번 달 물주기 횟수 조회
+    @Query("SELECT COUNT(w) FROM WateringLog w " +
+           "WHERE w.user.userId = :userId " +
+           "AND w.createdAt >= :monthStart AND w.createdAt < :monthEnd")
+    Long countByUserAndMonth(
+            @Param("userId") Long userId,
+            @Param("monthStart") LocalDateTime monthStart,
+            @Param("monthEnd") LocalDateTime monthEnd);
+
     // 이번 달 물주기 횟수 Top N 유저 조회
     @Query("SELECT w.user, COUNT(w) FROM WateringLog w " +
            "WHERE w.createdAt >= :monthStart AND w.createdAt < :monthEnd " +

@@ -13,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @Tag(name = "쿠킵스", description = "쿠킵스 관련 API")
@@ -28,8 +29,9 @@ public class CookeepsController {
 		@ApiResponse(responseCode = "200", description = "조회 성공")
 	})
 	@GetMapping("/ranking")
-	public ResponseEntity<DataResponse<RankingResponseDto>> getRanking() {
-		return ResponseEntity.ok(DataResponse.from(cookeepsService.getRanking()));
+	public ResponseEntity<DataResponse<RankingResponseDto>> getRanking(
+			@AuthenticationPrincipal(expression = "userId") Long userId) {
+		return ResponseEntity.ok(DataResponse.from(cookeepsService.getRanking(userId)));
 	}
 
 	@Operation(summary = "이번 주 레시피 전체보기", description = "이번 주차에 올라온 레시피들을 정렬 필터와 함께 조회합니다.")
