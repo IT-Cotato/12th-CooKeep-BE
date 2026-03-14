@@ -1,4 +1,4 @@
-package com.cookeep.cookeep.domain.dailyrecipe.application;
+package com.cookeep.cookeep.domain.recipe.application;
 
 import com.cookeep.cookeep.api.dto.response.AiRecipeAdoptResponseDto;
 import com.cookeep.cookeep.domain.cookie.application.CookieService;
@@ -13,9 +13,6 @@ import com.cookeep.cookeep.domain.ingredient.useringredient.entity.UserIngredien
 import com.cookeep.cookeep.domain.mycookeep.application.ConsumptionReportService;
 import com.cookeep.cookeep.domain.onboarding.application.WeeklyGoalService;
 import com.cookeep.cookeep.domain.onboarding.entity.GoalActionType;
-import com.cookeep.cookeep.domain.recipe.application.AiRecipeService;
-import com.cookeep.cookeep.domain.recipe.application.GeminiService;
-import com.cookeep.cookeep.domain.recipe.application.YoutubeSearchService;
 import com.cookeep.cookeep.domain.recipe.dao.AiMessageRepository;
 import com.cookeep.cookeep.domain.recipe.dao.AiRecipeRepository;
 import com.cookeep.cookeep.domain.recipe.dao.AiSessionRepository;

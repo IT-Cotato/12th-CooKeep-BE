@@ -1,4 +1,4 @@
-package com.cookeep.cookeep.domain.dailyrecipe.application;
+package com.cookeep.cookeep.domain.ingredient.application;
 
 import com.cookeep.cookeep.api.dto.request.ConsumeIngredientsRequestDto;
 import com.cookeep.cookeep.api.dto.response.ConsumeIngredientsResponseDto;
