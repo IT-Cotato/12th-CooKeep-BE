@@ -9,6 +9,8 @@ import com.cookeep.cookeep.domain.cookie.entity.CookieLog;
 import com.cookeep.cookeep.domain.ingredient.useringredient.dao.UserIngredientRepository;
 import com.cookeep.cookeep.domain.ingredient.useringredient.entity.UserIngredient;
 import com.cookeep.cookeep.domain.mycookeep.application.ConsumptionReportService;
+import com.cookeep.cookeep.domain.onboarding.application.WeeklyGoalService;
+import com.cookeep.cookeep.domain.onboarding.entity.GoalActionType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -27,6 +29,7 @@ public class ConsumeIngredientService {
     private final UserIngredientRepository userIngredientRepository;
     private final CookieService cookieService;
     private final ConsumptionReportService consumptionReportService;
+    private final WeeklyGoalService weeklyGoalService;
 
     // 식재료 섭취 완료
     @Transactional
@@ -69,6 +72,16 @@ public class ConsumeIngredientService {
 
         // 5. 재료 삭제
         userIngredientRepository.deleteAll(userIngredients);
+
+        // 임박 재료 1개 소비 시 카운트 증가 (주간 목표: 유통기한 임박 재료 n개 사용하기)
+        long urgentCount = userIngredients.stream()
+                .filter(ui -> ui.getLeftDays() == 0)
+                .count();
+
+        // 재료 소비(1개) n(소비 재료 수)번 호출하여 카운트
+        for (int i = 0; i < urgentCount; i++) {
+            weeklyGoalService.handleGoalProgress(userId, GoalActionType.USE_EXPIRING_INGREDIENT);
+        }
 
         log.info("User {} consumed {} ingredients via manual action. Reward granted: {}, points: {}",
                 userId, userIngredients.size(), granted, points);
