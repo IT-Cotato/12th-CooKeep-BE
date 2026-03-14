@@ -36,25 +36,30 @@ public class CookeepsService {
 	private final DailyRecipeRepository dailyRecipeRepository;
 
 	@Transactional(readOnly = true)
-	public RankingResponseDto getRanking() {
+	public RankingResponseDto getRanking(Long userId) {
+		LocalDateTime monthStart = LocalDate.now().withDayOfMonth(1).atStartOfDay();
+		LocalDateTime monthEnd = monthStart.plusMonths(1);
+
 		LocalDateTime weekStart = LocalDate.now()
 			.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
 			.atStartOfDay();
 		LocalDateTime weekEnd = weekStart.plusDays(7);
 
-		List<WateringRankDto> wateringRanking = getWateringRanking(weekStart, weekEnd);
+		List<WateringRankDto> wateringRanking = getWateringRanking(monthStart, monthEnd);
 		List<RecipeRankDto> recipeRanking = getRecipeRanking(weekStart, weekEnd);
+		Long myWateringCount = wateringLogRepository.countByUserAndMonth(userId, monthStart, monthEnd);
 
 		return RankingResponseDto.builder()
 			.wateringRanking(wateringRanking)
 			.recipeRanking(recipeRanking)
+			.myWateringCount(myWateringCount)
 			.build();
 	}
 
-	private List<WateringRankDto> getWateringRanking(LocalDateTime weekStart, LocalDateTime weekEnd) {
-		// 1단계: 이번 주 물주기 상위 3명 조회
+	private List<WateringRankDto> getWateringRanking(LocalDateTime monthStart, LocalDateTime monthEnd) {
+		// 1단계: 이번 달 물주기 상위 3명 조회
 		List<Object[]> results = wateringLogRepository.findTopWateringUsers(
-			weekStart, weekEnd, PageRequest.of(0, 3));
+			monthStart, monthEnd, PageRequest.of(0, 3));
 		
 		// 2단계: 인덱스를 포함한 스트림 처리
 		return IntStream.range(0, results.size()) // 0부터 results 크기-1까지

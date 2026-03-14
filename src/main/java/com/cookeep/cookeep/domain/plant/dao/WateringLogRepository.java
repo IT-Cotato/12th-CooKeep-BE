@@ -14,12 +14,21 @@ import java.util.List;
 public interface WateringLogRepository extends JpaRepository<WateringLog, Long> {
     boolean existsByUserUserId(Long userId);
 
-    // 이번 주 물주기 횟수 Top N 유저 조회
+    // 특정 유저의 이번 달 물주기 횟수 조회
+    @Query("SELECT COUNT(w) FROM WateringLog w " +
+           "WHERE w.user.userId = :userId " +
+           "AND w.createdAt >= :monthStart AND w.createdAt < :monthEnd")
+    Long countByUserAndMonth(
+            @Param("userId") Long userId,
+            @Param("monthStart") LocalDateTime monthStart,
+            @Param("monthEnd") LocalDateTime monthEnd);
+
+    // 이번 달 물주기 횟수 Top N 유저 조회
     @Query("SELECT w.user, COUNT(w) FROM WateringLog w " +
-           "WHERE w.createdAt >= :weekStart AND w.createdAt < :weekEnd " +
+           "WHERE w.createdAt >= :monthStart AND w.createdAt < :monthEnd " +
            "GROUP BY w.user ORDER BY COUNT(w) DESC")
     List<Object[]> findTopWateringUsers(
-            @Param("weekStart") LocalDateTime weekStart,
-            @Param("weekEnd") LocalDateTime weekEnd,
+            @Param("monthStart") LocalDateTime monthStart,
+            @Param("monthEnd") LocalDateTime monthEnd,
             Pageable pageable);
 }
