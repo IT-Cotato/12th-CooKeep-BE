@@ -52,6 +52,9 @@ public class UserIngredient extends BaseEntity {
     @Column(name = "left_days", nullable = false)
     private Integer leftDays;
 
+    @Column(name = "batch_id", length = 36, nullable = true)
+    private String batchId;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
@@ -64,7 +67,8 @@ public class UserIngredient extends BaseEntity {
             Unit unit, Storage storage,
             LocalDate expirationDate,
             String memo,
-            User user) {
+            User user,
+            String batchId) {
 
         this.type = type;
         this.referenceId = referenceId;
@@ -74,6 +78,7 @@ public class UserIngredient extends BaseEntity {
         this.expirationDate = expirationDate;
         this.memo = memo;
         this.user = user;
+        this.batchId = batchId;
         this.leftDays = calculateLeftDays(expirationDate);
     }
 
