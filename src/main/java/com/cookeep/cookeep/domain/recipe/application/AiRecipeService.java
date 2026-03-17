@@ -21,6 +21,8 @@ import com.cookeep.cookeep.domain.ingredient.defaultingredient.entity.DefaultIng
 import com.cookeep.cookeep.domain.ingredient.useringredient.dao.UserIngredientRepository;
 import com.cookeep.cookeep.domain.ingredient.useringredient.entity.UserIngredient;
 import com.cookeep.cookeep.domain.mycookeep.application.ConsumptionReportService;
+import com.cookeep.cookeep.domain.onboarding.application.WeeklyGoalService;
+import com.cookeep.cookeep.domain.onboarding.entity.GoalActionType;
 import com.cookeep.cookeep.domain.recipe.dao.AiMessageRepository;
 import com.cookeep.cookeep.domain.recipe.dao.AiRecipeRepository;
 import com.cookeep.cookeep.domain.recipe.dao.AiSessionRepository;
@@ -65,6 +67,7 @@ public class AiRecipeService {
     private final YoutubeSearchService youtubeSearchService;
     private final ConsumptionReportService consumptionReportService;
     private final DailyRecipeRepository dailyRecipeRepository;
+    private final WeeklyGoalService weeklyGoalService;
 
     // sessionId 유무에 따라 신규/재요청 로직 분기
     public AiRecipeResponseDto generateRecipe(Long userId, AiRecipeRequestDto request) {
@@ -238,6 +241,9 @@ public class AiRecipeService {
         // 6. 세션 완료 처리
         session.complete();
 
+        // 레시피 채택 시 카운트 증가 (주간 목표: 주 n회 요리하기)
+        boolean cookingGoalAchieved = weeklyGoalService.handleGoalProgress(userId, GoalActionType.COOKING);
+
         // 7. 세션의 ingredientIds 조회
         List<Long> ingredientIds;
         try {
@@ -261,6 +267,7 @@ public class AiRecipeService {
                 .recipeId(savedRecipe.getId())
                 .message("레시피가 성공적으로 채택되었습니다.")
                 .completedAt(session.getCompletedAt())
+                .weeklyGoalAchieved(cookingGoalAchieved)
                 .build();
     }
 
