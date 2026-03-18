@@ -76,9 +76,7 @@ public class RecentIngredientService {
         }
 
         // 3단계: DTO 변환
-        List<RecentIngredientsResponseDto.RecentIngredientItem> items = deduplicated.stream()
-                .map(this::toItem)
-                .toList();
+        List<RecentIngredientsResponseDto.RecentIngredientItem> items = toItems(deduplicated);
 
         return RecentIngredientsResponseDto.builder()
                 .ingredients(items)
@@ -106,44 +104,54 @@ public class RecentIngredientService {
         return UUID.randomUUID().toString();
     }
 
-    // 내부 메서드
-    private RecentIngredientsResponseDto buildResponse(Long userId, String batchId) {
-        List<UserIngredient> ingredients =
-                userIngredientRepository.findByUserIdAndBatchId(userId, batchId);
+    private List<RecentIngredientsResponseDto.RecentIngredientItem> toItems(List<UserIngredient> ingredients) {
 
-        List<RecentIngredientsResponseDto.RecentIngredientItem> items = ingredients.stream()
-                .map(this::toItem)
+        // referenceId를 타입별로 분리
+        List<Long> defaultIds = ingredients.stream()
+                .filter(ui -> ui.getType() == Type.DEFAULT)
+                .map(UserIngredient::getReferenceId)
+                .distinct()
                 .toList();
 
-        return RecentIngredientsResponseDto.builder()
-                .ingredients(items)
-                .build();
-    }
+        List<Long> customIds = ingredients.stream()
+                .filter(ui -> ui.getType() == Type.CUSTOM)
+                .map(UserIngredient::getReferenceId)
+                .distinct()
+                .toList();
 
-    private RecentIngredientsResponseDto.RecentIngredientItem toItem(UserIngredient ui) {
-        String name;
-        String imageUrl;
+        // 타입별 1번씩만 조회 후 Map으로 변환
+        Map<Long, DefaultIngredient> defaultMap = defaultIngredientRepository
+                .findAllById(defaultIds).stream()
+                .collect(Collectors.toMap(DefaultIngredient::getId, d -> d));
 
-        if (ui.getType() == Type.DEFAULT) {
-            DefaultIngredient ref = defaultIngredientRepository
-                    .findById(ui.getReferenceId())
-                    .orElse(null);
-            name = ref != null ? ref.getIngredient() : "Unknown";
-            imageUrl = ref != null ? ref.getImageUrl() : "";
-        } else {
-            CustomIngredient ref = customIngredientRepository
-                    .findById(ui.getReferenceId())
-                    .orElse(null);
-            name = ref != null ? ref.getName() : "Unknown";
-            imageUrl = ref != null ? ref.getImageUrl() : "";
-        }
+        Map<Long, CustomIngredient> customMap = customIngredientRepository
+                .findAllById(customIds).stream()
+                .collect(Collectors.toMap(CustomIngredient::getId, c -> c));
 
-        return RecentIngredientsResponseDto.RecentIngredientItem.builder()
-                .ingredientId(ui.getIngredientId())
-                .type(ui.getType().name())
-                .name(name)
-                .imageUrl(imageUrl)
-                .build();
+        // 매핑
+        return ingredients.stream()
+                .map(ui -> {
+                    String name;
+                    String imageUrl;
+
+                    if (ui.getType() == Type.DEFAULT) {
+                        DefaultIngredient ref = defaultMap.get(ui.getReferenceId());
+                        imageUrl = ref.getImageUrl();
+                        name = ref.getIngredient();
+                    } else {
+                        CustomIngredient ref = customMap.get(ui.getReferenceId());
+                        name = ref.getName();
+                        imageUrl = ref.getImageUrl();
+                    }
+
+                    return RecentIngredientsResponseDto.RecentIngredientItem.builder()
+                            .ingredientId(ui.getIngredientId())
+                            .type(ui.getType().name())
+                            .name(name)
+                            .imageUrl(imageUrl)
+                            .build();
+                })
+                .toList();
     }
 
 }
