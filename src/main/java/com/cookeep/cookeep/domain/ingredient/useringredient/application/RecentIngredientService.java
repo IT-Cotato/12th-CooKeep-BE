@@ -34,13 +34,12 @@ public class RecentIngredientService {
     private final CustomIngredientRepository customIngredientRepository;
     private final UserRepository userRepository;
 
-    // 유저의 직전 배치에 해당하는 재료 목록 반환 (첫 등록은 빈 리스트)
+    // 최근 추가한 순으로 최대 6개 재료 목록 반환 (첫 등록은 빈 리스트)
     public RecentIngredientsResponseDto getRecentIngredients(Long userId) {
         if (userId == null) {
             throw new AppException(ErrorCode.UNAUTHORIZED);
         }
 
-        // 1. 유저의 배치 이력을 최신순으로 조회
         List<RecentIngredientBatch> batches =
                 batchRepository.findByUser_UserIdOrderByCreatedAtDesc(userId);
 
@@ -50,32 +49,34 @@ public class RecentIngredientService {
                     .build();
         }
 
-        // 결과 담을 리스트 (순서 유지)
-        List<UserIngredient> resultIngredients = new ArrayList<>();
-        // 2. 중복 체크: type + referenceId 조합으로 판단
-        Set<String> seenKeys = new LinkedHashSet<>();
+        // 1단계: 최신 배치부터 역순으로 총 6개 행 수집 (중복 포함)
+        List<UserIngredient> collectedRaw = new ArrayList<>();
 
         for (RecentIngredientBatch batch : batches) {
-            if (seenKeys.size() >= MAX_RECENT_COUNT) break;
+            if (collectedRaw.size() >= MAX_RECENT_COUNT) break;
 
-            // 해당 배치의 재료 ID 목록 조회 (등록 순서 오름차순)
             List<UserIngredient> batchIngredients =
                     userIngredientRepository.findByUserIdAndBatchId(userId, batch.getBatchId());
 
-            // 배치 내 재료를 앞에서부터 추가 (LinkedHashSet가 중복 제거)
             for (UserIngredient ui : batchIngredients) {
-                String key = ui.getType().name() + "_" + ui.getReferenceId(); // 중복 기준
-                if (!seenKeys.contains(key)) {
-                    seenKeys.add(key);
-                    resultIngredients.add(ui);
-                }
-                // 6개 초과하면 중단
-                if (seenKeys.size() >= MAX_RECENT_COUNT) break;
+                collectedRaw.add(ui);
+                if (collectedRaw.size() >= MAX_RECENT_COUNT) break;
             }
         }
 
-        // 3. 수집된 ID 목록으로 재료 정보 조회 및 DTO 변환
-        List<RecentIngredientsResponseDto.RecentIngredientItem> items = resultIngredients.stream()
+        // 2단계: type + referenceId 기준 중복 제거 (순서 유지)
+        Set<String> seenKeys = new LinkedHashSet<>();
+        List<UserIngredient> deduplicated = new ArrayList<>();
+
+        for (UserIngredient ui : collectedRaw) {
+            String key = ui.getType().name() + "_" + ui.getReferenceId();
+            if (seenKeys.add(key)) { // add()는 중복이면 false 반환
+                deduplicated.add(ui);
+            }
+        }
+
+        // 3단계: DTO 변환
+        List<RecentIngredientsResponseDto.RecentIngredientItem> items = deduplicated.stream()
                 .map(this::toItem)
                 .toList();
 
