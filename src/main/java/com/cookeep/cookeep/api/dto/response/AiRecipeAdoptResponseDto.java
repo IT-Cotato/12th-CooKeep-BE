@@ -44,7 +44,9 @@ public class AiRecipeAdoptResponseDto {
     )
     private LocalDateTime completedAt;
 
-    @Schema(description = "이번 채택으로 주간 목표 달성 여부", example = "false")
+    @Schema(
+            description = "이번 채택으로 주간 목표 달성 여부 (COOKING / USE_EXPIRING_INGREDIENT)",
+            example = "false"
+    )
     private boolean weeklyGoalAchieved;
-
 }
