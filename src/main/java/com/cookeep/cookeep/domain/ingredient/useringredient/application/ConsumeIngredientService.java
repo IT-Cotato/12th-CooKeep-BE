@@ -26,6 +26,8 @@ import java.util.List;
 @Transactional(readOnly = true)
 public class ConsumeIngredientService {
 
+    private static final int URGENT = 0;
+
     private final UserIngredientRepository userIngredientRepository;
     private final CookieService cookieService;
     private final ConsumptionReportService consumptionReportService;
@@ -75,7 +77,7 @@ public class ConsumeIngredientService {
 
         // 6. 임박 재료(leftDays=0) 개수만큼 주간 목표(USE_EXPIRING_INGREDIENT) 카운트 증가
         long urgentCount = userIngredients.stream()
-                .filter(ui -> ui.getLeftDays() == 0)
+                .filter(ui -> ui.getLeftDays() == URGENT)
                 .count();
 
         boolean weeklyGoalAchieved = false;
