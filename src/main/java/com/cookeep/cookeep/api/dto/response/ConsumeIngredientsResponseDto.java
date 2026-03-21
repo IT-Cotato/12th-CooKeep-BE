@@ -23,7 +23,7 @@ public class ConsumeIngredientsResponseDto {
     )
     private RewardInfo reward;
 
-    @Schema(description = "이번 소비로 주간 목표(유통기한 임박 재료 사용하기) 달성 여부", example = "false")
+    @Schema(description = "이번 소비로 주간 목표(COOKING) 달성 여부", example = "false")
     private boolean weeklyGoalAchieved;
 
     @Getter
@@ -52,19 +52,11 @@ public class ConsumeIngredientsResponseDto {
         private List<CookieLog.CookieLogType> grantedTypes;
     }
 
-    public static ConsumeIngredientsResponseDto of(boolean granted, int points, List<CookieLog.CookieLogType> grantedTypes) {
-        return ConsumeIngredientsResponseDto.builder()
-                .reward(RewardInfo.builder()
-                        .granted(granted)
-                        .points(points)
-                        .grantedTypes(grantedTypes)
-                        .build())
-                .weeklyGoalAchieved(false)
-                .build();
-    }
-
-    public static ConsumeIngredientsResponseDto of(boolean granted, int points,
-                                                   List<CookieLog.CookieLogType> grantedTypes, boolean weeklyGoalAchieved) {
+    public static ConsumeIngredientsResponseDto of(
+            boolean granted,
+            int points,
+            List<CookieLog.CookieLogType> grantedTypes,
+            boolean weeklyGoalAchieved) {
         return ConsumeIngredientsResponseDto.builder()
                 .reward(RewardInfo.builder()
                         .granted(granted)

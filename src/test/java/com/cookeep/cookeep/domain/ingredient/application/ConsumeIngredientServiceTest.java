@@ -54,6 +54,7 @@ public class ConsumeIngredientServiceTest {
         user = User.builder().nickname("테스터").build();
         // 쿠키 지급은 기본 false
         given(cookieService.grantDailyCookie(anyLong(), any())).willReturn(false);
+        given(weeklyGoalService.handleGoalProgress(anyLong(), any())).willReturn(false);
     }
 
     // 유통기한 임박(leftDays=0) 재료 생성 헬퍼
@@ -153,20 +154,57 @@ public class ConsumeIngredientServiceTest {
         }
 
         @Test
-        @DisplayName("목표 달성 이후에도 handleGoalProgress는 호출되지만 내부에서 false를 반환한다")
-        void 목표달성후_추가소비_호출은하되_false반환() {
-            // handleGoalProgress 내부에서 isAchieved=true이면 false 반환 (WeeklyGoalService 로직)
-            // ConsumeIngredientService는 반환값과 무관하게 임박 재료 수만큼 호출하도록 함
-            given(weeklyGoalService.handleGoalProgress(anyLong(), any())).willReturn(false);
-
-            UserIngredient urgent = buildUrgentIngredient();
+        @DisplayName("임박 재료 소비로 목표 달성 시 weeklyGoalAchieved=true를 반환한다")
+        void 임박재료_소비_목표달성_weeklyGoalAchieved_true() {
             given(userIngredientRepository.findAllByIngredientIdInAndUser_UserId(anyList(), anyLong()))
-                    .willReturn(List.of(urgent));
+                    .willReturn(List.of(buildUrgentIngredient()));
+            given(weeklyGoalService.handleGoalProgress(1L, GoalActionType.USE_EXPIRING_INGREDIENT))
+                    .willReturn(true);
 
-            consumeIngredientService.consumeIngredients(1L, buildRequest(List.of(1L)));
+            ConsumeIngredientsResponseDto result =
+                    consumeIngredientService.consumeIngredients(1L, buildRequest(List.of(1L)));
 
-            verify(weeklyGoalService, times(1))
-                    .handleGoalProgress(1L, GoalActionType.USE_EXPIRING_INGREDIENT);
+            assertThat(result.isWeeklyGoalAchieved()).isTrue();
+        }
+
+        @Test
+        @DisplayName("임박 재료 소비했지만 목표 미달성 시 weeklyGoalAchieved=false를 반환한다")
+        void 임박재료_소비_목표미달성_weeklyGoalAchieved_false() {
+            given(userIngredientRepository.findAllByIngredientIdInAndUser_UserId(anyList(), anyLong()))
+                    .willReturn(List.of(buildUrgentIngredient()));
+            given(weeklyGoalService.handleGoalProgress(1L, GoalActionType.USE_EXPIRING_INGREDIENT))
+                    .willReturn(false);
+
+            ConsumeIngredientsResponseDto result =
+                    consumeIngredientService.consumeIngredients(1L, buildRequest(List.of(1L)));
+
+            assertThat(result.isWeeklyGoalAchieved()).isFalse();
+        }
+
+        @Test
+        @DisplayName("일반 재료만 소비 시 weeklyGoalAchieved=false를 반환한다")
+        void 일반재료만_소비_weeklyGoalAchieved_false() {
+            given(userIngredientRepository.findAllByIngredientIdInAndUser_UserId(anyList(), anyLong()))
+                    .willReturn(List.of(buildNormalIngredient()));
+
+            ConsumeIngredientsResponseDto result =
+                    consumeIngredientService.consumeIngredients(1L, buildRequest(List.of(1L)));
+
+            assertThat(result.isWeeklyGoalAchieved()).isFalse();
+        }
+
+        @Test
+        @DisplayName("임박 재료 3개 중 마지막 호출에서 목표 달성되면 weeklyGoalAchieved=true를 반환한다")
+        void 임박재료_3개_마지막호출_목표달성_true() {
+            given(userIngredientRepository.findAllByIngredientIdInAndUser_UserId(anyList(), anyLong()))
+                    .willReturn(List.of(buildUrgentIngredient(), buildUrgentIngredient(), buildUrgentIngredient()));
+            given(weeklyGoalService.handleGoalProgress(1L, GoalActionType.USE_EXPIRING_INGREDIENT))
+                    .willReturn(false, false, true);
+
+            ConsumeIngredientsResponseDto result =
+                    consumeIngredientService.consumeIngredients(1L, buildRequest(List.of(1L, 2L, 3L)));
+
+            assertThat(result.isWeeklyGoalAchieved()).isTrue();
         }
     }
 
@@ -175,11 +213,10 @@ public class ConsumeIngredientServiceTest {
     class BasicCookieGrant {
 
         @Test
-        @DisplayName("하루 첫 소비 시 쿠키가 지급된다")
+        @DisplayName("하루 첫 소비 시 쿠키가 지급되고 granted=true, points=1을 반환한다")
         void 첫소비_쿠키지급() {
-            UserIngredient normal = buildNormalIngredient();
             given(userIngredientRepository.findAllByIngredientIdInAndUser_UserId(anyList(), anyLong()))
-                    .willReturn(List.of(normal));
+                    .willReturn(List.of(buildNormalIngredient()));
             given(cookieService.grantDailyCookie(1L, CookieLog.CookieLogType.BASIC_DAILY_FIRST_CONSUME))
                     .willReturn(true);
 
@@ -191,11 +228,10 @@ public class ConsumeIngredientServiceTest {
         }
 
         @Test
-        @DisplayName("당일 이미 지급된 경우 쿠키가 지급되지 않는다")
+        @DisplayName("당일 이미 지급된 경우 granted=false, points=0을 반환한다")
         void 중복소비_쿠키미지급() {
-            UserIngredient normal = buildNormalIngredient();
             given(userIngredientRepository.findAllByIngredientIdInAndUser_UserId(anyList(), anyLong()))
-                    .willReturn(List.of(normal));
+                    .willReturn(List.of(buildNormalIngredient()));
             given(cookieService.grantDailyCookie(1L, CookieLog.CookieLogType.BASIC_DAILY_FIRST_CONSUME))
                     .willReturn(false);
 
@@ -204,6 +240,21 @@ public class ConsumeIngredientServiceTest {
 
             assertThat(result.getReward().getGranted()).isFalse();
             assertThat(result.getReward().getPoints()).isZero();
+        }
+
+        @Test
+        @DisplayName("쿠키 지급되더라도 임박 재료 없으면 weeklyGoalAchieved=false를 반환한다")
+        void 쿠키지급O_임박재료없음_weeklyGoalAchieved_false() {
+            given(userIngredientRepository.findAllByIngredientIdInAndUser_UserId(anyList(), anyLong()))
+                    .willReturn(List.of(buildNormalIngredient()));
+            given(cookieService.grantDailyCookie(1L, CookieLog.CookieLogType.BASIC_DAILY_FIRST_CONSUME))
+                    .willReturn(true);
+
+            ConsumeIngredientsResponseDto result =
+                    consumeIngredientService.consumeIngredients(1L, buildRequest(List.of(1L)));
+
+            assertThat(result.getReward().getGranted()).isTrue();
+            assertThat(result.isWeeklyGoalAchieved()).isFalse();
         }
     }
 

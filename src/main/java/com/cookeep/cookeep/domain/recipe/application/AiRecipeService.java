@@ -235,16 +235,16 @@ public class AiRecipeService {
         String rawContent = getLastAiMessage(session).getContent();
         AiRecipe savedRecipe = saveAdoptedRecipe(session, rawContent, userId);
 
-        // 5. USER 채택 메시지 저장
+        // 3. USER 채택 메시지 저장
         saveSimpleUserMessage(session, MessageType.ADOPT_RECIPE);
 
-        // 6. 세션 완료 처리
+        // 4. 세션 완료 처리
         session.complete();
 
-        // 레시피 채택 시 카운트 증가 (주간 목표: 주 n회 요리하기)
+        // 5. 레시피 채택 시 COOKING 목표 카운트 증가
         boolean cookingGoalAchieved = weeklyGoalService.handleGoalProgress(userId, GoalActionType.COOKING);
 
-        // 7. 세션의 ingredientIds 조회
+        // 6. 세션의 ingredientIds 조회
         List<Long> ingredientIds;
         try {
             ingredientIds = objectMapper.readValue(
@@ -256,18 +256,21 @@ public class AiRecipeService {
             throw new AppException(ErrorCode.INTERNAL_SERVER_ERROR);
         }
 
-        // 8. 임박 재료(leftDays=0) 포함 세션이면 쿠키 지급 (하루 1회)
+        // 7. 임박 재료(leftDays=0) 포함 세션이면 쿠키 지급 (하루 1회)
         grantUrgentCookieRewardIfEligible(userId, ingredientIds);
 
-        // 9. 요청 재료 전체 수량 -1 (단위 무관, 0이 되면 삭제)
-        consumeIngredients(userId, ingredientIds);
+        // 8. 요청 재료 소비 처리 후 USE_EXPIRING_INGREDIENT 주간 목표 카운트 증가
+        boolean expiringGoalAchieved = consumeIngredientsAndTrackExpiringGoal(userId, ingredientIds);
+
+        // 9. COOKING / USE_EXPIRING_INGREDIENT 중 하나라도 달성되면 weeklyGoalAchieved = true
+        boolean weeklyGoalAchieved = cookingGoalAchieved || expiringGoalAchieved;
 
         return AiRecipeAdoptResponseDto.builder()
                 .sessionId(session.getId())
                 .recipeId(savedRecipe.getId())
                 .message("레시피가 성공적으로 채택되었습니다.")
                 .completedAt(session.getCompletedAt())
-                .weeklyGoalAchieved(cookingGoalAchieved)
+                .weeklyGoalAchieved(weeklyGoalAchieved)
                 .build();
     }
 
@@ -601,11 +604,10 @@ public class AiRecipeService {
 
     }
 
-    // 재료 차감 로직. (단위 상관없이 무조건 -1)
-    private void consumeIngredients(Long userId, List<Long> ingredientIds) {
+    private boolean consumeIngredientsAndTrackExpiringGoal(Long userId, List<Long> ingredientIds) {
         if (ingredientIds == null || ingredientIds.isEmpty()) {
             log.info("재료 차감 생략 - ingredientIds 없음: userId={}", userId);
-            return;
+            return false;
         }
 
         List<UserIngredient> targets = userIngredientRepository
@@ -613,12 +615,18 @@ public class AiRecipeService {
 
         if (targets.isEmpty()) {
             log.warn("재료 차감 생략 - 유효한 재료 없음: userId={}", userId);
-            return;
+            return false;
         }
 
         // 주간 소비 리포트 기록 (차감/삭제 전에 호출해야 leftDays 읽기 가능)
         consumptionReportService.markConsumed(userId, targets);
 
+        // 임박 재료(leftDays=0) 개수 계산 (차감/삭제 전)
+        long urgentCount = targets.stream()
+                .filter(ui -> ui.getLeftDays() == URGENT)
+                .count();
+
+        // 재료 수량 차감 또는 삭제
         for (UserIngredient ui : targets) {
             int currentQty = ui.getQuantity();
             if (currentQty > 1) {
@@ -631,6 +639,19 @@ public class AiRecipeService {
                 log.info("재료 삭제(수량 0): ingredientId={}", ui.getIngredientId());
             }
         }
+
+        // USE_EXPIRING_INGREDIENT 목표 카운트 증가 (임박 재료 개수만큼)
+        boolean expiringGoalAchieved = false;
+        for (int i = 0; i < urgentCount; i++) {
+            if (weeklyGoalService.handleGoalProgress(userId, GoalActionType.USE_EXPIRING_INGREDIENT)) {
+                expiringGoalAchieved = true;
+            }
+        }
+
+        log.info("재료 소비 완료: userId={}, urgentCount={}, expiringGoalAchieved={}",
+                userId, urgentCount, expiringGoalAchieved);
+
+        return expiringGoalAchieved;
     }
 
     // AI 응답 에러 확인

@@ -26,6 +26,8 @@ import java.util.List;
 @Transactional(readOnly = true)
 public class ConsumeIngredientService {
 
+    private static final int URGENT = 0;
+
     private final UserIngredientRepository userIngredientRepository;
     private final CookieService cookieService;
     private final ConsumptionReportService consumptionReportService;
@@ -73,24 +75,24 @@ public class ConsumeIngredientService {
         // 5. 재료 삭제
         userIngredientRepository.deleteAll(userIngredients);
 
-        // 임박 재료 1개 소비 시 카운트 증가 (주간 목표: 유통기한 임박 재료 n개 사용하기)
+        // 6. 임박 재료(leftDays=0) 개수만큼 주간 목표(USE_EXPIRING_INGREDIENT) 카운트 증가
         long urgentCount = userIngredients.stream()
-                .filter(ui -> ui.getLeftDays() == 0)
+                .filter(ui -> ui.getLeftDays() == URGENT)
                 .count();
 
         boolean weeklyGoalAchieved = false;
-        // 재료 소비(1개) n(소비 재료 수)번 호출하여 카운트
         for (int i = 0; i < urgentCount; i++) {
-            // 목표 달성 시점에 true로 갱신
+            // handleGoalProgress는 이미 달성된 경우 false를 반환하므로 중복 지급 없음
             if (weeklyGoalService.handleGoalProgress(userId, GoalActionType.USE_EXPIRING_INGREDIENT)) {
                 weeklyGoalAchieved = true;
             }
         }
 
-        log.info("User {} consumed {} ingredients via manual action. Reward granted: {}, points: {}, urgentCount: {}",
-                userId, userIngredients.size(), granted, points, urgentCount);
+        log.info("User {} consumed {} ingredients via manual action. " +
+                        "Reward granted: {}, points: {}, urgentCount: {}, weeklyGoalAchieved: {}",
+                userId, userIngredients.size(), granted, points, urgentCount, weeklyGoalAchieved);
 
-        return ConsumeIngredientsResponseDto.of(granted, points, grantedTypes);
+        return ConsumeIngredientsResponseDto.of(granted, points, grantedTypes, weeklyGoalAchieved);
     }
 
 }
