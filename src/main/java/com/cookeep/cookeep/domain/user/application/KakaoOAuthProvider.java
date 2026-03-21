@@ -11,7 +11,7 @@ import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import com.cookeep.cookeep.domain.user.dao.UserRepository;
-import com.cookeep.cookeep.domain.user.dto.KakaoTokenResponseDTO;
+import com.cookeep.cookeep.domain.user.dto.SocialTokenResponseDTO;
 import com.cookeep.cookeep.domain.user.dto.KakaoUserInfoResponseDTO;
 import com.cookeep.cookeep.domain.user.entity.Provider;
 
@@ -29,9 +29,9 @@ public class KakaoOAuthProvider implements OAuthProvider {
 	private String clientId;
 	@Value("${kakao.auth.secret}")
 	private String clientSecret;
-	@Value("${kakao.auth.accessTokenURL}")
+	@Value("${kakao.auth.access-token-url}")
 	private String KakaoAccessTokenURL;
-	@Value("${kakao.auth.userInfoURL}")
+	@Value("${kakao.auth.user-info-url}")
 	private String KakaoUserInfoURL;
 	@Value("${kakao.auth.redirect}")
 	private String defaultRedirectUri;
@@ -54,7 +54,7 @@ public class KakaoOAuthProvider implements OAuthProvider {
 		form.add("redirect_uri", actualRedirectUri);
 		form.add("code", code);
 
-		KakaoTokenResponseDTO kakaoTokenResponseDTO = WebClient.create()
+		SocialTokenResponseDTO socialTokenResponseDTO = WebClient.create()
 			.post()
 			.uri(KakaoAccessTokenURL)
 			.contentType(MediaType.APPLICATION_FORM_URLENCODED)
@@ -62,13 +62,14 @@ public class KakaoOAuthProvider implements OAuthProvider {
 			.retrieve()
 			.onStatus(HttpStatusCode::isError, res ->
 				res.bodyToMono(String.class).defaultIfEmpty("")
-					.doOnNext(body -> log.error("[KAKAO] /oauth/token error status={}, body={}", res.statusCode(), body))
+					.doOnNext(
+						body -> log.error("[KAKAO] /oauth/token error status={}, body={}", res.statusCode(), body))
 					.then(Mono.error(new RuntimeException("카카오 로그인 요청에 실패하였습니다.")))
 			)
-			.bodyToMono(KakaoTokenResponseDTO.class)
+			.bodyToMono(SocialTokenResponseDTO.class)
 			.block();
 
-		return kakaoTokenResponseDTO.accessToken();
+		return socialTokenResponseDTO.accessToken();
 	}
 
 	// 카카오 액세스 토큰을 사용해 유저의 정보값을 받아옴
