@@ -40,8 +40,6 @@ VALUES
     ('VEGETABLE','늙은호박','PIECE','FRIDGE',7,'통째로 보관하는 것이 좋아요.','https://cookeep-images.s3.ap-northeast-2.amazonaws.com/ingredients/74e9f7cc-6eb3-42e1-ace1-ca9ac4d9ac0b.png'),
     ('VEGETABLE','브로콜리','PIECE','FRIDGE',7,'물기 제거 후 밀봉 보관하세요.','https://cookeep-images.s3.ap-northeast-2.amazonaws.com/ingredients/781996bf-c489-48f4-a616-72c56c7019f1.png'),
     ('VEGETABLE','콜리플라워','PIECE','FRIDGE',7,'랩으로 감싸 냉장 보관하세요.','https://cookeep-images.s3.ap-northeast-2.amazonaws.com/ingredients/390da3f9-3fe6-4cde-8c37-feb8f5671fc9.png'),
-    ('VEGETABLE','콩나물','PIECE','FRIDGE',7,'밀폐 용기에 담아 빠르게 소비하세요.','https://cookeep-images.s3.ap-northeast-2.amazonaws.com/ingredients/e9091188-7c98-4d3d-a795-90364fcf2d51.png'),
-    ('VEGETABLE','숙주','PIECE','FRIDGE',7,'물기 제거 후 밀봉이 좋아요.','https://cookeep-images.s3.ap-northeast-2.amazonaws.com/ingredients/e9091188-7c98-4d3d-a795-90364fcf2d51.png'),
     ('VEGETABLE','옥수수','PIECE','FRIDGE',7,'껍질째 보관하면 단맛이 유지돼요.','https://cookeep-images.s3.ap-northeast-2.amazonaws.com/ingredients/bec5f07d-edef-4baa-8925-3936cdaec0a1.png'),
     ('VEGETABLE','아스파라거스','PIECE','FRIDGE',7,'세워서 보관하면 신선해요.','https://cookeep-images.s3.ap-northeast-2.amazonaws.com/ingredients/c157c1af-7a27-441c-9b92-6857d22896aa.png'),
     ('VEGETABLE','샐러리','PIECE','FRIDGE',7,'알루미늄 포일로 감싸 보관하세요.','https://cookeep-images.s3.ap-northeast-2.amazonaws.com/ingredients/c33d34be-6807-412c-b622-e6366be8a785.png'),
@@ -276,6 +274,7 @@ VALUES
     ('GRAIN_RICE_NOODLE', '떡국떡', 'BAG', 'FREEZER', 180, '서로 달라붙지 않게 펼쳐 냉동하면 좋아요.','https://cookeep-images.s3.ap-northeast-2.amazonaws.com/ingredients/69f50692-17b9-4500-9420-59081e1d1e8d.png'),
     ('GRAIN_RICE_NOODLE', '가래떡', 'BAG', 'FREEZER', 180, '1회분씩 잘라 소분 냉동하면 편해요.','https://cookeep-images.s3.ap-northeast-2.amazonaws.com/ingredients/ae8d19c8-06c7-4a48-9e50-159d1c8723fc.png'),
     ('GRAIN_RICE_NOODLE', '어묵떡', 'BAG', 'FREEZER', 180, '개봉 후 지퍼백 밀봉 보관이 좋아요.','https://cookeep-images.s3.ap-northeast-2.amazonaws.com/ingredients/881959d3-002f-4b0c-8669-464909e53a60.png'),
+    ('GRAIN_RICE_NOODLE', '파스타면', 'BAG', 'PANTRY', 365, '직사광선을 피해 건조하고 서늘한 곳에 보관하세요.', 'https://cookeep-images.s3.ap-northeast-2.amazonaws.com/ingredients/3252f4c9-05a0-40cd-bb31-a8352e7737d6.png'),
 
     -- 빵·베이커리 (BAKERY)
     ('BAKERY', '식빵', 'BAG', 'PANTRY', 5, '빵은 냉동 보관하면 곰팡이를 줄일 수 있어요.','https://cookeep-images.s3.ap-northeast-2.amazonaws.com/ingredients/9e2f9294-106f-4bb5-b6f3-e0f5d0ad19a5.png'),
@@ -345,4 +344,14 @@ VALUES
     ('FERMENTED', '백김치', 'PACK', 'FRIDGE', 90, '백김치는 보관 방법을 잘 지키면 더 오래 신선해요!','https://cookeep-images.s3.ap-northeast-2.amazonaws.com/ingredients/2715a6b1-d47a-48b5-b0e9-f40c91d971c6.png'),
     ('FERMENTED', '피클', 'PACK', 'FRIDGE', 90, '피클은 보관 방법을 잘 지키면 더 오래 신선해요!','https://cookeep-images.s3.ap-northeast-2.amazonaws.com/ingredients/05f2cb14-fe9e-4949-b3dc-ddada6cfebff.png'),
     ('FERMENTED', '장아찌', 'PACK', 'FRIDGE', 90, '장아찌는 보관 방법을 잘 지키면 더 오래 신선해요!','https://cookeep-images.s3.ap-northeast-2.amazonaws.com/ingredients/6b2b3872-e440-4dd3-8cb1-0fd45e7d045c.png'),
-    ('FERMENTED', '젓갈', 'PACK', 'FRIDGE', 90, '젓갈은 보관 방법을 잘 지키면 더 오래 신선해요!','https://cookeep-images.s3.ap-northeast-2.amazonaws.com/ingredients/c68d6efd-0576-40f0-94eb-8af412b05be9.png');
+    ('FERMENTED', '젓갈', 'PACK', 'FRIDGE', 90, '젓갈은 보관 방법을 잘 지키면 더 오래 신선해요!','https://cookeep-images.s3.ap-northeast-2.amazonaws.com/ingredients/c68d6efd-0576-40f0-94eb-8af412b05be9.png'),
+
+    -- 콩류 (BEAN)
+    ('BEAN','콩나물','PIECE','FRIDGE',7,'밀폐 용기에 담아 빠르게 소비하세요.','https://cookeep-images.s3.ap-northeast-2.amazonaws.com/ingredients/e9091188-7c98-4d3d-a795-90364fcf2d51.png'),
+    ('BEAN','숙주','PIECE','FRIDGE',7,'물기 제거 후 밀봉이 좋아요.','https://cookeep-images.s3.ap-northeast-2.amazonaws.com/ingredients/e9091188-7c98-4d3d-a795-90364fcf2d51.png'),
+    ('BEAN', '두부', 'PIECE', 'FRIDGE', 5, '개봉 후 물에 담아 보관하고 매일 물을 갈아주며 빠르게 소비하세요.', 'https://cookeep-images.s3.ap-northeast-2.amazonaws.com/ingredients/6c32965d-bc26-4a39-98c2-fb3df1d5da34.png'),
+    ('BEAN', '두부면', 'PACK', 'FRIDGE', 5, '개봉 후 냉장 보관하며 물기를 제거하고 밀폐 용기에 보관하세요.', 'https://cookeep-images.s3.ap-northeast-2.amazonaws.com/ingredients/3d47bc7e-8b1f-4001-b127-49dc1e65e1f3.png'),
+    ('BEAN', '병아리콩', 'PACK', 'FRIDGE', 30,'삶은 경우 냉장 보관하며 밀폐 용기에 넣어 보관하세요.', 'https://cookeep-images.s3.ap-northeast-2.amazonaws.com/ingredients/27c45ec1-095d-40ec-9013-b88428f91fd2.png'),
+    ('BEAN', '렌틸콩', 'PACK', 'FRIDGE', 30, '삶은 경우 냉장 보관하며 밀폐 용기에 넣어 보관하세요.', 'https://cookeep-images.s3.ap-northeast-2.amazonaws.com/ingredients/ab6417aa-3107-4ce5-9b84-fab299129841.png'),
+    ('BEAN', '강낭콩', 'PACK', 'FRIDGE', 30, '삶은 경우 냉장 보관하며 밀폐 용기에 넣어 보관하세요.', 'https://cookeep-images.s3.ap-northeast-2.amazonaws.com/ingredients/a62b92c5-1d49-4813-8ea1-a6ded46b549a.png')
+;

@@ -13,7 +13,9 @@ public enum Category {
     READY_MEAL("즉석/간편식"),
     SNACK_DESSERT("과자/스낵/디저트"),
     BEVERAGE("음료"),
-    FERMENTED("절임/발효");
+    FERMENTED("절임/발효"),
+    BEAN("콩류"),
+    ETC("기타");
 
     private final String displayName;
 
