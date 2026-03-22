@@ -99,23 +99,6 @@ public class IngredientListResponseDto {
         )
         private Category category;
 
-        @Schema(
-                description = "기본 단위",
-                example = "개",
-                requiredMode = Schema.RequiredMode.NOT_REQUIRED
-        )
-        private String unit;
-
-        @Schema(description = "유통기한 (일)",
-                example = "7",
-                requiredMode = Schema.RequiredMode.REQUIRED)
-        private Integer expirationDays;
-
-        @Schema(description = "보관 장소",
-                example = "FRIDGE",
-                requiredMode = Schema.RequiredMode.REQUIRED)
-        private Storage storage;
-
     }
 
 }
