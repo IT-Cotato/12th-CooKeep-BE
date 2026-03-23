@@ -1,8 +1,11 @@
 package com.cookeep.cookeep.domain.cookeeps.application;
 
+import com.cookeep.cookeep.api.dto.response.CookeepsOnboardingResponseDto;
 import com.cookeep.cookeep.api.dto.response.RankingResponseDto;
 import com.cookeep.cookeep.domain.dailyrecipe.dao.DailyRecipeRepository;
 import com.cookeep.cookeep.domain.plant.dao.WateringLogRepository;
+import com.cookeep.cookeep.domain.user.application.UserReader;
+import com.cookeep.cookeep.domain.user.dao.UserRepository;
 import com.cookeep.cookeep.domain.user.entity.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -13,6 +16,8 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 import org.springframework.data.domain.Pageable;
 
 import java.time.LocalDate;
@@ -26,8 +31,11 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 class CookeepsServiceTest {
 
+    @Mock private UserReader userReader;
+    @Mock private UserRepository userRepository;
     @Mock private WateringLogRepository wateringLogRepository;
     @Mock private DailyRecipeRepository dailyRecipeRepository;
 
@@ -169,6 +177,60 @@ class CookeepsServiceTest {
                     startCaptor.capture(), endCaptor.capture(), any(Pageable.class));
 
             assertThat(endCaptor.getValue()).isEqualTo(startCaptor.getValue().plusDays(7));
+        }
+    }
+
+    @Nested
+    @DisplayName("getOnboardingStatus - 쿠킵스 온보딩 상태 조회")
+    class GetOnboardingStatus {
+
+        @Test
+        @DisplayName("온보딩 미완료 유저는 isCookeepsOnboarded가 false로 반환된다")
+        void 온보딩_미완료_유저_false_반환() {
+            User user = User.builder().nickname("유저").build();
+            given(userReader.readById(USER_ID)).willReturn(user);
+
+            CookeepsOnboardingResponseDto result = cookeepsService.getOnboardingStatus(USER_ID);
+
+            assertThat(result.isCookeepsOnboarded()).isFalse();
+        }
+
+        @Test
+        @DisplayName("온보딩 완료 유저는 isCookeepsOnboarded가 true로 반환된다")
+        void 온보딩_완료_유저_true_반환() {
+            User user = User.builder().nickname("유저").isCookeepsOnboarded(true).build();
+            given(userReader.readById(USER_ID)).willReturn(user);
+
+            CookeepsOnboardingResponseDto result = cookeepsService.getOnboardingStatus(USER_ID);
+
+            assertThat(result.isCookeepsOnboarded()).isTrue();
+        }
+    }
+
+    @Nested
+    @DisplayName("confirmOnboarding - 쿠킵스 온보딩 완료 처리")
+    class ConfirmOnboarding {
+
+        @Test
+        @DisplayName("온보딩 완료 처리 시 isCookeepsOnboarded가 true로 변경된다")
+        void 온보딩_완료처리_후_true로_변경() {
+            User user = User.builder().nickname("유저").build();
+            given(userReader.readById(USER_ID)).willReturn(user);
+
+            cookeepsService.confirmOnboarding(USER_ID);
+
+            assertThat(user.isCookeepsOnboarded()).isTrue();
+        }
+
+        @Test
+        @DisplayName("이미 온보딩 완료 상태여도 완료 처리 시 true로 유지된다")
+        void 이미_완료상태에서_완료처리_true_유지() {
+            User user = User.builder().nickname("유저").isCookeepsOnboarded(true).build();
+            given(userReader.readById(USER_ID)).willReturn(user);
+
+            cookeepsService.confirmOnboarding(USER_ID);
+
+            assertThat(user.isCookeepsOnboarded()).isTrue();
         }
     }
 }
