@@ -1,5 +1,6 @@
 package com.cookeep.cookeep.domain.cookeeps.application;
 
+import com.cookeep.cookeep.api.dto.response.CookeepsOnboardingResponseDto;
 import com.cookeep.cookeep.api.dto.response.CookeepsRecipeDetailResponseDto;
 import com.cookeep.cookeep.api.dto.response.RankingResponseDto;
 import com.cookeep.cookeep.api.dto.response.RankingResponseDto.RecipeRankDto;
@@ -12,6 +13,8 @@ import com.cookeep.cookeep.domain.dailyrecipe.dao.DailyRecipeRepository;
 
 import com.cookeep.cookeep.domain.dailyrecipe.entity.DailyRecipe;
 import com.cookeep.cookeep.domain.plant.dao.WateringLogRepository;
+import com.cookeep.cookeep.domain.user.application.UserReader;
+import com.cookeep.cookeep.domain.user.dao.UserRepository;
 import com.cookeep.cookeep.domain.user.entity.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -32,8 +35,10 @@ import java.util.stream.IntStream;
 @RequiredArgsConstructor
 public class CookeepsService {
 
+	private final UserReader userReader;
 	private final WateringLogRepository wateringLogRepository;
 	private final DailyRecipeRepository dailyRecipeRepository;
+	private final UserRepository userRepository;
 
 	@Transactional(readOnly = true)
 	public RankingResponseDto getRanking(Long userId) {
@@ -136,6 +141,21 @@ public class CookeepsService {
 					.recipeImageUrl(recipe.getRecipeImageUrl())
 					.build();
 		});
+	}
+
+	@Transactional(readOnly = true)
+	public CookeepsOnboardingResponseDto getOnboardingStatus(Long userId) {
+		User user = userReader.readById(userId);
+
+		return CookeepsOnboardingResponseDto.builder()
+			.isCookeepsOnboarded(user.isCookeepsOnboarded())
+			.build();
+	}
+
+	@Transactional
+	public void confirmOnboarding(Long userId) {
+		User user = userReader.readById(userId);
+		user.confirmCookeepsOnboarding();
 	}
 
 	@Transactional(readOnly = true)

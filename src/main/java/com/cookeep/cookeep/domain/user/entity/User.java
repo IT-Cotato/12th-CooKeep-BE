@@ -100,6 +100,10 @@ public class User extends BaseEntity {
 	@Column(nullable = false)
 	private boolean isProfileAutoUpdate = true; // 프로필 식물 변경을 자동 or 수동 모드 관리
 
+	@Builder.Default
+	@Column(nullable = false)
+	private boolean isCookeepsOnboarded = false; // 쿠킵스 온보딩 모달 확인 여부
+
 	// 유저가 API를 통해 직접 프로필을 변경할 때 호출
 	public void updateProfilePlant(UserPlant nesUserPlant) {
 		this.profilePlant = nesUserPlant;
@@ -161,5 +165,9 @@ public class User extends BaseEntity {
 
 	public void updateUserStatus(UserStatus userStatus) {
 		this.userStatus = userStatus;
+	}
+
+	public void confirmCookeepsOnboarding() {
+		this.isCookeepsOnboarded = true;
 	}
 }
