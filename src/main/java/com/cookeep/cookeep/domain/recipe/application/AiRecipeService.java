@@ -35,6 +35,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -141,7 +142,7 @@ public class AiRecipeService {
                 youtubeSearchService.searchVideos(aiResponse.getYoutubeSearchQueries());
 
         // 6. 레시피 저장
-        saveAiMessageWithYoutubeReferences(session, aiResponse, youtubeReferences, MessageType.INITIAL_REQUEST);
+        saveAiMessageWithYoutubeReferences(session, aiResponse, youtubeReferences, MessageType.INITIAL_REQUEST, dislikedIngredients);
 
 
         // 7. 응답 반환
@@ -209,7 +210,7 @@ public class AiRecipeService {
                 youtubeSearchService.searchVideos(aiResponse.getYoutubeSearchQueries());
 
         // 9. 재요청 레시피 저장
-        saveAiMessageWithYoutubeReferences(session, aiResponse, youtubeReferences, MessageType.RETRY_REQUEST);
+        saveAiMessageWithYoutubeReferences(session, aiResponse, youtubeReferences, MessageType.RETRY_REQUEST, dislikedIngredients);
 
 
         // 10. 응답 반환
@@ -655,7 +656,9 @@ public class AiRecipeService {
     }
 
     // AI 응답 에러 확인
-    private void validateAiResponse(GeminiRecipeResponseDto response) {
+    private void validateAiResponse(
+            GeminiRecipeResponseDto response,
+            List<String> dislikedIngredients) {
 
         if (response == null) {
             log.error("❌ AI 응답 자체가 null입니다.");
@@ -739,6 +742,39 @@ public class AiRecipeService {
             }
         }
 
+        // 3. dislikedIngredients 검증
+        if (dislikedIngredients != null && !dislikedIngredients.isEmpty()) {
+
+            List<String> lowerDisliked = dislikedIngredients.stream()
+                    .map(String::toLowerCase)
+                    .toList();
+
+            List<String> aiGeneratedIngredients = new ArrayList<>();
+
+            // additional_ingredients
+            if (ingredients.getAdditionalIngredients() != null) {
+                ingredients.getAdditionalIngredients()
+                        .forEach(i -> aiGeneratedIngredients.add(i.getName()));
+            }
+
+            // optional_ingredients
+            if (ingredients.getOptionalIngredients() != null) {
+                ingredients.getOptionalIngredients()
+                        .forEach(i -> aiGeneratedIngredients.add(i.getName()));
+            }
+
+            for (String ingredientName : aiGeneratedIngredients) {
+                String lowerName = ingredientName.toLowerCase();
+
+                for (String disliked : lowerDisliked) {
+                    if (lowerName.contains(disliked)) {
+                        log.error("❌ disliked ingredient 포함 (AI 생성 재료): {}", ingredientName);
+                        throw new AppException(ErrorCode.DISLIKED_INGREDIENT_INCLUDED);
+                    }
+                }
+            }
+        }
+
         log.info("✅ AI 응답 검증 통과");
     }
 
@@ -747,10 +783,11 @@ public class AiRecipeService {
             AiSession session,
             GeminiRecipeResponseDto response,
             List<YoutubeReferenceDto> youtubeReferences,
-            MessageType type
+            MessageType type,
+            List<String> dislikedIngredients
     ) {
         try {
-            validateAiResponse(response);
+            validateAiResponse(response, dislikedIngredients);
 
             // Gemini 응답을 JSON으로 변환
             ObjectNode root = objectMapper.valueToTree(response);
