@@ -8,12 +8,8 @@ import com.cookeep.cookeep.api.dto.response.AiSessionListResponseDto;
 import com.cookeep.cookeep.common.exception.AppException;
 import com.cookeep.cookeep.common.exception.ErrorCode;
 import com.cookeep.cookeep.domain.cookie.application.CookieService;
-import com.cookeep.cookeep.domain.cookie.dao.CookieLogRepository;
-import com.cookeep.cookeep.domain.cookie.dao.DailyCookieGrantRepository;
 import com.cookeep.cookeep.domain.cookie.entity.CookieLog;
-import com.cookeep.cookeep.domain.cookie.entity.DailyCookieGrant;
 import com.cookeep.cookeep.domain.dailyrecipe.dao.DailyRecipeRepository;
-import com.cookeep.cookeep.domain.ingredient.common.domain.Type;
 import com.cookeep.cookeep.domain.ingredient.customingredient.dao.CustomIngredientRepository;
 import com.cookeep.cookeep.domain.ingredient.customingredient.entity.CustomIngredient;
 import com.cookeep.cookeep.domain.ingredient.defaultingredient.dao.DefaultIngredientRepository;
@@ -32,19 +28,15 @@ import com.cookeep.cookeep.domain.user.dao.UserRepository;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static com.cookeep.cookeep.domain.recipe.entity.MessageType.*;
 
 @Slf4j
 @Service
@@ -68,6 +60,7 @@ public class AiRecipeService {
     private final ConsumptionReportService consumptionReportService;
     private final DailyRecipeRepository dailyRecipeRepository;
     private final WeeklyGoalService weeklyGoalService;
+    private final UserRepository userRepository;
 
     // sessionId 유무에 따라 신규/재요청 로직 분기
     public AiRecipeResponseDto generateRecipe(Long userId, AiRecipeRequestDto request) {

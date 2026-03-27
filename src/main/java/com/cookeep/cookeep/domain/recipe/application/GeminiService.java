@@ -38,16 +38,18 @@ public class GeminiService {
 
     public GeminiRecipeResponseDto generateRecipe(
             List<IngredientDetailDto> ingredients,
-            Difficulty difficulty) {
-        return generateRecipeByPrompt(buildPrompt(ingredients, difficulty, List.of()));
+            Difficulty difficulty,
+            List<String> dislikedIngredients) {
+        return generateRecipeByPrompt(buildPrompt(ingredients, difficulty, List.of(), dislikedIngredients));
     }
 
     public GeminiRecipeResponseDto generateRecipeWithExclusion(
             List<IngredientDetailDto> ingredients,
             Difficulty difficulty,
-            List<String> excludedTitles
+            List<String> excludedTitles,
+            List<String> dislikedIngredients
     ) {
-        return generateRecipeByPrompt(buildPrompt(ingredients, difficulty, excludedTitles));
+        return generateRecipeByPrompt(buildPrompt(ingredients, difficulty, excludedTitles, dislikedIngredients));
     }
 
     // 레시피 생성
@@ -157,7 +159,8 @@ public class GeminiService {
     private String buildPrompt(
             List<IngredientDetailDto> ingredients,
             Difficulty difficulty,
-            List<String> excludedTitles) {
+            List<String> excludedTitles,
+            List<String> dislikedIngredients) {
 
         // 재료 리스트 (이름 + 단위만)
         String ingredientsJson = ingredients.stream()
@@ -172,10 +175,16 @@ public class GeminiService {
                         excludedTitles.stream().map(t -> "- " + t).collect(Collectors.joining("\n")) +
                         "\n위 요리와 겹치지 않는 새로운 레시피를 추천하세요.\n";
 
+        // 못 먹는 재료 제외
+        String dislikedBlock = (dislikedIngredients == null || dislikedIngredients.isEmpty()) ? "" :
+                "\n[절대 사용 금지 재료]\n" +
+                        dislikedIngredients.stream().map(t -> "- " + t).collect(Collectors.joining("\n")) +
+                        "\n위 재료는 additional_ingredients, optional_ingredients 어디에도 절대 포함하지 마세요.\n";
+
         return "당신은 요리 레시피 전문가입니다.\n\n" +
                 "[난이도] " + difficulty.name() + "\n" +
-                exclusionBlock + "\n" +
-                "[재료 구성 규칙]\n" +
+                exclusionBlock + dislikedBlock +
+                "\n[재료 구성 규칙]\n" +
                 // 규칙 1: user_ingredients — 원본 데이터 그대로 사용
                 "1. user_ingredients의 ingredientId, name, unit은 아래 데이터 값 그대로 사용하세요. quantity는 0보다 큰 양수로 생성하세요.\n" +
                 // 규칙 2: additional_ingredients — 레시피에 필요한 추가 재료 (필수/선택/대체 포함)
