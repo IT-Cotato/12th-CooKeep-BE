@@ -176,6 +176,7 @@ public class User extends BaseEntity {
 		this.isCookeepsOnboarded = true;
 	}
 
+	// JSON 문자열 읽기
 	public List<String> getDislikedIngredients() {
 		if (dislikedIngredientsJson == null || dislikedIngredientsJson.isBlank()) {
 			return Collections.emptyList();
@@ -188,6 +189,7 @@ public class User extends BaseEntity {
 		}
 	}
 
+	// 문자열로 변환해서 저장
 	public void updateDislikedIngredients(List<String> ingredients) {
 		try {
 			this.dislikedIngredientsJson = ingredients == null || ingredients.isEmpty()

@@ -25,6 +25,7 @@ import com.cookeep.cookeep.domain.recipe.dao.AiSessionRepository;
 import com.cookeep.cookeep.domain.recipe.dto.*;
 import com.cookeep.cookeep.domain.recipe.entity.*;
 import com.cookeep.cookeep.domain.user.dao.UserRepository;
+import com.cookeep.cookeep.domain.user.entity.User;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -123,10 +124,13 @@ public class AiRecipeService {
         // 메시지 db에 저장
         saveInitialUserMessage(session, request);
 
+        List<String> dislikedIngredients = getDislikedIngredients(userId);
+
         // 3. AI 레시피 생성 (이름 + 단위만 전달, AI가 quantity 생성)
         GeminiRecipeResponseDto aiResponse = geminiService.generateRecipe(
                 enrichedIngredients,
-                request.getDifficulty()
+                request.getDifficulty(),
+                dislikedIngredients
         );
 
         // 4. 세션 제목 업데이트
@@ -183,11 +187,14 @@ public class AiRecipeService {
         // 4. 재요청 메시지 저장 (role=USER, RETRY_REQUEST)
         saveSimpleUserMessage(session, MessageType.RETRY_REQUEST);
 
+        List<String> dislikedIngredients = getDislikedIngredients(userId);
+
         // 5. AI 호출 (제외 리스트 포함)
         GeminiRecipeResponseDto aiResponse = geminiService.generateRecipeWithExclusion(
                 ingredients,
                 session.getDifficulty(),
-                excludedTitles
+                excludedTitles,
+                dislikedIngredients
         );
 
         // 6. 시도 횟수 증가 및 저장
@@ -769,5 +776,11 @@ public class AiRecipeService {
         }
     }
 
+    // 비선호 재료 리스트
+    private List<String> getDislikedIngredients(Long userId) {
+        return userRepository.findById(userId)
+                .map(User::getDislikedIngredients)
+                .orElse(List.of());
+    }
 
 }
