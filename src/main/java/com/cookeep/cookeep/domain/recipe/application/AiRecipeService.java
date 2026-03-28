@@ -95,6 +95,9 @@ public class AiRecipeService {
             throw new AppException(ErrorCode.INVALID_DIFFICULTY);
         }
 
+        // RateLimit 검증
+        rateLimitService.validate(userId);
+
         // 1. 해당 유저의 재료 조회
         List<UserIngredient> userIngredients = userIngredientRepository
                 .findAllByIngredientIdInAndUser_UserId(request.getIngredientIds(), userId);
@@ -131,8 +134,6 @@ public class AiRecipeService {
         // 메시지 db에 저장
         saveInitialUserMessage(session, request);
 
-        // RateLimit 검증
-        rateLimitService.validate(userId);
 
         // 3. AI 레시피 생성 (이름 + 단위만 전달, AI가 quantity 생성)
         GeminiRecipeResponseDto aiResponse = geminiService.generateRecipe(
@@ -182,6 +183,9 @@ public class AiRecipeService {
             throw new AppException(ErrorCode.SESSION_DIFFICULTY_NOT_FOUND);
         }
 
+        // RateLimit 검증
+        rateLimitService.validate(userId);
+
         // 2. 이전 재료 복원 (이미 이름 + 단위 포함)
         List<IngredientDetailDto> ingredients = readIngredientsFromSession(session);
         if (ingredients == null || ingredients.isEmpty()) {
@@ -193,9 +197,6 @@ public class AiRecipeService {
 
         // 4. 재요청 메시지 저장 (role=USER, RETRY_REQUEST)
         saveSimpleUserMessage(session, MessageType.RETRY_REQUEST);
-
-        // RateLimit 검증
-        rateLimitService.validate(userId);
 
         // 5. AI 호출 (제외 리스트 포함)
         GeminiRecipeResponseDto aiResponse = geminiService.generateRecipeWithExclusion(
