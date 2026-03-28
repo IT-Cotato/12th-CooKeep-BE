@@ -395,12 +395,12 @@ public class AiRecipeServiceTest {
             stubRegenerateSession();
 
             // validate가 예외를 던지도록 설정
-            doThrow(new AppException(ErrorCode.AI_RATE_LIMIT_EXCEEDED))
+            doThrow(new AppException(ErrorCode.USER_RATE_LIMIT_EXCEEDED))
                     .when(rateLimitService).validate(1L);
 
             assertThatThrownBy(() -> aiRecipeService.regenerateRecipe(1L, 10L))
                     .isInstanceOf(AppException.class)
-                    .hasFieldOrPropertyWithValue("errorCode", ErrorCode.AI_RATE_LIMIT_EXCEEDED);
+                    .hasFieldOrPropertyWithValue("errorCode", ErrorCode.USER_RATE_LIMIT_EXCEEDED);
 
             // Rate Limit에 걸렸으므로 Gemini는 절대 호출되면 안 됨
             verify(geminiService, never()).generateRecipeWithExclusion(anyList(), any(), anyList());
@@ -411,14 +411,14 @@ public class AiRecipeServiceTest {
         void regenerate_RateLimit_에러코드_확인() throws Exception {
             stubRegenerateSession();
 
-            doThrow(new AppException(ErrorCode.AI_RATE_LIMIT_EXCEEDED))
+            doThrow(new AppException(ErrorCode.USER_RATE_LIMIT_EXCEEDED))
                     .when(rateLimitService).validate(1L);
 
             assertThatThrownBy(() -> aiRecipeService.regenerateRecipe(1L, 10L))
                     .isInstanceOf(AppException.class)
                     .satisfies(ex -> {
                         AppException appEx = (AppException) ex;
-                        assertThat(appEx.getErrorCode()).isEqualTo(ErrorCode.AI_RATE_LIMIT_EXCEEDED);
+                        assertThat(appEx.getErrorCode()).isEqualTo(ErrorCode.USER_RATE_LIMIT_EXCEEDED);
                     });
         }
 

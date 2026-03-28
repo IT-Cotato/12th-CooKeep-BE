@@ -30,7 +30,7 @@ public class AiRateLimitService {
 
         // 제한 초과
         if (logs.size() >= LIMIT) {
-            throw new AppException(ErrorCode.AI_RATE_LIMIT_EXCEEDED);
+            throw new AppException(ErrorCode.USER_RATE_LIMIT_EXCEEDED);
         }
 
         // 현재 요청 기록
