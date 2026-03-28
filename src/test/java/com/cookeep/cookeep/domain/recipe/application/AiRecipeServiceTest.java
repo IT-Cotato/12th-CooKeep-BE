@@ -2,6 +2,7 @@ package com.cookeep.cookeep.domain.recipe.application;
 
 import com.cookeep.cookeep.api.dto.response.AiRecipeAdoptResponseDto;
 import com.cookeep.cookeep.common.exception.AppException;
+import com.cookeep.cookeep.common.exception.ErrorCode;
 import com.cookeep.cookeep.domain.cookie.application.CookieService;
 import com.cookeep.cookeep.domain.dailyrecipe.dao.DailyRecipeRepository;
 import com.cookeep.cookeep.domain.ingredient.common.domain.Storage;
@@ -37,6 +38,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.willDoNothing;
@@ -58,6 +60,7 @@ public class AiRecipeServiceTest {
     @Mock private ConsumptionReportService consumptionReportService;
     @Mock private DailyRecipeRepository dailyRecipeRepository;
     @Mock private WeeklyGoalService weeklyGoalService;
+    @Mock private AiRateLimitService rateLimitService;
 
     @Spy
     private ObjectMapper objectMapper = new ObjectMapper();
@@ -126,6 +129,8 @@ public class AiRecipeServiceTest {
         given(weeklyGoalService.handleGoalProgress(anyLong(), any())).willReturn(false);
         // 기본값: 쿠키 지급 false
         given(cookieService.grantDailyCookie(anyLong(), any())).willReturn(false);
+        // 기본값: Rate Limit 통과
+        willDoNothing().given(rateLimitService).validate(anyLong());
     }
 
     // 유통기한 임박(leftDays=0) 재료 생성 헬퍼
@@ -312,6 +317,176 @@ public class AiRecipeServiceTest {
             AiRecipeAdoptResponseDto result = aiRecipeService.adoptRecipe(1L, 10L);
 
             assertThat(result.isWeeklyGoalAchieved()).isFalse();
+        }
+    }
+
+    @Nested
+    @DisplayName("Rate Limit - AiRateLimitService 연동")
+    class RateLimitIntegration {
+
+        // regenerateRecipe 테스트에 필요한 세션 세팅 헬퍼
+        private void stubRegenerateSession() throws Exception {
+            // userIngredientIds에 실제 JSON을 넣어야 readIngredientsFromSession이 동작
+            String ingredientsJson = """
+                    [{"ingredientId":1,"name":"양파","quantity":null,"unit":"개"}]
+                    """;
+            session = AiSession.builder()
+                    .userId(1L)
+                    .difficulty(Difficulty.EASY)
+                    .attemptNumber(1)
+                    .isCompleted(false)
+                    .userIngredientIds(ingredientsJson)
+                    .ingredientIdsJson("[1]")
+                    .build();
+
+            given(aiSessionRepository.findByIdAndUserId(anyLong(), eq(1L)))
+                    .willReturn(Optional.of(session));
+            given(aiSessionRepository.save(any(AiSession.class))).willAnswer(inv -> inv.getArgument(0));
+            given(aiMessageRepository.findAllBySessionIdAndRoleAi(anyLong())).willReturn(List.of());
+        }
+
+        private void stubGeminiAndYoutube() {
+            // GeminiRecipeResponseDto 스텁
+            var ingredientsDto = new com.cookeep.cookeep.domain.recipe.dto.GeminiRecipeResponseDto();
+            // ObjectMapper로 직접 만들기 어려우므로 geminiService 자체를 스텁
+            com.cookeep.cookeep.domain.recipe.dto.GeminiRecipeResponseDto response =
+                    buildValidGeminiResponse();
+
+            given(geminiService.generateRecipeWithExclusion(anyList(), any(), anyList()))
+                    .willReturn(response);
+            given(youtubeSearchService.searchVideos(anyList())).willReturn(List.of());
+            given(aiMessageRepository.save(any())).willAnswer(inv -> inv.getArgument(0));
+            given(aiSessionRepository.save(any())).willAnswer(inv -> inv.getArgument(0));
+        }
+
+        // 공통 헬퍼
+
+        /**
+         * 리플렉션 없이 GeminiRecipeResponseDto를 ObjectMapper로 생성.
+         * VALID_AI_RESPONSE_JSON을 재활용합니다.
+         */
+        private com.cookeep.cookeep.domain.recipe.dto.GeminiRecipeResponseDto buildValidGeminiResponse() {
+            try {
+                return objectMapper.readValue(
+                        VALID_AI_RESPONSE_JSON,
+                        com.cookeep.cookeep.domain.recipe.dto.GeminiRecipeResponseDto.class
+                );
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        // 검증: rateLimitService.validate()가 호출되는지 확인
+
+        @Test
+        @DisplayName("regenerateRecipe 호출 시 rateLimitService.validate(userId)가 1회 호출된다")
+        void regenerate_호출시_validate_1회() throws Exception {
+            stubRegenerateSession();
+            stubGeminiAndYoutube();
+
+            aiRecipeService.regenerateRecipe(1L, 10L);
+
+            verify(rateLimitService, times(1)).validate(1L);
+        }
+
+        @Test
+        @DisplayName("regenerateRecipe에서 Rate Limit 초과 시 AI가 호출되지 않는다")
+        void regenerate_RateLimit_초과시_Gemini_미호출() throws Exception {
+            stubRegenerateSession();
+
+            // validate가 예외를 던지도록 설정
+            doThrow(new AppException(ErrorCode.AI_RATE_LIMIT_EXCEEDED))
+                    .when(rateLimitService).validate(1L);
+
+            assertThatThrownBy(() -> aiRecipeService.regenerateRecipe(1L, 10L))
+                    .isInstanceOf(AppException.class)
+                    .hasFieldOrPropertyWithValue("errorCode", ErrorCode.AI_RATE_LIMIT_EXCEEDED);
+
+            // Rate Limit에 걸렸으므로 Gemini는 절대 호출되면 안 됨
+            verify(geminiService, never()).generateRecipeWithExclusion(anyList(), any(), anyList());
+        }
+
+        @Test
+        @DisplayName("regenerateRecipe Rate Limit 초과 시 AI_RATE_LIMIT_EXCEEDED 에러코드를 반환한다")
+        void regenerate_RateLimit_에러코드_확인() throws Exception {
+            stubRegenerateSession();
+
+            doThrow(new AppException(ErrorCode.AI_RATE_LIMIT_EXCEEDED))
+                    .when(rateLimitService).validate(1L);
+
+            assertThatThrownBy(() -> aiRecipeService.regenerateRecipe(1L, 10L))
+                    .isInstanceOf(AppException.class)
+                    .satisfies(ex -> {
+                        AppException appEx = (AppException) ex;
+                        assertThat(appEx.getErrorCode()).isEqualTo(ErrorCode.AI_RATE_LIMIT_EXCEEDED);
+                    });
+        }
+
+        @Test
+        @DisplayName("이미 완료된 세션이면 Rate Limit 검증 전에 예외가 발생한다")
+        void 완료된세션_RateLimit_미호출() throws Exception {
+            stubRegenerateSession();
+            session.complete(); // isCompleted = true
+
+            // 완료된 세션이므로 SESSION_ALREADY_COMPLETED 예외 발생
+            assertThatThrownBy(() -> aiRecipeService.regenerateRecipe(1L, 10L))
+                    .isInstanceOf(AppException.class)
+                    .hasFieldOrPropertyWithValue("errorCode", ErrorCode.SESSION_ALREADY_COMPLETED);
+
+            // Rate Limit 검증까지 도달하지 않으므로 validate 미호출
+            verify(rateLimitService, never()).validate(anyLong());
+        }
+
+        @Test
+        @DisplayName("재시도 횟수 초과 시 Rate Limit 검증 전에 예외가 발생한다")
+        void 재시도횟수_초과_RateLimit_미호출() throws Exception {
+            stubRegenerateSession();
+
+            // attemptNumber를 MAX_RETRY_COUNT(5) 이상으로 설정
+            session = AiSession.builder()
+                    .userId(1L)
+                    .difficulty(Difficulty.EASY)
+                    .attemptNumber(5) // MAX_RETRY_COUNT = 5
+                    .isCompleted(false)
+                    .userIngredientIds("[{\"ingredientId\":1,\"name\":\"양파\",\"quantity\":null,\"unit\":\"개\"}]")
+                    .ingredientIdsJson("[1]")
+                    .build();
+            given(aiSessionRepository.findByIdAndUserId(anyLong(), eq(1L)))
+                    .willReturn(Optional.of(session));
+
+            assertThatThrownBy(() -> aiRecipeService.regenerateRecipe(1L, 10L))
+                    .isInstanceOf(AppException.class)
+                    .hasFieldOrPropertyWithValue("errorCode", ErrorCode.AI_RECIPE_CHANGE_LIMIT_EXCEEDED);
+
+            verify(rateLimitService, never()).validate(anyLong());
+        }
+
+        @Test
+        @DisplayName("서로 다른 유저는 Rate Limit이 독립적으로 적용된다")
+        void 서로다른_유저_RateLimit_독립() throws Exception {
+            stubRegenerateSession();
+            stubGeminiAndYoutube();
+
+            // 유저2 세션 추가 세팅
+            AiSession session2 = AiSession.builder()
+                    .userId(2L)
+                    .difficulty(Difficulty.EASY)
+                    .attemptNumber(1)
+                    .isCompleted(false)
+                    .userIngredientIds("[{\"ingredientId\":1,\"name\":\"양파\",\"quantity\":null,\"unit\":\"개\"}]")
+                    .ingredientIdsJson("[1]")
+                    .build();
+            given(aiSessionRepository.findByIdAndUserId(anyLong(), eq(2L)))
+                    .willReturn(Optional.of(session2));
+
+            // 유저1: 통과
+            // 유저2: 통과
+            aiRecipeService.regenerateRecipe(1L, 10L);
+            aiRecipeService.regenerateRecipe(2L, 10L);
+
+            // 각 유저에 대해 독립적으로 validate 1회씩 호출됨
+            verify(rateLimitService, times(1)).validate(1L);
+            verify(rateLimitService, times(1)).validate(2L);
         }
     }
 

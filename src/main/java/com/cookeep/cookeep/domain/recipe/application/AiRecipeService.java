@@ -68,6 +68,7 @@ public class AiRecipeService {
     private final ConsumptionReportService consumptionReportService;
     private final DailyRecipeRepository dailyRecipeRepository;
     private final WeeklyGoalService weeklyGoalService;
+    private final AiRateLimitService rateLimitService;
 
     // sessionId 유무에 따라 신규/재요청 로직 분기
     public AiRecipeResponseDto generateRecipe(Long userId, AiRecipeRequestDto request) {
@@ -130,6 +131,9 @@ public class AiRecipeService {
         // 메시지 db에 저장
         saveInitialUserMessage(session, request);
 
+        // RateLimit 검증
+        rateLimitService.validate(userId);
+
         // 3. AI 레시피 생성 (이름 + 단위만 전달, AI가 quantity 생성)
         GeminiRecipeResponseDto aiResponse = geminiService.generateRecipe(
                 enrichedIngredients,
@@ -189,6 +193,9 @@ public class AiRecipeService {
 
         // 4. 재요청 메시지 저장 (role=USER, RETRY_REQUEST)
         saveSimpleUserMessage(session, MessageType.RETRY_REQUEST);
+
+        // RateLimit 검증
+        rateLimitService.validate(userId);
 
         // 5. AI 호출 (제외 리스트 포함)
         GeminiRecipeResponseDto aiResponse = geminiService.generateRecipeWithExclusion(
