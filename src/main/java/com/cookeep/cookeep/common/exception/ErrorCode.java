@@ -181,7 +181,7 @@ public enum ErrorCode {
 	SMS_TOO_MANY_ATTEMPTS(HttpStatus.TOO_MANY_REQUESTS, "인증 시도 횟수를 초과하였습니다. 잠시 후 다시 시도해주세요.", "SMS-006"),
 
 	// RECIPE
-	AI_RATE_LIMIT_EXCEEDED(HttpStatus.TOO_MANY_REQUESTS, "AI API rate limit exceeded", "RECIPE-25"),
+	AI_RATE_LIMIT_EXCEEDED(HttpStatus.TOO_MANY_REQUESTS, "AI API rate limit exceeded", "RECIPE-24"),
 
 	// ==============================
 	// 500 INTERNAL_SERVER_ERROR

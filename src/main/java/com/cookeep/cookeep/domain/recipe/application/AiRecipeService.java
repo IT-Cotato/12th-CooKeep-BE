@@ -764,11 +764,15 @@ public class AiRecipeService {
             }
 
             for (String ingredientName : aiGeneratedIngredients) {
-                String lowerName = ingredientName.toLowerCase();
 
-                for (String disliked : lowerDisliked) {
-                    if (lowerName.contains(disliked)) {
-                        log.error("❌ disliked ingredient 포함 (AI 생성 재료): {}", ingredientName);
+                String normalizedName = ingredientName.trim();
+
+                for (String disliked : dislikedIngredients) {
+
+                    if (disliked == null) continue;
+                    String normalizedDisliked = disliked.trim();
+                    if (normalizedName.equals(normalizedDisliked)) {
+                        log.error("❌ disliked ingredient 포함 (AI 생성 재료): {}", normalizedName);
                         throw new AppException(ErrorCode.DISLIKED_INGREDIENT_INCLUDED);
                     }
                 }
