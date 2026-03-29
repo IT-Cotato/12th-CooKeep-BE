@@ -3,15 +3,15 @@ package com.cookeep.cookeep.api.controller;
 import com.cookeep.cookeep.api.dto.response.CookeepsOnboardingResponseDto;
 import com.cookeep.cookeep.api.dto.response.CookeepsRecipeDetailResponseDto;
 import com.cookeep.cookeep.api.dto.response.RankingResponseDto;
-import com.cookeep.cookeep.api.dto.response.WeeklyRecipeResponseDto;
+import com.cookeep.cookeep.api.dto.response.CookeepsFeedResponseDto;
 import com.cookeep.cookeep.common.dto.DataResponse;
+import com.cookeep.cookeep.common.dto.SliceResponse;
 import com.cookeep.cookeep.domain.cookeeps.application.CookeepsService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -56,13 +56,13 @@ public class CookeepsController {
 		return ResponseEntity.ok(DataResponse.from(null));
 	}
 
-	@Operation(summary = "이번 주 레시피 전체보기", description = "이번 주차에 올라온 레시피들을 정렬 필터와 함께 조회합니다.")
-	@GetMapping("/recipes/weekly")
-	public ResponseEntity<DataResponse<Page<WeeklyRecipeResponseDto>>> getWeeklyRecipes(
-			@RequestParam(defaultValue = "likes") String filter,
-			@org.springdoc.core.annotations.ParameterObject Pageable pageable // 프론트에서 page, size를 넘기면 자동 매핑
+	@Operation(summary = "쿠킵스 공개 레시피 목록 전체 조회", description = "모든 유저의 공개 레시피를 정렬 필터와 함께 조회합니다. filter: latest(기본, 최신순), likes(좋아요 많은 순), oldest(오래된 순)")
+	@GetMapping("/recipes")
+	public ResponseEntity<DataResponse<SliceResponse<CookeepsFeedResponseDto>>> getAllRecipes(
+			@RequestParam(defaultValue = "latest") String filter,
+			@org.springdoc.core.annotations.ParameterObject Pageable pageable
 	) {
-		return ResponseEntity.ok(DataResponse.from(cookeepsService.getWeeklyRecipes(filter, pageable)));
+		return ResponseEntity.ok(DataResponse.from(SliceResponse.from(cookeepsService.getAllRecipes(filter, pageable))));
 	}
 
 	@Operation(summary = "쿠킵스 레시피 상세 조회", description = "쿠킵스에 공개된 특정 레시피의 상세 내용을 조회합니다.")
