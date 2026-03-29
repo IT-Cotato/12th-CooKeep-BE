@@ -1,6 +1,8 @@
 package com.cookeep.cookeep.domain.user.entity;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
+import java.util.List;
 
 import com.cookeep.cookeep.domain.plant.entity.PlantStatus;
 import com.cookeep.cookeep.domain.plant.entity.UserPlant;
@@ -104,6 +106,9 @@ public class User extends BaseEntity {
 	@Column(nullable = false)
 	private boolean isCookeepsOnboarded = false; // 쿠킵스 온보딩 모달 확인 여부
 
+	@Column(name = "disliked_ingredients", columnDefinition = "JSON")
+	private String dislikedIngredientsJson; // 못먹는 재료 목록 (JSON 배열로 저장)
+
 	// 유저가 API를 통해 직접 프로필을 변경할 때 호출
 	public void updateProfilePlant(UserPlant nesUserPlant) {
 		this.profilePlant = nesUserPlant;
@@ -169,5 +174,29 @@ public class User extends BaseEntity {
 
 	public void confirmCookeepsOnboarding() {
 		this.isCookeepsOnboarded = true;
+	}
+
+	// JSON 문자열 읽기
+	public List<String> getDislikedIngredients() {
+		if (dislikedIngredientsJson == null || dislikedIngredientsJson.isBlank()) {
+			return Collections.emptyList();
+		}
+		try {
+			return new com.fasterxml.jackson.databind.ObjectMapper()
+					.readValue(dislikedIngredientsJson, new com.fasterxml.jackson.core.type.TypeReference<List<String>>() {});
+		} catch (Exception e) {
+			return Collections.emptyList();
+		}
+	}
+
+	// 문자열로 변환해서 저장
+	public void updateDislikedIngredients(List<String> ingredients) {
+		try {
+			this.dislikedIngredientsJson = ingredients == null || ingredients.isEmpty()
+					? null
+					: new com.fasterxml.jackson.databind.ObjectMapper().writeValueAsString(ingredients);
+		} catch (Exception e) {
+			this.dislikedIngredientsJson = null;
+		}
 	}
 }
