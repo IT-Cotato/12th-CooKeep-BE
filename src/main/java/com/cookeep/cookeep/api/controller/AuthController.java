@@ -21,6 +21,7 @@ import com.cookeep.cookeep.api.dto.response.SignUpResponseDTO;
 import com.cookeep.cookeep.api.dto.response.TokenRefreshResponseDTO;
 import com.cookeep.cookeep.common.dto.DataResponse;
 import com.cookeep.cookeep.domain.user.application.AuthService;
+import com.cookeep.cookeep.domain.user.entity.Provider;
 import com.cookeep.cookeep.security.UserPrincipal;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -56,7 +57,7 @@ public class AuthController {
 	public ResponseEntity<DataResponse<SocialLoginResponseDTO>> kakaoLogin(
 		@RequestParam String code,
 		@RequestParam(value = "redirect_uri", required = false) String redirectUri) {
-		return ResponseEntity.ok(DataResponse.from(authService.kakaoLogin(code, redirectUri)));
+		return ResponseEntity.ok(DataResponse.from(authService.socialLogin(Provider.KAKAO, code, redirectUri)));
 	}
 
 	@Operation(summary = "구글 로그인 API")
@@ -68,7 +69,7 @@ public class AuthController {
 	public ResponseEntity<DataResponse<SocialLoginResponseDTO>> googleLogin(
 		@RequestParam String code,
 		@RequestParam(value = "redirect_uri", required = false) String redirectUri) {
-		return ResponseEntity.ok(DataResponse.from(authService.googleLogin(code, redirectUri)));
+		return ResponseEntity.ok(DataResponse.from(authService.socialLogin(Provider.GOOGLE, code, redirectUri)));
 	}
 
 	@Operation(summary = "전화번호 회원가입 API")

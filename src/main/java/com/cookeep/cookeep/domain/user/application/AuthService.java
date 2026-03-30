@@ -138,29 +138,41 @@ public class AuthService {
 	// 닉네임 제약 위반 시 재시도 횟수를 제한하기 위한 값 (무한 반복 방지)
 	private static final int MAX_TRIES = 30;
 
-	// 카카오 로그인
+	private final List<OAuthProvider> oAuthProviders;
+
+	private OAuthProvider getProvider(Provider provider) {
+		return oAuthProviders.stream()
+			.filter(p -> p.provider() == provider)
+			.findFirst()
+			.orElseThrow(() -> new RuntimeException("지원하지 않는 소셜 로그인입니다."));
+		// ErrorCode가 develop 브랜치에서 대폭 수정된 상태라 추후 AppException으로 수정 예정
+	}
+
+	// 소셜 로그인
 	@Transactional
-	public SocialLoginResponseDTO kakaoLogin(String code, String redirectUri) {
-		String kakaoAccessToken = kakaoOAuthProvider.getAccessToken(code, redirectUri);
-		OAuthUserInfoDTO userInfo = kakaoOAuthProvider.getUserInfo(kakaoAccessToken);
+	public SocialLoginResponseDTO socialLogin(Provider provider, String code, String redirectUri) {
+		// provider 타입에 따라 KakaoOAuthProvider 또는 GoogleOAuthProvider 반환
+		OAuthProvider oAuthProvider = getProvider(provider);
+		String accessToken = oAuthProvider.getAccessToken(code, redirectUri);
+		OAuthUserInfoDTO userInfo = oAuthProvider.getUserInfo(accessToken);
 
-		String kakaoId = String.valueOf(userInfo.id());
+		String socialId = userInfo.id();
 
-		// provider = KAKAO, providerUserId인 값을 통해 이미 가입된 회원인지 식별
-		Optional<UserAuth> existingUserAuth = userAuthRepository.findByProviderAndProviderUserId(KAKAO, kakaoId);
+		// provider, providerUserId인 값을 통해 이미 가입된 회원인지 식별
+		Optional<UserAuth> existingUserAuth = userAuthRepository.findByProviderAndProviderUserId(provider, socialId);
 
 		String email = userInfo.email();
 
 		// 신규 유저일 경우 User, UserAuth값을 새롭게 생성함
 		UserAuth userAuth = existingUserAuth
 			.orElseGet(() -> {
-				User user = createKakaoUser(email);
+				User user = createSocialUser(email);
 
 				return userAuthRepository.save(
 					UserAuth.builder()
 						.user(user)
-						.provider(KAKAO)
-						.providerUserId(kakaoId)
+						.provider(provider)
+						.providerUserId(socialId)
 						.build());
 			});
 
@@ -188,7 +200,7 @@ public class AuthService {
 		);
 	}
 
-	private User createKakaoUser(String email) {
+	private User createSocialUser(String email) {
 
 		for (int i = 0; i < MAX_TRIES; i++) {
 			String nickname = nicknameGenerator.generateRandomNickname();
@@ -201,7 +213,7 @@ public class AuthService {
 			} catch (DataIntegrityViolationException e) {
 				// 닉네임 관련 제약 위반인 경우에만 재시도
 				if (shouldRetryNickname(e)) {
-					log.debug("Nickname conflict during kakao signup. try={}/{}", i + 1, MAX_TRIES);
+					log.debug("Nickname conflict during social signup. try={}/{}", i + 1, MAX_TRIES);
 					continue;
 				}
 				// 그 외 제약 위반은 에러 발생
@@ -210,84 +222,9 @@ public class AuthService {
 			}
 		}
 
-		log.warn("Failed to generate unique nickname after {} tries (kakao signup).", MAX_TRIES);
+		log.warn("Failed to generate unique nickname after {} tries (social signup).", MAX_TRIES);
 		throw new AppException(ErrorCode.NICKNAME_GENERATION_UNAVAILABLE);
 	}
-
-	public SocialLoginResponseDTO googleLogin(String  code, String redirectUri) {
-		String googleAccessToken = googleOAuthProvider.getAccessToken(code, redirectUri);
-		OAuthUserInfoDTO userInfo = googleOAuthProvider.getUserInfo(googleAccessToken);
-
-		String googleId = String.valueOf(userInfo.id());
-
-		// provider = GOOGLE, providerUserId인 값을 통해 이미 가입된 회원인지 식별
-		Optional<UserAuth> existingUserAuth = userAuthRepository.findByProviderAndProviderUserId(GOOGLE, googleId);
-
-		String email = userInfo.email();
-
-		// 신규 유저일 경우 User, UserAuth값을 새롭게 생성함
-		UserAuth userAuth = existingUserAuth
-			.orElseGet(() -> {
-				User user = createGoogleUser(email);
-
-				return userAuthRepository.save(
-					UserAuth.builder()
-						.user(user)
-						.provider(GOOGLE)
-						.providerUserId(googleId)
-						.build());
-			});
-
-		User user = userAuth.getUser();
-
-		// 액세스 토큰, 리프레쉬 토큰 발급
-		TokenPair tokenPair = issueTokensAndUpsertSession(user);
-
-		UserStatus userStatus = user.getUserStatus();
-		NextStep nextStep = null;
-		Boolean marketingConsent = user.getMarketingConsent();
-
-		// 최초 회원가입한 소셜 로그인 유저일 경우
-		if (user.getUserStatus() == UserStatus.CREATED) {
-			// 최초 회원가입인 경우 TERMS 페이지로 이동,
-			// 회원가입 이후 약관 동의까지 마친 경우 ONBOARDING 페이지로 이동
-			nextStep = (marketingConsent == null)
-				? NextStep.TERMS
-				: NextStep.ONBOARDING;
-		}
-
-		return new SocialLoginResponseDTO(
-			user.getUserId(), tokenPair.accessToken(), tokenPair.refreshToken(),
-			userStatus, nextStep
-		);
-	}
-
-	private User createGoogleUser(String email) {
-
-		for (int i = 0; i < MAX_TRIES; i++) {
-			String nickname = nicknameGenerator.generateRandomNickname();
-
-			try {
-				return userRepository.saveAndFlush(User.builder()
-					.email(email)
-					.nickname(nickname)
-					.build());
-			} catch (DataIntegrityViolationException e) {
-				// 닉네임 관련 제약 위반인 경우에만 재시도
-				if (shouldRetryNickname(e)) {
-					log.debug("Nickname conflict during google signup. try={}/{}", i + 1, MAX_TRIES);
-					continue;
-				}
-				// 그 외 제약 위반은 에러 발생
-				log.error("Signup failed due to integrity violation (non-nickname).", e);
-				throw e;
-			}
-		}
-
-		log.warn("Failed to generate unique nickname after {} tries (google signup).", MAX_TRIES);
-		throw new AppException(ErrorCode.NICKNAME_GENERATION_UNAVAILABLE);
-	}
-
 
 	@Transactional
 	public void sendSignupCode(SendCodeRequestDTO sendCodeRequestDTO) {
