@@ -8,12 +8,8 @@ import com.cookeep.cookeep.api.dto.response.AiSessionListResponseDto;
 import com.cookeep.cookeep.common.exception.AppException;
 import com.cookeep.cookeep.common.exception.ErrorCode;
 import com.cookeep.cookeep.domain.cookie.application.CookieService;
-import com.cookeep.cookeep.domain.cookie.dao.CookieLogRepository;
-import com.cookeep.cookeep.domain.cookie.dao.DailyCookieGrantRepository;
 import com.cookeep.cookeep.domain.cookie.entity.CookieLog;
-import com.cookeep.cookeep.domain.cookie.entity.DailyCookieGrant;
 import com.cookeep.cookeep.domain.dailyrecipe.dao.DailyRecipeRepository;
-import com.cookeep.cookeep.domain.ingredient.common.domain.Type;
 import com.cookeep.cookeep.domain.ingredient.customingredient.dao.CustomIngredientRepository;
 import com.cookeep.cookeep.domain.ingredient.customingredient.entity.CustomIngredient;
 import com.cookeep.cookeep.domain.ingredient.defaultingredient.dao.DefaultIngredientRepository;
@@ -29,22 +25,20 @@ import com.cookeep.cookeep.domain.recipe.dao.AiSessionRepository;
 import com.cookeep.cookeep.domain.recipe.dto.*;
 import com.cookeep.cookeep.domain.recipe.entity.*;
 import com.cookeep.cookeep.domain.user.dao.UserRepository;
+import com.cookeep.cookeep.domain.user.entity.User;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static com.cookeep.cookeep.domain.recipe.entity.MessageType.*;
 
 @Slf4j
 @Service
@@ -135,11 +129,13 @@ public class AiRecipeService {
         // 메시지 db에 저장
         saveInitialUserMessage(session, request);
 
+        List<String> dislikedIngredients = getDislikedIngredients(userId);
 
         // 3. AI 레시피 생성 (이름 + 단위만 전달, AI가 quantity 생성)
         GeminiRecipeResponseDto aiResponse = geminiService.generateRecipe(
                 enrichedIngredients,
-                request.getDifficulty()
+                request.getDifficulty(),
+                dislikedIngredients
         );
 
         // 4. 세션 제목 업데이트
@@ -150,7 +146,7 @@ public class AiRecipeService {
                 youtubeSearchService.searchVideos(aiResponse.getYoutubeSearchQueries());
 
         // 6. 레시피 저장
-        saveAiMessageWithYoutubeReferences(session, aiResponse, youtubeReferences, MessageType.INITIAL_REQUEST);
+        saveAiMessageWithYoutubeReferences(session, aiResponse, youtubeReferences, MessageType.INITIAL_REQUEST, dislikedIngredients);
 
 
         // 7. 응답 반환
@@ -199,11 +195,14 @@ public class AiRecipeService {
         // 4. 재요청 메시지 저장 (role=USER, RETRY_REQUEST)
         saveSimpleUserMessage(session, MessageType.RETRY_REQUEST);
 
+        List<String> dislikedIngredients = getDislikedIngredients(userId);
+
         // 5. AI 호출 (제외 리스트 포함)
         GeminiRecipeResponseDto aiResponse = geminiService.generateRecipeWithExclusion(
                 ingredients,
                 session.getDifficulty(),
-                excludedTitles
+                excludedTitles,
+                dislikedIngredients
         );
 
         // 6. 시도 횟수 증가 및 저장
@@ -218,7 +217,7 @@ public class AiRecipeService {
                 youtubeSearchService.searchVideos(aiResponse.getYoutubeSearchQueries());
 
         // 9. 재요청 레시피 저장
-        saveAiMessageWithYoutubeReferences(session, aiResponse, youtubeReferences, MessageType.RETRY_REQUEST);
+        saveAiMessageWithYoutubeReferences(session, aiResponse, youtubeReferences, MessageType.RETRY_REQUEST, dislikedIngredients);
 
 
         // 10. 응답 반환
@@ -664,7 +663,9 @@ public class AiRecipeService {
     }
 
     // AI 응답 에러 확인
-    private void validateAiResponse(GeminiRecipeResponseDto response) {
+    private void validateAiResponse(
+            GeminiRecipeResponseDto response,
+            List<String> dislikedIngredients) {
 
         if (response == null) {
             log.error("❌ AI 응답 자체가 null입니다.");
@@ -748,6 +749,43 @@ public class AiRecipeService {
             }
         }
 
+        // 3. dislikedIngredients 검증
+        if (dislikedIngredients != null && !dislikedIngredients.isEmpty()) {
+
+            List<String> lowerDisliked = dislikedIngredients.stream()
+                    .map(String::toLowerCase)
+                    .toList();
+
+            List<String> aiGeneratedIngredients = new ArrayList<>();
+
+            // additional_ingredients
+            if (ingredients.getAdditionalIngredients() != null) {
+                ingredients.getAdditionalIngredients()
+                        .forEach(i -> aiGeneratedIngredients.add(i.getName()));
+            }
+
+            // optional_ingredients
+            if (ingredients.getOptionalIngredients() != null) {
+                ingredients.getOptionalIngredients()
+                        .forEach(i -> aiGeneratedIngredients.add(i.getName()));
+            }
+
+            for (String ingredientName : aiGeneratedIngredients) {
+
+                String normalizedName = ingredientName.trim();
+
+                for (String disliked : dislikedIngredients) {
+
+                    if (disliked == null) continue;
+                    String normalizedDisliked = disliked.trim();
+                    if (normalizedName.equals(normalizedDisliked)) {
+                        log.error("❌ disliked ingredient 포함 (AI 생성 재료): {}", normalizedName);
+                        throw new AppException(ErrorCode.DISLIKED_INGREDIENT_INCLUDED);
+                    }
+                }
+            }
+        }
+
         log.info("✅ AI 응답 검증 통과");
     }
 
@@ -756,10 +794,11 @@ public class AiRecipeService {
             AiSession session,
             GeminiRecipeResponseDto response,
             List<YoutubeReferenceDto> youtubeReferences,
-            MessageType type
+            MessageType type,
+            List<String> dislikedIngredients
     ) {
         try {
-            validateAiResponse(response);
+            validateAiResponse(response, dislikedIngredients);
 
             // Gemini 응답을 JSON으로 변환
             ObjectNode root = objectMapper.valueToTree(response);
@@ -785,5 +824,11 @@ public class AiRecipeService {
         }
     }
 
+    // 비선호 재료 리스트
+    private List<String> getDislikedIngredients(Long userId) {
+        return userRepository.findById(userId)
+                .map(User::getDislikedIngredients)
+                .orElse(List.of());
+    }
 
 }
