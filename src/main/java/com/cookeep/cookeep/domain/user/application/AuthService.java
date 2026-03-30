@@ -166,8 +166,12 @@ public class AuthService {
 		// 신규 유저일 경우 User, UserAuth값을 새롭게 생성함
 		UserAuth userAuth = existingUserAuth
 			.orElseGet(() -> {
-				User user = createSocialUser(email);
+				// 동일한 이메일로 가입된 User가 존재하는지 확인
+				// 존재하지 않을 경우 새로운 유저 생성
+				User user = userRepository.findByEmail(email)
+					.orElseGet(() -> createSocialUser(email));
 
+				// 기존 유저든 신규 유저든 UserAuth가 추가됨
 				return userAuthRepository.save(
 					UserAuth.builder()
 						.user(user)
