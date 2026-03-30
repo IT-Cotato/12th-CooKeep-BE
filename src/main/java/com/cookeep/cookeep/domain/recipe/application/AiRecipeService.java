@@ -68,6 +68,7 @@ public class AiRecipeService {
     private final ConsumptionReportService consumptionReportService;
     private final DailyRecipeRepository dailyRecipeRepository;
     private final WeeklyGoalService weeklyGoalService;
+    private final UserRepository userRepository;
     private final AiRateLimitService rateLimitService;
 
     // sessionId 유무에 따라 신규/재요청 로직 분기
