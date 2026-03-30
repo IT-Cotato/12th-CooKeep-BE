@@ -63,6 +63,7 @@ public class AiRecipeService {
     private final DailyRecipeRepository dailyRecipeRepository;
     private final WeeklyGoalService weeklyGoalService;
     private final UserRepository userRepository;
+    private final AiRateLimitService rateLimitService;
 
     // sessionId 유무에 따라 신규/재요청 로직 분기
     public AiRecipeResponseDto generateRecipe(Long userId, AiRecipeRequestDto request) {
@@ -88,6 +89,9 @@ public class AiRecipeService {
         if (request.getDifficulty() == null) {
             throw new AppException(ErrorCode.INVALID_DIFFICULTY);
         }
+
+        // RateLimit 검증
+        rateLimitService.validate(userId);
 
         // 1. 해당 유저의 재료 조회
         List<UserIngredient> userIngredients = userIngredientRepository
@@ -175,6 +179,9 @@ public class AiRecipeService {
         if (session.getDifficulty() == null) {
             throw new AppException(ErrorCode.SESSION_DIFFICULTY_NOT_FOUND);
         }
+
+        // RateLimit 검증
+        rateLimitService.validate(userId);
 
         // 2. 이전 재료 복원 (이미 이름 + 단위 포함)
         List<IngredientDetailDto> ingredients = readIngredientsFromSession(session);
