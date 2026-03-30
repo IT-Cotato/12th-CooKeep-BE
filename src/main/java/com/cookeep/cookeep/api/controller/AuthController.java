@@ -59,6 +59,18 @@ public class AuthController {
 		return ResponseEntity.ok(DataResponse.from(authService.kakaoLogin(code, redirectUri)));
 	}
 
+	@Operation(summary = "구글 로그인 API")
+	@ApiResponses(value = {
+		@ApiResponse(responseCode = "200", description = "구글 로그인 성공"),
+		@ApiResponse(responseCode = "400", description = "요청 파라미터 오류")
+	})
+	@GetMapping("/login/google")
+	public ResponseEntity<DataResponse<SocialLoginResponseDTO>> googleLogin(
+		@RequestParam String code,
+		@RequestParam(value = "redirect_uri", required = false) String redirectUri) {
+		return ResponseEntity.ok(DataResponse.from(authService.googleLogin(code, redirectUri)));
+	}
+
 	@Operation(summary = "전화번호 회원가입 API")
 	@ApiResponses(value = {
 		@ApiResponse(responseCode = "200", description = "회원가입 성공"),

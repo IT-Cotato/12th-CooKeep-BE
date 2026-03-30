@@ -10,9 +10,9 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClient;
 
+import com.cookeep.cookeep.domain.user.dto.GoogleUserInfoResponseDTO;
 import com.cookeep.cookeep.domain.user.dto.OAuthUserInfoDTO;
 import com.cookeep.cookeep.domain.user.dto.SocialTokenResponseDTO;
-import com.cookeep.cookeep.domain.user.dto.KakaoUserInfoResponseDTO;
 import com.cookeep.cookeep.domain.user.entity.Provider;
 
 import io.netty.handler.codec.http.HttpHeaderValues;
@@ -23,25 +23,25 @@ import reactor.core.publisher.Mono;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class KakaoOAuthProvider implements OAuthProvider {
+public class GoogleOAuthProvider implements OAuthProvider {
 
-	@Value("${kakao.auth.client}")
+	@Value("${google.auth.client}")
 	private String clientId;
-	@Value("${kakao.auth.secret}")
+	@Value("${google.auth.secret}")
 	private String clientSecret;
-	@Value("${kakao.auth.access-token-url}")
-	private String KakaoAccessTokenURL;
-	@Value("${kakao.auth.user-info-url}")
-	private String KakaoUserInfoURL;
-	@Value("${kakao.auth.redirect}")
+	@Value("${google.auth.access-token-url}")
+	private String GoogleAccessTokenURL;
+	@Value("${google.auth.user-info-url}")
+	private String GoogleUserInfoURL;
+	@Value("${google.auth.redirect}")
 	private String defaultRedirectUri;
 
 	@Override
 	public Provider provider() {
-		return Provider.KAKAO;
+		return Provider.GOOGLE;
 	}
 
-	// 인가코드를 사용해 로그인할 유저의 카카오 액세스 토큰값을 받아옴
+	// 인가코드를 사용해 로그인할 유저의 구글 액세스 토큰값을 받아옴
 	public String getAccessToken(String code, String redirectUri) {
 		String actualRedirectUri = (redirectUri != null) ? redirectUri : defaultRedirectUri;
 
@@ -54,15 +54,15 @@ public class KakaoOAuthProvider implements OAuthProvider {
 
 		SocialTokenResponseDTO socialTokenResponseDTO = WebClient.create()
 			.post()
-			.uri(KakaoAccessTokenURL)
+			.uri(GoogleAccessTokenURL)
 			.contentType(MediaType.APPLICATION_FORM_URLENCODED)
 			.body(BodyInserters.fromFormData(form))
 			.retrieve()
 			.onStatus(HttpStatusCode::isError, res ->
 				res.bodyToMono(String.class).defaultIfEmpty("")
 					.doOnNext(
-						body -> log.error("[KAKAO] /oauth/token error status={}, body={}", res.statusCode(), body))
-					.then(Mono.error(new RuntimeException("카카오 로그인 요청에 실패하였습니다.")))
+						body -> log.error("[GOOGLE] /oauth/token error status={}, body={}", res.statusCode(), body))
+					.then(Mono.error(new RuntimeException("구글 로그인 요청에 실패하였습니다.")))
 			)
 			.bodyToMono(SocialTokenResponseDTO.class)
 			.block();
@@ -70,19 +70,18 @@ public class KakaoOAuthProvider implements OAuthProvider {
 		return socialTokenResponseDTO.accessToken();
 	}
 
-	// 카카오 액세스 토큰을 사용해 유저의 정보값을 받아옴
+	// 구글 액세스 토큰을 사용해 유저의 정보값을 받아옴
 	public OAuthUserInfoDTO getUserInfo(String accessToken) {
-		KakaoUserInfoResponseDTO kakaoUserInfo = WebClient.create(KakaoUserInfoURL)
+		GoogleUserInfoResponseDTO googleUserInfo = WebClient.create(GoogleUserInfoURL)
 			.get()
 			.header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken) // access token 인가
 			.header(HttpHeaders.CONTENT_TYPE, HttpHeaderValues.APPLICATION_X_WWW_FORM_URLENCODED.toString())
 			.retrieve()
-			.bodyToMono(KakaoUserInfoResponseDTO.class)
+			.bodyToMono(GoogleUserInfoResponseDTO.class)
 			.block();
 
 		return new OAuthUserInfoDTO(
-			String.valueOf(kakaoUserInfo.id()),
-			kakaoUserInfo.kakaoAccount().email()
+			googleUserInfo.id(), googleUserInfo.email()
 		);
 	}
 }
