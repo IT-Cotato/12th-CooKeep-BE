@@ -52,7 +52,6 @@ public enum ErrorCode {
 	TITLE_INVALID_VALUE(HttpStatus.BAD_REQUEST, "레시피 제목을 입력해주세요.", "RECIPE-022"),
 	TITLE_TOO_LONG(HttpStatus.BAD_REQUEST, "레시피 제목은 최대 100글자입니다.", "RECIPE-023"),
 	RECIPE_DELETE_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "데일리레시피에 기록된 레시피는 삭제할 수 없습니다.", "RECIPE-024"),
-	DISLIKED_INGREDIENT_INCLUDED(HttpStatus.BAD_REQUEST, "제외 재료가 포함된 레시피입니다.", "RECIPE-026"),
 
 	// ONBOARDING
 	INVALID_FOOD_TYPE_COUNT(HttpStatus.BAD_REQUEST, "선호하는 음식 종류는 3개까지만 선택 가능합니다.", "ONBOARDING-001"),
@@ -181,8 +180,8 @@ public enum ErrorCode {
 	SMS_TOO_MANY_ATTEMPTS(HttpStatus.TOO_MANY_REQUESTS, "인증 시도 횟수를 초과하였습니다. 잠시 후 다시 시도해주세요.", "SMS-006"),
 
 	// RECIPE
-	AI_RATE_LIMIT_EXCEEDED(HttpStatus.TOO_MANY_REQUESTS, "AI API rate limit exceeded(토큰 부족)", "RECIPE-24"),
-	USER_RATE_LIMIT_EXCEEDED(HttpStatus.TOO_MANY_REQUESTS, "USER AI 사용 exceeded(1분 후 다시 시도)", "RECIPE-25"),
+	AI_RATE_LIMIT_EXCEEDED(HttpStatus.TOO_MANY_REQUESTS, "AI API rate limit exceeded(토큰 부족)", "RECIPE-25"),
+	USER_RATE_LIMIT_EXCEEDED(HttpStatus.TOO_MANY_REQUESTS, "USER AI 사용 exceeded(1분 후 다시 시도)", "RECIPE-26"),
 
 	// ==============================
 	// 500 INTERNAL_SERVER_ERROR
