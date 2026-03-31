@@ -1,8 +1,10 @@
 package com.cookeep.cookeep.domain.cookeeps.application;
 
+import com.cookeep.cookeep.api.dto.response.CookeepsFeedResponseDto;
 import com.cookeep.cookeep.api.dto.response.CookeepsOnboardingResponseDto;
 import com.cookeep.cookeep.api.dto.response.RankingResponseDto;
 import com.cookeep.cookeep.domain.dailyrecipe.dao.DailyRecipeRepository;
+import com.cookeep.cookeep.domain.dailyrecipe.entity.DailyRecipe;
 import com.cookeep.cookeep.domain.plant.dao.WateringLogRepository;
 import com.cookeep.cookeep.domain.user.application.UserReader;
 import com.cookeep.cookeep.domain.user.dao.UserRepository;
@@ -18,7 +20,12 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
+import org.springframework.data.domain.SliceImpl;
+import org.springframework.data.domain.Sort;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -231,6 +238,151 @@ class CookeepsServiceTest {
             cookeepsService.confirmOnboarding(USER_ID);
 
             assertThat(user.isCookeepsOnboarded()).isTrue();
+        }
+    }
+
+    @Nested
+    @DisplayName("getAllRecipes - 전체 공개 레시피 피드 조회")
+    class GetAllRecipes {
+
+        private User user;
+
+        @BeforeEach
+        void setUp() {
+            user = User.builder().nickname("테스터").build();
+            given(dailyRecipeRepository.findAllPublicRecipes(any(Pageable.class)))
+                    .willReturn(new SliceImpl<>(List.of()));
+        }
+
+        private DailyRecipe buildRecipe(Long id, String title, int likeCount, String imageUrl, LocalDateTime createdAt) {
+            DailyRecipe recipe = DailyRecipe.builder()
+                    .id(id)
+                    .title(title)
+                    .content("{}")
+                    .isPublic(true)
+                    .likeCount(likeCount)
+                    .recipeImageUrl(imageUrl)
+                    .user(user)
+                    .build();
+            ReflectionTestUtils.setField(recipe, "createdAt", createdAt);
+            return recipe;
+        }
+
+        @Test
+        @DisplayName("filter가 latest이면 createdAt 내림차순 정렬로 조회한다")
+        void filter_latest_createdAt_내림차순_조회() {
+            cookeepsService.getAllRecipes("latest", PageRequest.of(0, 10));
+
+            ArgumentCaptor<Pageable> captor = ArgumentCaptor.forClass(Pageable.class);
+            verify(dailyRecipeRepository).findAllPublicRecipes(captor.capture());
+
+            Sort.Order order = captor.getValue().getSort().getOrderFor("createdAt");
+            assertThat(order).isNotNull();
+            assertThat(order.getDirection()).isEqualTo(Sort.Direction.DESC);
+        }
+
+        @Test
+        @DisplayName("filter가 likes이면 likeCount 내림차순, 동점 시 createdAt 내림차순 정렬로 조회한다")
+        void filter_likes_likeCount_내림차순_createdAt_내림차순_조회() {
+            cookeepsService.getAllRecipes("likes", PageRequest.of(0, 10));
+
+            ArgumentCaptor<Pageable> captor = ArgumentCaptor.forClass(Pageable.class);
+            verify(dailyRecipeRepository).findAllPublicRecipes(captor.capture());
+
+            Sort sort = captor.getValue().getSort();
+            assertThat(sort.getOrderFor("likeCount").getDirection()).isEqualTo(Sort.Direction.DESC);
+            assertThat(sort.getOrderFor("createdAt").getDirection()).isEqualTo(Sort.Direction.DESC);
+        }
+
+        @Test
+        @DisplayName("filter가 oldest이면 createdAt 오름차순 정렬로 조회한다")
+        void filter_oldest_createdAt_오름차순_조회() {
+            cookeepsService.getAllRecipes("oldest", PageRequest.of(0, 10));
+
+            ArgumentCaptor<Pageable> captor = ArgumentCaptor.forClass(Pageable.class);
+            verify(dailyRecipeRepository).findAllPublicRecipes(captor.capture());
+
+            Sort.Order order = captor.getValue().getSort().getOrderFor("createdAt");
+            assertThat(order).isNotNull();
+            assertThat(order.getDirection()).isEqualTo(Sort.Direction.ASC);
+        }
+
+        @Test
+        @DisplayName("알 수 없는 filter 값은 최신순(createdAt 내림차순)으로 처리한다")
+        void 알수없는_filter_최신순_처리() {
+            cookeepsService.getAllRecipes("unknown", PageRequest.of(0, 10));
+
+            ArgumentCaptor<Pageable> captor = ArgumentCaptor.forClass(Pageable.class);
+            verify(dailyRecipeRepository).findAllPublicRecipes(captor.capture());
+
+            Sort.Order order = captor.getValue().getSort().getOrderFor("createdAt");
+            assertThat(order).isNotNull();
+            assertThat(order.getDirection()).isEqualTo(Sort.Direction.DESC);
+        }
+
+        @Test
+        @DisplayName("공개된 레시피가 없으면 빈 content를 반환한다")
+        void 공개_레시피_없으면_빈_content_반환() {
+            given(dailyRecipeRepository.findAllPublicRecipes(any(Pageable.class)))
+                    .willReturn(new SliceImpl<>(List.of()));
+
+            Slice<CookeepsFeedResponseDto> result = cookeepsService.getAllRecipes("latest", PageRequest.of(0, 10));
+
+            assertThat(result.getContent()).isEmpty();
+        }
+
+        @Test
+        @DisplayName("조회된 레시피가 다음 페이지보다 적으면 hasNext가 false이다")
+        void 마지막_페이지면_hasNext_false() {
+            DailyRecipe recipe = buildRecipe(1L, "된장찌개", 5, null, LocalDateTime.now());
+            given(dailyRecipeRepository.findAllPublicRecipes(any(Pageable.class)))
+                    .willReturn(new SliceImpl<>(List.of(recipe), PageRequest.of(0, 10), false));
+
+            Slice<CookeepsFeedResponseDto> result = cookeepsService.getAllRecipes("latest", PageRequest.of(0, 10));
+
+            assertThat(result.hasNext()).isFalse();
+        }
+
+        @Test
+        @DisplayName("다음 페이지가 있으면 hasNext가 true이다")
+        void 다음_페이지_있으면_hasNext_true() {
+            DailyRecipe recipe = buildRecipe(1L, "된장찌개", 5, null, LocalDateTime.now());
+            given(dailyRecipeRepository.findAllPublicRecipes(any(Pageable.class)))
+                    .willReturn(new SliceImpl<>(List.of(recipe), PageRequest.of(0, 10), true));
+
+            Slice<CookeepsFeedResponseDto> result = cookeepsService.getAllRecipes("latest", PageRequest.of(0, 10));
+
+            assertThat(result.hasNext()).isTrue();
+        }
+
+        @Test
+        @DisplayName("조회된 레시피의 필드가 DTO에 올바르게 매핑된다")
+        void 레시피_필드_DTO_올바르게_매핑() {
+            LocalDateTime createdAt = LocalDateTime.of(2026, 3, 28, 14, 0, 0);
+            DailyRecipe recipe = buildRecipe(42L, "된장찌개", 15, "https://example.com/img.jpg", createdAt);
+            given(dailyRecipeRepository.findAllPublicRecipes(any(Pageable.class)))
+                    .willReturn(new SliceImpl<>(List.of(recipe)));
+
+            Slice<CookeepsFeedResponseDto> result = cookeepsService.getAllRecipes("latest", PageRequest.of(0, 10));
+
+            CookeepsFeedResponseDto dto = result.getContent().get(0);
+            assertThat(dto.getDailyRecipeId()).isEqualTo(42L);
+            assertThat(dto.getTitle()).isEqualTo("된장찌개");
+            assertThat(dto.getLikeCount()).isEqualTo(15);
+            assertThat(dto.getRecipeImageUrl()).isEqualTo("https://example.com/img.jpg");
+            assertThat(dto.getCreatedAt()).isEqualTo(createdAt);
+        }
+
+        @Test
+        @DisplayName("recipeImageUrl이 없는 레시피는 null로 매핑된다")
+        void recipeImageUrl_없으면_null_매핑() {
+            DailyRecipe recipe = buildRecipe(1L, "바나나 쉐이크", 0, null, LocalDateTime.now());
+            given(dailyRecipeRepository.findAllPublicRecipes(any(Pageable.class)))
+                    .willReturn(new SliceImpl<>(List.of(recipe)));
+
+            Slice<CookeepsFeedResponseDto> result = cookeepsService.getAllRecipes("latest", PageRequest.of(0, 10));
+
+            assertThat(result.getContent().get(0).getRecipeImageUrl()).isNull();
         }
     }
 }
