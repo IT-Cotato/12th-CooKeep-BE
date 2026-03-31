@@ -75,7 +75,6 @@ public class KakaoOAuthProvider implements OAuthProvider {
 		KakaoUserInfoResponseDTO kakaoUserInfo = WebClient.create(KakaoUserInfoURL)
 			.get()
 			.header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken) // access token 인가
-			.header(HttpHeaders.CONTENT_TYPE, HttpHeaderValues.APPLICATION_X_WWW_FORM_URLENCODED.toString())
 			.retrieve()
 			.bodyToMono(KakaoUserInfoResponseDTO.class)
 			.block();

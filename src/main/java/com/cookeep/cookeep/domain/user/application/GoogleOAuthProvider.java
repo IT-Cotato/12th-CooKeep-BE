@@ -75,7 +75,6 @@ public class GoogleOAuthProvider implements OAuthProvider {
 		GoogleUserInfoResponseDTO googleUserInfo = WebClient.create(GoogleUserInfoURL)
 			.get()
 			.header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken) // access token 인가
-			.header(HttpHeaders.CONTENT_TYPE, HttpHeaderValues.APPLICATION_X_WWW_FORM_URLENCODED.toString())
 			.retrieve()
 			.bodyToMono(GoogleUserInfoResponseDTO.class)
 			.block();
