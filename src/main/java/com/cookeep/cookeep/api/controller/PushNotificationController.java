@@ -22,7 +22,7 @@ import java.util.Map;
 @Slf4j
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/users/me/push")
+@RequestMapping("/api/users/me")
 public class PushNotificationController {
 
     private final PushNotificationEligibilityService pushNotificationEligibilityService;
@@ -53,7 +53,7 @@ public class PushNotificationController {
                     - INTERNAL_SERVER_ERROR: 서버 내부 오류가 발생했습니다.
                     """, content = @Content)
     })
-    @GetMapping("/eligibility")
+    @GetMapping("/alerts")
     public ResponseEntity<DataResponse<PushNotificationEligibilityResponseDto>> checkPushNotificationEligibility(
             @AuthenticationPrincipal(expression = "userId") Long userId
     ) {
