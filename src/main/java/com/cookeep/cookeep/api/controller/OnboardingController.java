@@ -1,12 +1,9 @@
 package com.cookeep.cookeep.api.controller;
 
+import com.cookeep.cookeep.api.dto.response.IngredientNameResponseDto;
+import com.cookeep.cookeep.domain.ingredient.defaultingredient.application.IngredientNameService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.PatchMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
 
 import com.cookeep.cookeep.api.dto.request.AgreementRequestDTO;
 import com.cookeep.cookeep.api.dto.request.OnboardingRequestDTO;
@@ -19,6 +16,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
@@ -26,6 +24,7 @@ import lombok.RequiredArgsConstructor;
 public class OnboardingController {
 
 	private final OnboardingService onboardingService;
+	private final IngredientNameService ingredientNameService;
 
 	@Operation(summary = "약관 동의 여부 저장", description = "소셜로그인 회원을 대상으로 약관 동의 여부를 저장합니다.")
 	@ApiResponses(value = {
@@ -73,5 +72,15 @@ public class OnboardingController {
 		Long userId = principal.userId();
 		onboardingService.saveOnboarding(userId, onboardingRequestDTO);
 		return ResponseEntity.ok(DataResponse.ok());
+	}
+
+	@Operation(summary = "식재료 이름 조회 (비선호식재료 입력 시 재료명 조회용)")
+	@ApiResponses(value = {
+			@ApiResponse(responseCode = "200", description = "조회 성공"),
+			@ApiResponse(responseCode = "500", description = "서버 내부 오류")
+	})
+	@GetMapping("/onboarding/ingredients")
+	public ResponseEntity<DataResponse<IngredientNameResponseDto>> getIngredientNames() {
+		return ResponseEntity.ok(DataResponse.from(ingredientNameService.getIngredientNames()));
 	}
 }
