@@ -17,7 +17,6 @@ import com.cookeep.cookeep.domain.user.dao.UserAuthRepository;
 import com.cookeep.cookeep.domain.user.dao.UserRepository;
 import com.cookeep.cookeep.domain.user.entity.Provider;
 import com.cookeep.cookeep.domain.user.entity.User;
-import com.cookeep.cookeep.domain.user.entity.UserStatus;
 import com.cookeep.cookeep.domain.verification.application.SmsVerificationService;
 import com.cookeep.cookeep.domain.verification.entity.VerificationPurpose;
 
