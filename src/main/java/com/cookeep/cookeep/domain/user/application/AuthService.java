@@ -53,8 +53,6 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class AuthService {
 
-	private final KakaoOAuthProvider kakaoOAuthProvider;
-	private final GoogleOAuthProvider googleOAuthProvider;
 	private final UserRepository userRepository;
 	private final UserAuthRepository userAuthRepository;
 	private final UserSessionRepository userSessionRepository;
