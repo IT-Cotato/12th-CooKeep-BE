@@ -15,12 +15,13 @@ import com.cookeep.cookeep.api.dto.request.LoginRequestDTO;
 import com.cookeep.cookeep.api.dto.request.ResetPasswordRequestDTO;
 import com.cookeep.cookeep.api.dto.request.SignupRequestDTO;
 import com.cookeep.cookeep.api.dto.request.TokenRefreshRequestDTO;
-import com.cookeep.cookeep.api.dto.response.KakaoLoginResponseDTO;
+import com.cookeep.cookeep.api.dto.response.SocialLoginResponseDTO;
 import com.cookeep.cookeep.api.dto.response.LoginResponseDTO;
 import com.cookeep.cookeep.api.dto.response.SignUpResponseDTO;
 import com.cookeep.cookeep.api.dto.response.TokenRefreshResponseDTO;
 import com.cookeep.cookeep.common.dto.DataResponse;
 import com.cookeep.cookeep.domain.user.application.AuthService;
+import com.cookeep.cookeep.domain.user.entity.Provider;
 import com.cookeep.cookeep.security.UserPrincipal;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -53,10 +54,22 @@ public class AuthController {
 		@ApiResponse(responseCode = "400", description = "요청 파라미터 오류")
 	})
 	@GetMapping("/login/kakao")
-	public ResponseEntity<DataResponse<KakaoLoginResponseDTO>> kakaoLogin(
-			@RequestParam String code,
-			@RequestParam(value = "redirect_uri", required = false) String redirectUri) {
-		return ResponseEntity.ok(DataResponse.from(authService.kakaoLogin(code, redirectUri)));
+	public ResponseEntity<DataResponse<SocialLoginResponseDTO>> kakaoLogin(
+		@RequestParam String code,
+		@RequestParam(value = "redirect_uri", required = false) String redirectUri) {
+		return ResponseEntity.ok(DataResponse.from(authService.socialLogin(Provider.KAKAO, code, redirectUri)));
+	}
+
+	@Operation(summary = "구글 로그인 API")
+	@ApiResponses(value = {
+		@ApiResponse(responseCode = "200", description = "구글 로그인 성공"),
+		@ApiResponse(responseCode = "400", description = "요청 파라미터 오류")
+	})
+	@GetMapping("/login/google")
+	public ResponseEntity<DataResponse<SocialLoginResponseDTO>> googleLogin(
+		@RequestParam String code,
+		@RequestParam(value = "redirect_uri", required = false) String redirectUri) {
+		return ResponseEntity.ok(DataResponse.from(authService.socialLogin(Provider.GOOGLE, code, redirectUri)));
 	}
 
 	@Operation(summary = "전화번호 회원가입 API")
