@@ -12,7 +12,10 @@ import lombok.*;
 @AllArgsConstructor
 @Builder
 @Entity
-@Table(name = "daily_recipes")
+@Table(name = "daily_recipes", indexes = {
+        @Index(name = "idx_daily_recipes_public_created", columnList = "is_public, created_at DESC"),
+        @Index(name = "idx_daily_recipes_public_likes", columnList = "is_public, like_count DESC, created_at DESC")
+})
 public class DailyRecipe extends BaseEntity {
 
     @Id

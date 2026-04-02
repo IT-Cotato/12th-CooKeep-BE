@@ -4,6 +4,7 @@ import com.cookeep.cookeep.domain.dailyrecipe.entity.DailyRecipe;
 import com.cookeep.cookeep.domain.user.entity.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -34,13 +35,9 @@ public interface DailyRecipeRepository extends JpaRepository<DailyRecipe, Long> 
             @Param("start") LocalDateTime start,
             @Param("end") LocalDateTime end);
 
-    // 이번 주차(월~일) 중 공개된 레시피만 조회
-    @Query("SELECT dr FROM DailyRecipe dr WHERE dr.isPublic = true " +
-            "AND dr.createdAt >= :start AND dr.createdAt < :end")
-    Page<DailyRecipe> findWeeklyPublicRecipes(
-            @Param("start") LocalDateTime start,
-            @Param("end") LocalDateTime end,
-            Pageable pageable);
+    // 전체 공개 레시피 조회 (Slice 기반 - COUNT 쿼리 없음)
+    @Query("SELECT dr FROM DailyRecipe dr WHERE dr.isPublic = true")
+    Slice<DailyRecipe> findAllPublicRecipes(Pageable pageable);
 
     boolean existsByAiRecipe_Session_Id(Long sessionId);
 
