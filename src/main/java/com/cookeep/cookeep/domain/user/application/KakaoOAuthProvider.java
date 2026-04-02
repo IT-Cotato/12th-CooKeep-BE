@@ -15,7 +15,6 @@ import com.cookeep.cookeep.domain.user.dto.SocialTokenResponseDTO;
 import com.cookeep.cookeep.domain.user.dto.KakaoUserInfoResponseDTO;
 import com.cookeep.cookeep.domain.user.entity.Provider;
 
-import io.netty.handler.codec.http.HttpHeaderValues;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Mono;
@@ -41,6 +40,8 @@ public class KakaoOAuthProvider implements OAuthProvider {
 		return Provider.KAKAO;
 	}
 
+	private WebClient webClient = WebClient.create();
+
 	// 인가코드를 사용해 로그인할 유저의 카카오 액세스 토큰값을 받아옴
 	public String getAccessToken(String code, String redirectUri) {
 		String actualRedirectUri = (redirectUri != null) ? redirectUri : defaultRedirectUri;
@@ -52,7 +53,7 @@ public class KakaoOAuthProvider implements OAuthProvider {
 		form.add("redirect_uri", actualRedirectUri);
 		form.add("code", code);
 
-		SocialTokenResponseDTO socialTokenResponseDTO = WebClient.create()
+		SocialTokenResponseDTO socialTokenResponseDTO = webClient
 			.post()
 			.uri(KakaoAccessTokenURL)
 			.contentType(MediaType.APPLICATION_FORM_URLENCODED)
@@ -72,8 +73,9 @@ public class KakaoOAuthProvider implements OAuthProvider {
 
 	// 카카오 액세스 토큰을 사용해 유저의 정보값을 받아옴
 	public OAuthUserInfoDTO getUserInfo(String accessToken) {
-		KakaoUserInfoResponseDTO kakaoUserInfo = WebClient.create(KakaoUserInfoURL)
+		KakaoUserInfoResponseDTO kakaoUserInfo = webClient
 			.get()
+			.uri(KakaoUserInfoURL)
 			.header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken) // access token 인가
 			.retrieve()
 			.bodyToMono(KakaoUserInfoResponseDTO.class)
