@@ -34,8 +34,8 @@ public class SecurityConfig {
 		config.setAllowedOrigins(List.of(
 			"http://localhost:5173",
 			"https://12th-coo-keep-fe.vercel.app",
-			"https://cookeep.store",
-			"https://api.cookeep.store"
+			"https://cookeep.kr",
+			"https://api.cookeep.kr"
 		));
 		config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
 		config.setAllowedHeaders(List.of("*"));
