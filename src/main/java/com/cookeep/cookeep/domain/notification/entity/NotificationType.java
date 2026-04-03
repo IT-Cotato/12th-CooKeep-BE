@@ -9,8 +9,8 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public enum NotificationType {
     EXPIRATION("유통기한임박"),
-    PLANT_WILTING("시듦"),
-    PLANT_GROWTH_STOP("성장정지");
+    PLANT_WILTING("시듦"), //필요시수정(to.현정)
+    PLANT_GROWTH_STOP("성장정지"); //필요시수정(to.현정)
 
     private final String displayName;
 
