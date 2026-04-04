@@ -1,6 +1,7 @@
 package com.cookeep.cookeep.domain.notification.application;
 
 import com.cookeep.cookeep.api.dto.request.WebPushSubscriptionRequestDto;
+import com.cookeep.cookeep.api.dto.response.WebPushEligibilityResponseDto;
 import com.cookeep.cookeep.api.dto.response.WebPushSubscriptionResponseDto;
 import com.cookeep.cookeep.common.exception.AppException;
 import com.cookeep.cookeep.common.exception.ErrorCode;
@@ -43,140 +44,215 @@ public class WebPushSubscriptionServiceTest {
     private static final String P256DH   = "BNcRdreALRFXTkOOUHK1EtK2wtaz5Ry4YfYCA_0QTpQt";
     private static final String AUTH     = "tBHItJI5svbpez7KI4CCXg==";
 
-    private User mockUser;
-    private WebPushSubscriptionRequestDto validRequest;
+    private User user;
 
     @BeforeEach
     void setUp() {
-        mockUser = mock(User.class);
-        given(mockUser.getUserId()).willReturn(USER_ID);
-
-        validRequest = makeRequest(ENDPOINT, P256DH, AUTH);
+        user = mock(User.class);
+        lenient().when(user.getUserId()).thenReturn(USER_ID);
+        lenient().when(userReader.readById(USER_ID)).thenReturn(user);
     }
 
     // 1. 구독 등록
     @Nested
-    @DisplayName("1. subscribe (구독 등록)")
+    @DisplayName("1. subscribe - 구독 등록")
     class Subscribe {
 
         @Test
-        @DisplayName("성공 - 신규 endpoint면 저장 후 성공 메시지 반환")
-        void subscribe_success_newEndpoint() {
-            // given
-            given(userReader.readById(USER_ID)).willReturn(mockUser);
+        @DisplayName("신규 endpoint이면 저장 후 성공 메시지를 반환한다")
+        void 신규_endpoint_저장_성공메시지_반환() {
             given(webPushSubscriptionRepository.findByEndpoint(ENDPOINT)).willReturn(Optional.empty());
 
-            // WebPushSubscription 저장 시 id 세팅 모킹
-            doAnswer(invocation -> {
-                WebPushSubscription sub = invocation.getArgument(0);
-                ReflectionTestUtils.setField(sub, "id", 10L);
-                return sub;
-            }).when(webPushSubscriptionRepository).save(any(WebPushSubscription.class));
+            WebPushSubscriptionResponseDto result =
+                    webPushSubscriptionService.subscribe(USER_ID, buildRequest(ENDPOINT, P256DH, AUTH));
 
-            // when
-            WebPushSubscriptionResponseDto response = webPushSubscriptionService.subscribe(USER_ID, validRequest);
-
-            // then
-            assertThat(response.getMessage()).isEqualTo("웹 푸시 구독이 등록되었습니다.");
-            then(webPushSubscriptionRepository).should(times(1)).save(any(WebPushSubscription.class));
+            assertThat(result.getMessage()).isEqualTo("웹 푸시 구독이 등록되었습니다.");
+            verify(webPushSubscriptionRepository, times(1)).save(any(WebPushSubscription.class));
         }
 
         @Test
-        @DisplayName("성공 (멱등) - 이미 동일한 endpoint가 존재하면 저장하지 않고 성공 메시지 반환")
-        void subscribe_success_duplicateEndpoint_idempotent() {
-            // given
-            WebPushSubscription existingSubscription = buildSubscription(10L, mockUser, ENDPOINT);
-            given(userReader.readById(USER_ID)).willReturn(mockUser);
+        @DisplayName("이미 동일한 endpoint가 존재하면 저장하지 않고 성공 메시지를 반환한다")
+        void 중복_endpoint_저장_생략_성공메시지_반환() {
+            WebPushSubscription existing = buildSubscription(10L, user, ENDPOINT);
             given(webPushSubscriptionRepository.findByEndpoint(ENDPOINT))
-                    .willReturn(Optional.of(existingSubscription));
+                    .willReturn(Optional.of(existing));
 
-            // when
-            WebPushSubscriptionResponseDto response = webPushSubscriptionService.subscribe(USER_ID, validRequest);
+            WebPushSubscriptionResponseDto result =
+                    webPushSubscriptionService.subscribe(USER_ID, buildRequest(ENDPOINT, P256DH, AUTH));
 
-            // then
-            assertThat(response.getMessage()).isEqualTo("웹 푸시 구독이 등록되었습니다.");
-            then(webPushSubscriptionRepository).should(never()).save(any());
+            assertThat(result.getMessage()).isEqualTo("웹 푸시 구독이 등록되었습니다.");
+            verify(webPushSubscriptionRepository, never()).save(any());
         }
 
         @Test
-        @DisplayName("실패 - 존재하지 않는 유저")
-        void subscribe_fail_userNotFound() {
-            // given
+        @DisplayName("존재하지 않는 유저이면 USER_NOT_FOUND 예외가 발생한다")
+        void 존재하지않는_유저_예외발생() {
             given(userReader.readById(USER_ID))
                     .willThrow(new AppException(ErrorCode.USER_NOT_FOUND));
 
-            // when & then
-            assertThatThrownBy(() -> webPushSubscriptionService.subscribe(USER_ID, validRequest))
+            assertThatThrownBy(() ->
+                    webPushSubscriptionService.subscribe(USER_ID, buildRequest(ENDPOINT, P256DH, AUTH))
+            )
                     .isInstanceOf(AppException.class)
-                    .extracting(e -> ((AppException) e).getErrorCode())
-                    .isEqualTo(ErrorCode.USER_NOT_FOUND);
+                    .hasMessageContaining(ErrorCode.USER_NOT_FOUND.getMessage());
 
-            then(webPushSubscriptionRepository).should(never()).save(any());
+            verify(webPushSubscriptionRepository, never()).save(any());
         }
 
         @Test
-        @DisplayName("실패 - request 자체가 null")
-        void subscribe_fail_requestNull() {
-            // given
-            given(userReader.readById(USER_ID)).willReturn(mockUser);
-
-            // when & then
-            assertThatThrownBy(() -> webPushSubscriptionService.subscribe(USER_ID, null))
+        @DisplayName("request가 null이면 INVALID_REQUEST 예외가 발생한다")
+        void request_null_INVALID_REQUEST_예외발생() {
+            assertThatThrownBy(() ->
+                    webPushSubscriptionService.subscribe(USER_ID, null)
+            )
                     .isInstanceOf(AppException.class)
-                    .extracting(e -> ((AppException) e).getErrorCode())
-                    .isEqualTo(ErrorCode.INVALID_REQUEST);
+                    .hasMessageContaining(ErrorCode.INVALID_REQUEST.getMessage());
+
+            verify(webPushSubscriptionRepository, never()).save(any());
         }
 
         @Test
-        @DisplayName("실패 - endpoint가 null")
-        void subscribe_fail_endpointNull() {
-            // given
-            given(userReader.readById(USER_ID)).willReturn(mockUser);
-            WebPushSubscriptionRequestDto requestWithNullEndpoint = makeRequest(null, P256DH, AUTH);
-
-            // when & then
-            assertThatThrownBy(() -> webPushSubscriptionService.subscribe(USER_ID, requestWithNullEndpoint))
+        @DisplayName("endpoint가 null이면 INVALID_ENDPOINT 예외가 발생한다")
+        void endpoint_null_INVALID_ENDPOINT_예외발생() {
+            assertThatThrownBy(() ->
+                    webPushSubscriptionService.subscribe(USER_ID, buildRequest(null, P256DH, AUTH))
+            )
                     .isInstanceOf(AppException.class)
-                    .extracting(e -> ((AppException) e).getErrorCode())
-                    .isEqualTo(ErrorCode.INVALID_ENDPOINT);
+                    .hasMessageContaining(ErrorCode.INVALID_ENDPOINT.getMessage());
+
+            verify(webPushSubscriptionRepository, never()).save(any());
         }
 
         @Test
-        @DisplayName("실패 - endpoint가 빈 문자열")
-        void subscribe_fail_endpointBlank() {
-            // given
-            given(userReader.readById(USER_ID)).willReturn(mockUser);
-            WebPushSubscriptionRequestDto requestWithBlankEndpoint = makeRequest("  ", P256DH, AUTH);
-
-            // when & then
-            assertThatThrownBy(() -> webPushSubscriptionService.subscribe(USER_ID, requestWithBlankEndpoint))
+        @DisplayName("endpoint가 빈 문자열이면 INVALID_ENDPOINT 예외가 발생한다")
+        void endpoint_공백_INVALID_ENDPOINT_예외발생() {
+            assertThatThrownBy(() ->
+                    webPushSubscriptionService.subscribe(USER_ID, buildRequest("  ", P256DH, AUTH))
+            )
                     .isInstanceOf(AppException.class)
-                    .extracting(e -> ((AppException) e).getErrorCode())
-                    .isEqualTo(ErrorCode.INVALID_ENDPOINT);
+                    .hasMessageContaining(ErrorCode.INVALID_ENDPOINT.getMessage());
+
+            verify(webPushSubscriptionRepository, never()).save(any());
         }
 
         @Test
-        @DisplayName("실패 - keys가 null")
-        void subscribe_fail_keysNull() {
-            // given
-            given(userReader.readById(USER_ID)).willReturn(mockUser);
-            WebPushSubscriptionRequestDto requestWithNullKeys = makeRequest(ENDPOINT, null, null);
+        @DisplayName("keys가 null이면 INVALID_REQUEST 예외가 발생한다")
+        void keys_null_INVALID_REQUEST_예외발생() {
+            WebPushSubscriptionRequestDto request = new WebPushSubscriptionRequestDto();
+            ReflectionTestUtils.setField(request, "endpoint", ENDPOINT);
+            // keys 필드를 명시적으로 null로 유지
 
-            // when & then
-            assertThatThrownBy(() -> webPushSubscriptionService.subscribe(USER_ID, requestWithNullKeys))
+            assertThatThrownBy(() ->
+                    webPushSubscriptionService.subscribe(USER_ID, request)
+            )
                     .isInstanceOf(AppException.class)
-                    .extracting(e -> ((AppException) e).getErrorCode())
-                    .isEqualTo(ErrorCode.INVALID_REQUEST);
+                    .hasMessageContaining(ErrorCode.INVALID_REQUEST.getMessage());
+
+            verify(webPushSubscriptionRepository, never()).save(any());
         }
     }
 
     // 2. 구독 삭제
+    @Nested
+    @DisplayName("2. unsubscribe - 구독 삭제")
+    class Unsubscribe {
 
+        @Test
+        @DisplayName("본인 소유 endpoint이면 삭제 후 성공 메시지를 반환한다")
+        void 본인_소유_endpoint_삭제_성공메시지_반환() {
+            WebPushSubscription subscription = buildSubscription(10L, user, ENDPOINT);
+            given(webPushSubscriptionRepository.findByEndpoint(ENDPOINT))
+                    .willReturn(Optional.of(subscription));
+
+            WebPushSubscriptionResponseDto result =
+                    webPushSubscriptionService.unsubscribe(USER_ID, buildRequest(ENDPOINT, P256DH, AUTH));
+
+            assertThat(result.getMessage()).isEqualTo("웹 푸시 구독이 해제되었습니다.");
+            verify(webPushSubscriptionRepository, times(1)).delete(subscription);
+        }
+
+        @Test
+        @DisplayName("존재하지 않는 endpoint이면 SUBSCRIPTION_NOT_FOUND 예외가 발생한다")
+        void 존재하지않는_endpoint_SUBSCRIPTION_NOT_FOUND_예외발생() {
+            given(webPushSubscriptionRepository.findByEndpoint(ENDPOINT))
+                    .willReturn(Optional.empty());
+
+            assertThatThrownBy(() ->
+                    webPushSubscriptionService.unsubscribe(USER_ID, buildRequest(ENDPOINT, P256DH, AUTH))
+            )
+                    .isInstanceOf(AppException.class)
+                    .hasMessageContaining(ErrorCode.SUBSCRIPTION_NOT_FOUND.getMessage());
+
+            verify(webPushSubscriptionRepository, never()).delete(any());
+        }
+
+        @Test
+        @DisplayName("다른 유저 소유의 endpoint를 삭제하려 하면 FORBIDDEN 예외가 발생한다")
+        void 타인_소유_endpoint_FORBIDDEN_예외발생() {
+            User anotherUser = mock(User.class);
+            given(anotherUser.getUserId()).willReturn(999L);
+
+            WebPushSubscription subscription = buildSubscription(10L, anotherUser, ENDPOINT);
+            given(webPushSubscriptionRepository.findByEndpoint(ENDPOINT))
+                    .willReturn(Optional.of(subscription));
+
+            assertThatThrownBy(() ->
+                    webPushSubscriptionService.unsubscribe(USER_ID, buildRequest(ENDPOINT, P256DH, AUTH))
+            )
+                    .isInstanceOf(AppException.class)
+                    .hasMessageContaining(ErrorCode.FORBIDDEN.getMessage());
+
+            verify(webPushSubscriptionRepository, never()).delete(any());
+        }
+    }
+
+    // 3. 구독 가능 여부 확인
+    @Nested
+    @DisplayName("3. checkEligibility - 수신 가능 여부 확인")
+    class CheckEligibility {
+
+        @Test
+        @DisplayName("구독 정보가 존재하면 eligible=true를 반환한다")
+        void 구독_존재_eligible_true_반환() {
+            given(webPushSubscriptionRepository.existsByUser_UserId(USER_ID)).willReturn(true);
+
+            WebPushEligibilityResponseDto result =
+                    webPushSubscriptionService.checkEligibility(USER_ID);
+
+            assertThat(result.getEligible()).isTrue();
+        }
+
+        @Test
+        @DisplayName("구독 정보가 없으면 eligible=false를 반환한다")
+        void 구독_없음_eligible_false_반환() {
+            given(webPushSubscriptionRepository.existsByUser_UserId(USER_ID)).willReturn(false);
+
+            WebPushEligibilityResponseDto result =
+                    webPushSubscriptionService.checkEligibility(USER_ID);
+
+            assertThat(result.getEligible()).isFalse();
+        }
+
+        @Test
+        @DisplayName("존재하지 않는 유저이면 USER_NOT_FOUND 예외가 발생한다")
+        void 존재하지않는_유저_USER_NOT_FOUND_예외발생() {
+            given(userReader.readById(USER_ID))
+                    .willThrow(new AppException(ErrorCode.USER_NOT_FOUND));
+
+            assertThatThrownBy(() ->
+                    webPushSubscriptionService.checkEligibility(USER_ID)
+            )
+                    .isInstanceOf(AppException.class)
+                    .hasMessageContaining(ErrorCode.USER_NOT_FOUND.getMessage());
+
+            verify(webPushSubscriptionRepository, never()).existsByUser_UserId(any());
+        }
+    }
 
     // --- 내부 메서드 ---
 
     // Keys 객체 생성
-    private WebPushSubscriptionRequestDto makeRequest(String endpoint, String p256dh, String auth) {
+    private WebPushSubscriptionRequestDto buildRequest(String endpoint, String p256dh, String auth) {
         WebPushSubscriptionRequestDto dto = new WebPushSubscriptionRequestDto();
         ReflectionTestUtils.setField(dto, "endpoint", endpoint);
 
@@ -186,14 +262,13 @@ public class WebPushSubscriptionServiceTest {
             ReflectionTestUtils.setField(keys, "auth", auth);
             ReflectionTestUtils.setField(dto, "keys", keys);
         }
-
         return dto;
     }
 
     // 테스트용 WebPushSubscription 생성
-    private WebPushSubscription buildSubscription(Long id, User user, String endpoint) {
+    private WebPushSubscription buildSubscription(Long id, User owner, String endpoint) {
         WebPushSubscription sub = WebPushSubscription.builder()
-                .user(user)
+                .user(owner)
                 .endpoint(endpoint)
                 .p256dh(P256DH)
                 .auth(AUTH)
