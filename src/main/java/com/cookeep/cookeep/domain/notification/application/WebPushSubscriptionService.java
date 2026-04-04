@@ -1,6 +1,7 @@
 package com.cookeep.cookeep.domain.notification.application;
 
 import com.cookeep.cookeep.api.dto.request.WebPushSubscriptionRequestDto;
+import com.cookeep.cookeep.api.dto.response.WebPushEligibilityResponseDto;
 import com.cookeep.cookeep.api.dto.response.WebPushSubscriptionResponseDto;
 import com.cookeep.cookeep.common.exception.AppException;
 import com.cookeep.cookeep.common.exception.ErrorCode;
@@ -61,6 +62,37 @@ public class WebPushSubscriptionService {
                 userId, subscription.getId());
 
         return WebPushSubscriptionResponseDto.subscribed();
+    }
+
+    // 2. 구독 삭제: endpoint 구독 정보 삭제
+    @Transactional
+    public WebPushSubscriptionResponseDto unsubscribe(Long userId, WebPushSubscriptionRequestDto request) {
+        WebPushSubscription subscription = webPushSubscriptionRepository
+                .findByEndpoint(request.getEndpoint())
+                .orElseThrow(() -> new AppException(ErrorCode.SUBSCRIPTION_NOT_FOUND));
+
+        // 본인 소유 여부 검증
+        if (!subscription.getUser().getUserId().equals(userId)) {
+            throw new AppException(ErrorCode.FORBIDDEN);
+        }
+
+        webPushSubscriptionRepository.delete(subscription);
+
+        log.info("WebPush 구독 정보 삭제. userId={}, subscriptionId={}",
+                userId, subscription.getId());
+
+        return WebPushSubscriptionResponseDto.unsubscribed();
+    }
+
+    // 3. 수신 가능 여부 확인
+    @Transactional(readOnly = true)
+    public WebPushEligibilityResponseDto checkEligibility(Long userId) {
+
+        userReader.readById(userId);
+
+        boolean subscribed = webPushSubscriptionRepository.existsByUser_UserId(userId);
+
+        return WebPushEligibilityResponseDto.of(subscribed);
     }
 
     private String maskEndpoint(String endpoint) {
