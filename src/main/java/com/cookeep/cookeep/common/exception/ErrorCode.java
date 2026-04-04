@@ -149,7 +149,7 @@ public enum ErrorCode {
 	VERIFICATION_NOT_FOUND(HttpStatus.NOT_FOUND, "인증 요청 내역이 없습니다.", "SMS-004"),
 
 	// NOTIFICATION
-	SUBSCRIPTION_NOT_FOUND(HttpStatus.NOT_FOUND, "해당 subscription을 찾을 수 없습니다.", "NOTIFICATION-002"),
+	SUBSCRIPTION_NOT_FOUND(HttpStatus.NOT_FOUND, "해당 subscription을 찾을 수 없습니다.", "NOTIFICATION-003"),
 
 	// ==============================
 	// 409 CONFLICT
