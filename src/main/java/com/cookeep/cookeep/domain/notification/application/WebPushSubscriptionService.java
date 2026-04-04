@@ -25,7 +25,6 @@ public class WebPushSubscriptionService {
     // 1. 구독등록: 브라우저가 생성한 Push Subscription 저장 or 이미 존재하면 기존 정보 반환
     @Transactional
     public WebPushSubscriptionResponseDto subscribe(Long userId, WebPushSubscriptionRequestDto request) {
-        User user = userReader.readById(userId);
 
         // request 자체 null
         if (request == null) {
@@ -41,6 +40,8 @@ public class WebPushSubscriptionService {
         if (request.getKeys() == null) {
             throw new AppException(ErrorCode.INVALID_REQUEST);
         }
+
+        User user = userReader.readById(userId);
 
         // 동일 endpoint가 이미 존재하면 해당 정보 응답
         if (webPushSubscriptionRepository.findByEndpoint(request.getEndpoint()).isPresent()) {
