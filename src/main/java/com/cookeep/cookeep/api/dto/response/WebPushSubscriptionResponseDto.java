@@ -2,6 +2,7 @@ package com.cookeep.cookeep.api.dto.response;
 
 import com.cookeep.cookeep.domain.notification.entity.WebPushSubscription;
 import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -9,26 +10,21 @@ import java.time.LocalDateTime;
 
 @Schema(
         name = "WebPushSubscriptionResponse",
-        description = "웹 푸시 구독 등록 응답 DTO"
+        description = "웹 푸시 구독 등록 / 삭제 응답 DTO"
 )
 @Getter
 @Builder
+@AllArgsConstructor
 public class WebPushSubscriptionResponseDto {
 
-    @Schema(description = "생성된 구독 ID", example = "1")
-    private Long subscriptionId;
+    @Schema(description = "처리 결과 메시지", example = "웹 푸시 구독이 등록되었습니다.")
+    private String message;
 
-    @Schema(description = "등록된 엔드포인트", example = "https://fcm.googleapis.com/fcm/send/...")
-    private String endpoint;
+    public static WebPushSubscriptionResponseDto subscribed() {
+        return new WebPushSubscriptionResponseDto("웹 푸시 구독이 등록되었습니다.");
+    }
 
-    @Schema(description = "구독 등록 시각", example = "2026-04-04T12:00:00")
-    private LocalDateTime createdAt;
-
-    public static WebPushSubscriptionResponseDto from(WebPushSubscription subscription) {
-        return WebPushSubscriptionResponseDto.builder()
-                .subscriptionId(subscription.getId())
-                .endpoint(subscription.getEndpoint())
-                .createdAt(subscription.getCreatedAt())
-                .build();
+    public static WebPushSubscriptionResponseDto unsubscribed() {
+        return new WebPushSubscriptionResponseDto("웹 푸시 구독이 해제되었습니다.");
     }
 }

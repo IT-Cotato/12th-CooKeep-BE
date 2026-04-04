@@ -2,6 +2,8 @@ package com.cookeep.cookeep.domain.notification.application;
 
 import com.cookeep.cookeep.api.dto.request.WebPushSubscriptionRequestDto;
 import com.cookeep.cookeep.api.dto.response.WebPushSubscriptionResponseDto;
+import com.cookeep.cookeep.common.exception.AppException;
+import com.cookeep.cookeep.common.exception.ErrorCode;
 import com.cookeep.cookeep.domain.notification.dao.WebPushSubscriptionRepository;
 import com.cookeep.cookeep.domain.notification.entity.WebPushSubscription;
 import com.cookeep.cookeep.domain.user.application.UserReader;
@@ -24,26 +26,36 @@ public class WebPushSubscriptionService {
     public WebPushSubscriptionResponseDto subscribe(Long userId, WebPushSubscriptionRequestDto request) {
         User user = userReader.readById(userId);
 
-        // 동일 endpoint가 이미 존재하면 기존 것 반환 (멱등)
-        return webPushSubscriptionRepository.findByEndpoint(request.getEndpoint())
-                .map(existing -> {
-                    log.debug("WebPush subscription already exists. userId={}, endpoint={}",
-                            userId, maskEndpoint(request.getEndpoint()));
-                    return WebPushSubscriptionResponseDto.from(existing);
-                })
-                .orElseGet(() -> {
-                    WebPushSubscription subscription = WebPushSubscription.builder()
-                            .user(user)
-                            .endpoint(request.getEndpoint())
-                            .p256dh(request.getP256dh())
-                            .auth(request.getAuth())
-                            .build();
+        // endpoint 누락 체크 (에러 방지)
+        if (request.getEndpoint() == null || request.getEndpoint().isBlank()) {
+            throw new AppException(ErrorCode.INVALID_ENDPOINT);
+        }
 
-                    WebPushSubscription saved = webPushSubscriptionRepository.save(subscription);
-                    log.info("WebPush subscription registered. userId={}, subscriptionId={}",
-                            userId, saved.getId());
-                    return WebPushSubscriptionResponseDto.from(saved);
-                });
+        // 동일 endpoint가 이미 존재하면 해당 정보 응답
+        if (webPushSubscriptionRepository.findByEndpoint(request.getEndpoint()).isPresent()) {
+            log.debug("WebPush 구독 정보 이미 존재함. userId={}, endpoint={}",
+                    userId, maskEndpoint(request.getEndpoint()));
+            return WebPushSubscriptionResponseDto.subscribed();
+        }
+
+        WebPushSubscription subscription = WebPushSubscription.builder()
+                .user(user)
+                .endpoint(request.getEndpoint())
+                .p256dh(request.getKeys().getP256dh())
+                .auth(request.getKeys().getAuth())
+                .build();
+
+        webPushSubscriptionRepository.save(subscription);
+
+        log.info("WebPush subscription registered. userId={}, subscriptionId={}",
+                userId, subscription.getId());
+
+        return WebPushSubscriptionResponseDto.subscribed();
+    }
+
+    private String maskEndpoint(String endpoint) {
+        if (endpoint == null || endpoint.length() < 20) return "****";
+        return endpoint.substring(0, 20) + "****";
     }
 
 }
