@@ -1,4 +1,4 @@
-package com.cookeep.cookeep.domain.notice.entity;
+package com.cookeep.cookeep.domain.notification.entity;
 
 import com.cookeep.cookeep.common.entity.BaseEntity;
 import com.cookeep.cookeep.domain.user.entity.User;
