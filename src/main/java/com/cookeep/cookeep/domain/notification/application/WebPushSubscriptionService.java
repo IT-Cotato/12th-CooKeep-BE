@@ -26,9 +26,19 @@ public class WebPushSubscriptionService {
     public WebPushSubscriptionResponseDto subscribe(Long userId, WebPushSubscriptionRequestDto request) {
         User user = userReader.readById(userId);
 
-        // endpoint 누락 체크 (에러 방지)
+        // request 자체 null
+        if (request == null) {
+            throw new AppException(ErrorCode.INVALID_REQUEST);
+        }
+
+        // endpoint 검증
         if (request.getEndpoint() == null || request.getEndpoint().isBlank()) {
             throw new AppException(ErrorCode.INVALID_ENDPOINT);
+        }
+
+        // keys 검증
+        if (request.getKeys() == null) {
+            throw new AppException(ErrorCode.INVALID_REQUEST);
         }
 
         // 동일 endpoint가 이미 존재하면 해당 정보 응답
