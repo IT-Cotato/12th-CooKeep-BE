@@ -19,6 +19,7 @@ import com.cookeep.cookeep.domain.recipe.dao.AiMessageRepository;
 import com.cookeep.cookeep.domain.recipe.dao.AiRecipeRepository;
 import com.cookeep.cookeep.domain.recipe.dao.AiSessionRepository;
 import com.cookeep.cookeep.domain.recipe.entity.*;
+import com.cookeep.cookeep.domain.user.dao.UserRepository;
 import com.cookeep.cookeep.domain.user.entity.User;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
@@ -61,6 +62,7 @@ public class AiRecipeServiceTest {
     @Mock private DailyRecipeRepository dailyRecipeRepository;
     @Mock private WeeklyGoalService weeklyGoalService;
     @Mock private AiRateLimitService rateLimitService;
+    @Mock private UserRepository userRepository;
 
     @Spy
     private ObjectMapper objectMapper = new ObjectMapper();
@@ -90,6 +92,9 @@ public class AiRecipeServiceTest {
     @BeforeEach
     void setUp() throws Exception {
         user = User.builder().nickname("테스터").build();
+
+        given(userRepository.findById(anyLong()))
+                .willReturn(Optional.of(user));
 
         session = AiSession.builder()
                 .userId(1L)
@@ -352,8 +357,12 @@ public class AiRecipeServiceTest {
             com.cookeep.cookeep.domain.recipe.dto.GeminiRecipeResponseDto response =
                     buildValidGeminiResponse();
 
-            given(geminiService.generateRecipeWithExclusion(anyList(), any(), anyList()))
-                    .willReturn(response);
+            given(geminiService.generateRecipeWithExclusion(
+                    anyList(),
+                    any(Difficulty.class),
+                    anyList(),
+                    anyList()
+            )).willReturn(response);
             given(youtubeSearchService.searchVideos(anyList())).willReturn(List.of());
             given(aiMessageRepository.save(any())).willAnswer(inv -> inv.getArgument(0));
             given(aiSessionRepository.save(any())).willAnswer(inv -> inv.getArgument(0));
@@ -403,7 +412,12 @@ public class AiRecipeServiceTest {
                     .hasFieldOrPropertyWithValue("errorCode", ErrorCode.USER_RATE_LIMIT_EXCEEDED);
 
             // Rate Limit에 걸렸으므로 Gemini는 절대 호출되면 안 됨
-            verify(geminiService, never()).generateRecipeWithExclusion(anyList(), any(), anyList());
+            verify(geminiService, never()).generateRecipeWithExclusion(
+                    anyList(),
+                    any(Difficulty.class),
+                    anyList(),
+                    anyList()
+            );
         }
 
         @Test

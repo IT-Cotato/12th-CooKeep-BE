@@ -87,6 +87,10 @@ public enum ErrorCode {
 	SAME_AS_CURRENT_PHONE_NUMBER(HttpStatus.BAD_REQUEST, "기존 등록된 전화번호와 동일한 전화번호입니다.", "USER-007"),
 	SAME_AS_CURRENT_EMAIL(HttpStatus.BAD_REQUEST, "기존 등록된 이메일과 동일한 이메일입니다.", "USER-008"),
 
+	// NOTIFICATION
+	INVALID_ENDPOINT(HttpStatus.BAD_REQUEST, "subscription endpoint 정보가 누락되었습니다.", "NOTIFICATION-001"),
+	INVALID_REQUEST(HttpStatus.BAD_REQUEST, "요청 정보는 필수입니다.", "NOTIFICATION-002"),
+
 	// ==============================
 	// 401 UNAUTHORIZED
 	// ==============================
@@ -143,6 +147,9 @@ public enum ErrorCode {
 
 	// SMS
 	VERIFICATION_NOT_FOUND(HttpStatus.NOT_FOUND, "인증 요청 내역이 없습니다.", "SMS-004"),
+
+	// NOTIFICATION
+	SUBSCRIPTION_NOT_FOUND(HttpStatus.NOT_FOUND, "해당 subscription을 찾을 수 없습니다.", "NOTIFICATION-003"),
 
 	// ==============================
 	// 409 CONFLICT
