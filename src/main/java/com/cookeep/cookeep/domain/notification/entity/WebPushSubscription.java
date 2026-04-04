@@ -28,12 +28,15 @@ public class WebPushSubscription extends BaseEntity {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
+    // Push 전송 주소 (기기/브라우저 마다 다름)
     @Column(nullable = false, unique = true, length = 512)
-    private String endpoint; // Push 전송 주소 (기기/브라우저 마다 다름)
+    private String endpoint;
 
+    // VAPID 공개키
     @Column(nullable = false, length = 256)
-    private String p256dh; // VAPID 공개키
+    private String p256dh;
 
+    // VAPID 인증키
     @Column(nullable = false, length = 64)
-    private String auth; // VAPID 인증키
+    private String auth;
 }
