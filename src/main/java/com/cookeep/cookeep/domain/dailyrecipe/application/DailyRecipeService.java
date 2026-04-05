@@ -86,7 +86,7 @@ public class DailyRecipeService {
                 .content(content)
                 .recipeImageUrl(recipeImageUrl)
                 .isPublic(isPublic != null ? isPublic : false)
-                .photoCookieAwarded(hasPhoto)
+                .photoRewardCompleted(hasPhoto)
                 .user(user)
                 .aiRecipe(aiRecipe)
                 .build();
@@ -157,8 +157,8 @@ public class DailyRecipeService {
                 throw new AppException(ErrorCode.DAILY_RECIPE_IMAGE_SAME_URL);
             }
             dailyRecipe.updateRecipeImageUrl(recipeImageUrl);
-            if (!dailyRecipe.isPhotoCookieAwarded()) {
-                dailyRecipe.markPhotoCookieAwarded();
+            if (!dailyRecipe.isPhotoRewardCompleted()) {
+                dailyRecipe.markPhotoRewardCompleted();
                 cookieService.updateCookie(userId, CookieLog.CookieLogType.BASIC_FOOD_PHOTO_REG);
                 goalAchieved = weeklyGoalService.handleGoalProgress(userId, GoalActionType.PHOTO_RECORD);
                 photoCookieAwarded = true;
