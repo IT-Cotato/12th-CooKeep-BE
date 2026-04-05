@@ -3,7 +3,7 @@ package com.cookeep.cookeep.api.controller;
 import com.cookeep.cookeep.common.dto.DataResponse;
 import com.cookeep.cookeep.common.exception.ErrorCode;
 import com.cookeep.cookeep.config.ApiErrorCodeExamples;
-import com.cookeep.cookeep.domain.notification.application.PushNotificationEligibilityService;
+import com.cookeep.cookeep.domain.notification.application.PopupNotificationEligibilityService;
 import com.cookeep.cookeep.domain.notification.dto.PushNotificationEligibilityResponseDto;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -16,8 +16,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Map;
-
 @Tag(name = "(MAIN04) 푸시 알림", description = "유통기한 임박 식재료 팝업 알림 API")
 @Slf4j
 @RestController
@@ -25,7 +23,7 @@ import java.util.Map;
 @RequestMapping("/api/users/me")
 public class PushNotificationController {
 
-    private final PushNotificationEligibilityService pushNotificationEligibilityService;
+    private final PopupNotificationEligibilityService pushNotificationEligibilityService;
 
     @Operation(
             summary = "유통기한 임박 팝업 자격 확인",
