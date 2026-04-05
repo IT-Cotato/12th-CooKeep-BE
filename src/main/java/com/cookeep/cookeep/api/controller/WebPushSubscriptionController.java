@@ -2,12 +2,10 @@ package com.cookeep.cookeep.api.controller;
 
 import com.cookeep.cookeep.api.dto.request.WebPushSubscriptionRequestDto;
 import com.cookeep.cookeep.api.dto.response.WebPushEligibilityResponseDto;
-import com.cookeep.cookeep.api.dto.response.WebPushSendResponseDto;
 import com.cookeep.cookeep.api.dto.response.WebPushSubscriptionResponseDto;
 import com.cookeep.cookeep.common.dto.DataResponse;
 import com.cookeep.cookeep.common.exception.ErrorCode;
 import com.cookeep.cookeep.config.ApiErrorCodeExamples;
-import com.cookeep.cookeep.domain.notification.application.WebPushNotificationService;
 import com.cookeep.cookeep.domain.notification.application.WebPushSubscriptionService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -16,6 +14,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -27,6 +26,9 @@ import org.springframework.web.bind.annotation.*;
 public class WebPushSubscriptionController {
 
     private final WebPushSubscriptionService webPushSubscriptionService;
+
+    @Value("${vapid.public-key}")
+    private String vapidPublicKey;
 
     @Operation(
             summary = "웹 푸시 구독 등록",
@@ -111,6 +113,15 @@ public class WebPushSubscriptionController {
     ) {
         WebPushEligibilityResponseDto response = webPushSubscriptionService.checkEligibility(userId);
         return ResponseEntity.ok(DataResponse.from(response));
+    }
+
+    @Operation(
+            summary = "퍼블릭 키 전달",
+            description = "프론트에서 구독 등록에 이용한 퍼블릭 키 전달"
+    )
+    @GetMapping("/public-key")
+    public ResponseEntity<DataResponse<String>> getPublicKey() {
+        return ResponseEntity.ok(DataResponse.from(vapidPublicKey));
     }
 
 }
