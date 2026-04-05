@@ -44,11 +44,18 @@ public class DailyRecipeDetailResponseDto {
     @Schema(description = "이번 액션으로 주간 목표 달성 여부 (수정 시에만 유효)", example = "false")
     private boolean weeklyGoalAchieved;
 
+    @Schema(description = "사진 업로드 보상 쿠키 지급 여부 (수정 시에만 유효)", example = "true")
+    private boolean photoCookieAwarded;
+
     public static DailyRecipeDetailResponseDto from(DailyRecipe dailyRecipe) {
-        return from(dailyRecipe, false);
+        return from(dailyRecipe, false, false);
     }
 
     public static DailyRecipeDetailResponseDto from(DailyRecipe dailyRecipe, boolean weeklyGoalAchieved) {
+        return from(dailyRecipe, weeklyGoalAchieved, false);
+    }
+
+    public static DailyRecipeDetailResponseDto from(DailyRecipe dailyRecipe, boolean weeklyGoalAchieved, boolean photoCookieAwarded) {
         return DailyRecipeDetailResponseDto.builder()
                 .dailyRecipeId(dailyRecipe.getId())
                 .title(dailyRecipe.getTitle())
@@ -59,6 +66,7 @@ public class DailyRecipeDetailResponseDto {
                 .aiRecipeId(dailyRecipe.getAiRecipe() != null ? dailyRecipe.getAiRecipe().getId() : null)
                 .createdAt(dailyRecipe.getCreatedAt())
                 .weeklyGoalAchieved(weeklyGoalAchieved)
+                .photoCookieAwarded(photoCookieAwarded)
                 .build();
     }
 }

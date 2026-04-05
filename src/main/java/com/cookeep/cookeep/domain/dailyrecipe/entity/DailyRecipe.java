@@ -44,6 +44,10 @@ public class DailyRecipe extends BaseEntity {
     @Column(name = "like_count", nullable = false)
     private Integer likeCount = 0;
 
+    @Builder.Default
+    @Column(name = "photo_cookie_awarded", nullable = false)
+    private boolean photoCookieAwarded = false;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
@@ -66,6 +70,10 @@ public class DailyRecipe extends BaseEntity {
 
     public void updateRecipeImageUrl(String recipeImageUrl) {
         this.recipeImageUrl = recipeImageUrl;
+    }
+
+    public void markPhotoCookieAwarded() {
+        this.photoCookieAwarded = true;
     }
 
     public void incrementLikeCount() {

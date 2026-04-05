@@ -44,7 +44,7 @@ public class DailyRecipeService {
     private final ObjectMapper objectMapper;
     private final S3Service s3Service;
 
-    public record DailyRecipeResult(DailyRecipe dailyRecipe, boolean weeklyGoalAchieved) {}
+    public record DailyRecipeResult(DailyRecipe dailyRecipe, boolean weeklyGoalAchieved, boolean photoCookieAwarded) {}
 
     // 채택된 AI 레시피 목록 조회
     @Transactional(readOnly = true)
@@ -78,12 +78,15 @@ public class DailyRecipeService {
         // title: 사용자 지정값이 있으면 사용, 없으면 AI 레시피 제목
         String resolvedTitle = (title != null && !title.isBlank()) ? title : aiRecipe.getTitle();
 
+        boolean hasPhoto = recipeImageUrl != null && !recipeImageUrl.isBlank();
+
         DailyRecipe dailyRecipe = DailyRecipe.builder()
                 .title(resolvedTitle)
                 .description(description)
                 .content(content)
                 .recipeImageUrl(recipeImageUrl)
                 .isPublic(isPublic != null ? isPublic : false)
+                .photoCookieAwarded(hasPhoto)
                 .user(user)
                 .aiRecipe(aiRecipe)
                 .build();
@@ -95,12 +98,12 @@ public class DailyRecipeService {
 
         // 쿠키 추가 지급: 음식 사진 등록 시 (1개) + 주간 목표 진행
         boolean goalAchieved = false;
-        if (recipeImageUrl != null && !recipeImageUrl.isBlank()) {
+        if (hasPhoto) {
             cookieService.updateCookie(userId, CookieLog.CookieLogType.BASIC_FOOD_PHOTO_REG);
             goalAchieved = weeklyGoalService.handleGoalProgress(userId, GoalActionType.PHOTO_RECORD);
         }
 
-        return new DailyRecipeResult(dailyRecipe, goalAchieved);
+        return new DailyRecipeResult(dailyRecipe, goalAchieved, hasPhoto);
     }
 
     // 데일리 레시피 상세 조회
@@ -146,21 +149,23 @@ public class DailyRecipeService {
             dailyRecipe.updateDescription(description);
         }
 
-        // 기존에 사진이 없었고 새로 사진을 추가하는 경우 쿠키 지급 + 주간 목표 진행
+        // 사진 추가 시 쿠키 지급 (최초 1회) + 주간 목표 진행
         boolean goalAchieved = false;
+        boolean photoCookieAwarded = false;
         if (recipeImageUrl != null && !recipeImageUrl.isBlank()) {
             if (recipeImageUrl.equals(dailyRecipe.getRecipeImageUrl())) {
                 throw new AppException(ErrorCode.DAILY_RECIPE_IMAGE_SAME_URL);
             }
-            boolean isNewPhotoAdded = dailyRecipe.getRecipeImageUrl() == null || dailyRecipe.getRecipeImageUrl().isBlank();
             dailyRecipe.updateRecipeImageUrl(recipeImageUrl);
-            if (isNewPhotoAdded) {
+            if (!dailyRecipe.isPhotoCookieAwarded()) {
+                dailyRecipe.markPhotoCookieAwarded();
                 cookieService.updateCookie(userId, CookieLog.CookieLogType.BASIC_FOOD_PHOTO_REG);
                 goalAchieved = weeklyGoalService.handleGoalProgress(userId, GoalActionType.PHOTO_RECORD);
+                photoCookieAwarded = true;
             }
         }
 
-        return new DailyRecipeResult(dailyRecipe, goalAchieved);
+        return new DailyRecipeResult(dailyRecipe, goalAchieved, photoCookieAwarded);
     }
 
     // 데일리 레시피 공개 범위 수정
