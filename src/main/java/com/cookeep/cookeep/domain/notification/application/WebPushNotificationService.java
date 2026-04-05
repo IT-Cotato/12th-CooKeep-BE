@@ -61,12 +61,16 @@ public class WebPushNotificationService {
         // 4. 알림 페이로드 생성
         String payload = buildPayload(NotificationType.EXPIRATION);
 
-        // 5. 구독별 전송 (실패 구독은 제거)
-        sendToSubscriptions(subscriptions, payload);
+        // 5. 구독별 전송 — 실제로 브라우저에 전달된 횟수를 반환
+        int successCount = sendToSubscriptions(subscriptions, payload);
 
-        log.info("웹 푸시 알림 전송 완료. userId={}, subscriptionCount={}", userId, subscriptions.size());
+        log.info("웹 푸시 알림 전송 완료. userId={}, total={}, success={}",
+                userId, subscriptions.size(), successCount);
 
-        return WebPushSendResponseDto.sent();
+        // 6. 성공 횟수가 0이면 모든 구독이 만료됐거나 전송에 실패한 것
+        return successCount > 0
+                ? WebPushSendResponseDto.sent()
+                : WebPushSendResponseDto.allSubscriptionsExpired();
 
     }
 
@@ -85,7 +89,10 @@ public class WebPushNotificationService {
 
     // 각 구독에 푸시 알림을 전송
     // 전송 실패 시 410 Gone / 404 Not Found 응답이면 만료 구독으로 판단하고 DB에서 삭제
-    private void sendToSubscriptions(List<WebPushSubscription> subscriptions, String payload) {
+    private int sendToSubscriptions(List<WebPushSubscription> subscriptions, String payload) {
+
+        int successCount = 0;
+
         for (WebPushSubscription subscription : subscriptions) {
             try {
                 Notification notification = new Notification(
@@ -99,9 +106,18 @@ public class WebPushNotificationService {
 
                 // 410 Gone 또는 404 Not Found : 만료된 구독 → 삭제
                 if (statusCode == 410 || statusCode == 404) {
+                    // 만료된 구독 → 삭제, 성공 카운트에 포함하지 않음
                     log.warn("만료된 구독 삭제. subscriptionId={}, statusCode={}",
                             subscription.getId(), statusCode);
                     webPushSubscriptionRepository.delete(subscription);
+
+                } else if (statusCode >= 200 && statusCode < 300) {
+                    // 2xx → 브라우저에 실제로 전달됨
+                    successCount++;
+
+                } else {
+                    log.warn("웹 푸시 비정상 응답. subscriptionId={}, statusCode={}",
+                            subscription.getId(), statusCode);
                 }
 
             } catch (Exception e) {
@@ -110,5 +126,7 @@ public class WebPushNotificationService {
                 // 개별 구독 실패는 전체 흐름을 중단하지 않음
             }
         }
+        return successCount;
+
     }
 }

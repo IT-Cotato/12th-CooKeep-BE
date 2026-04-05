@@ -30,4 +30,9 @@ public class WebPushSendResponseDto {
         return new WebPushSendResponseDto(false, "유통기한이 만료된 재료가 없습니다.");
     }
 
+    // 구독은 존재. 전부 만료(410/404) or 전송 실패
+    public static WebPushSendResponseDto allSubscriptionsExpired() {
+        return new WebPushSendResponseDto(false, "유효한 구독이 없어 알림을 전송하지 못했습니다.");
+    }
+
 }
