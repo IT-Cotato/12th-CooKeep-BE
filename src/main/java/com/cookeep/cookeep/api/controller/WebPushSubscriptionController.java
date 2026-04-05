@@ -2,10 +2,12 @@ package com.cookeep.cookeep.api.controller;
 
 import com.cookeep.cookeep.api.dto.request.WebPushSubscriptionRequestDto;
 import com.cookeep.cookeep.api.dto.response.WebPushEligibilityResponseDto;
+import com.cookeep.cookeep.api.dto.response.WebPushSendResponseDto;
 import com.cookeep.cookeep.api.dto.response.WebPushSubscriptionResponseDto;
 import com.cookeep.cookeep.common.dto.DataResponse;
 import com.cookeep.cookeep.common.exception.ErrorCode;
 import com.cookeep.cookeep.config.ApiErrorCodeExamples;
+import com.cookeep.cookeep.domain.notification.application.WebPushNotificationService;
 import com.cookeep.cookeep.domain.notification.application.WebPushSubscriptionService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -25,6 +27,7 @@ import org.springframework.web.bind.annotation.*;
 public class WebPushSubscriptionController {
 
     private final WebPushSubscriptionService webPushSubscriptionService;
+    private final WebPushNotificationService webPushNotificationService;
 
     @Operation(
             summary = "웹 푸시 구독 등록",
@@ -108,6 +111,45 @@ public class WebPushSubscriptionController {
             @AuthenticationPrincipal(expression = "userId") Long userId
     ) {
         WebPushEligibilityResponseDto response = webPushSubscriptionService.checkEligibility(userId);
+        return ResponseEntity.ok(DataResponse.from(response));
+    }
+
+    @Operation(
+            summary = "웹 푸시 알림 전송",
+            description = """
+                    유통기한이 당일(D-0)인 식재료가 있는 경우 웹 푸시 알림을 전송합니다.
+                    
+                    **전송 조건 (모두 충족 시 전송)**
+                    1. 마케팅 수신 동의(marketingConsent) = true
+                    2. 냉장고 속 leftDays = 0 인 식재료 존재
+                    3. 서버에 구독 정보(WebPushSubscription) 존재
+                    
+                    - 조건 미충족 시 sent = false 반환 (에러 아님)
+                    - 만료된 구독(410/404 응답)은 자동 삭제
+                    - 알림 타입: EXPIRATION (유통기한 임박)
+                    """
+    )
+    @ApiErrorCodeExamples({
+            ErrorCode.UNAUTHORIZED,
+            ErrorCode.USER_NOT_FOUND,
+            ErrorCode.SUBSCRIPTION_NOT_FOUND,
+            ErrorCode.INTERNAL_SERVER_ERROR
+    })
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "알림 전송 성공 또는 전송 조건 미충족 (sent 필드로 구분)"),
+            @ApiResponse(responseCode = "401", description = "인증 실패", content = @Content),
+            @ApiResponse(responseCode = "404", description = """
+                    리소스를 찾을 수 없습니다.
+                    - USER_NOT_FOUND: 사용자 없음
+                    - SUBSCRIPTION_NOT_FOUND: 구독 없음
+                    """, content = @Content),
+            @ApiResponse(responseCode = "500", description = "서버 오류", content = @Content)
+    })
+    @PostMapping("/alerts")
+    public ResponseEntity<DataResponse<WebPushSendResponseDto>> sendAlert(
+            @AuthenticationPrincipal(expression = "userId") Long userId
+    ) {
+        WebPushSendResponseDto response = webPushNotificationService.sendExpirationAlert(userId);
         return ResponseEntity.ok(DataResponse.from(response));
     }
 

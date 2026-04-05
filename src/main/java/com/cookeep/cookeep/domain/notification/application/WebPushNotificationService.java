@@ -70,12 +70,15 @@ public class WebPushNotificationService {
 
     }
 
+    // --- 내부 메서드 ---
+
+    // 알림 내용 생성
     private String buildPayload(NotificationType type) {
         JSONObject payload = new JSONObject();
 
-        payload.put("title", tyoe.getTitle());
-        payload.put("body", "오늘 유통기한이 만료되는 재료가 있어요!");
-        payload.put("url", "/refrigerator");
+        payload.put("title", type.getTitle());
+        payload.put("body", type.getBody());
+        payload.put("url", type.getUrl());
         payload.put("type", type.name());
         return payload.toString();
     }

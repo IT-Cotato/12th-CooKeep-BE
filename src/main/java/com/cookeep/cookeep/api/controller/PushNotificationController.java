@@ -23,7 +23,7 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/users/me")
 public class PushNotificationController {
 
-    private final PopupNotificationEligibilityService pushNotificationEligibilityService;
+    private final PopupNotificationEligibilityService popupNotificationEligibilityService;
 
     @Operation(
             summary = "유통기한 임박 팝업 자격 확인",
@@ -56,7 +56,7 @@ public class PushNotificationController {
             @AuthenticationPrincipal(expression = "userId") Long userId
     ) {
         PushNotificationEligibilityResponseDto response =
-                pushNotificationEligibilityService.checkEligibility(userId);
+                popupNotificationEligibilityService.checkEligibility(userId);
 
         return ResponseEntity.ok(DataResponse.from(response));
     }
