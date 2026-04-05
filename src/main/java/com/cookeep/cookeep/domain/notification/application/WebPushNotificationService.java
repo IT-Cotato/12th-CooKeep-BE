@@ -72,7 +72,8 @@ public class WebPushNotificationService {
 
     private String buildPayload(NotificationType type) {
         JSONObject payload = new JSONObject();
-        payload.put("title", "재료 만료 임박");
+
+        payload.put("title", tyoe.getTitle());
         payload.put("body", "오늘 유통기한이 만료되는 재료가 있어요!");
         payload.put("url", "/refrigerator");
         payload.put("type", type.name());
