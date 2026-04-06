@@ -40,7 +40,7 @@ public class WebPushNotificationService {
             return WebPushSendResponseDto.notConsented();
         }
 
-        // 2. leftDays = 0 인 식재료 존재 여부 확인
+        // 2. D-0 재료 존재 여부 확인
         LocalDate today = LocalDate.now();
         boolean hasExpiringToday =
                 userIngredientRepository.existsByUserIdAndExpirationDate(userId, today);
