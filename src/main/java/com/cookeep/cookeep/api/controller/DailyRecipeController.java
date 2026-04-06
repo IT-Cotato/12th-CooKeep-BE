@@ -7,6 +7,7 @@ import com.cookeep.cookeep.api.dto.response.AdoptedAiRecipeDetailResponseDto;
 import com.cookeep.cookeep.api.dto.response.AdoptedAiRecipeListResponseDto;
 import com.cookeep.cookeep.api.dto.response.DailyRecipeCreateResponseDto;
 import com.cookeep.cookeep.api.dto.response.DailyRecipeDetailResponseDto;
+import com.cookeep.cookeep.api.dto.response.DailyRecipeUpdateResponseDto;
 import com.cookeep.cookeep.api.dto.response.DailyRecipeCalendarResponseDto;
 import com.cookeep.cookeep.api.dto.response.DailyRecipeListResponseDto;
 import com.cookeep.cookeep.common.dto.DataResponse;
@@ -123,7 +124,7 @@ public class DailyRecipeController {
         );
 
         return ResponseEntity.status(201)
-                .body(DataResponse.created(DailyRecipeCreateResponseDto.from(result.dailyRecipe(), result.weeklyGoalAchieved())));
+                .body(DataResponse.created(DailyRecipeCreateResponseDto.from(result.dailyRecipe(), result.weeklyGoalAchieved(), result.photoCookieAwarded())));
     }
 
     @Operation(
@@ -166,7 +167,7 @@ public class DailyRecipeController {
             @ApiResponse(responseCode = "404", description = "데일리 레시피를 찾을 수 없음", content = @Content)
     })
     @PatchMapping("/{dailyRecipeId}")
-    public ResponseEntity<DataResponse<DailyRecipeDetailResponseDto>> updateDailyRecipe(
+    public ResponseEntity<DataResponse<DailyRecipeUpdateResponseDto>> updateDailyRecipe(
             @AuthenticationPrincipal(expression = "userId") Long userId,
             @Parameter(description = "데일리 레시피 ID", required = true)
             @PathVariable Long dailyRecipeId,
@@ -177,7 +178,7 @@ public class DailyRecipeController {
                 request.getRecipeImageUrl(), request.getDeleteRecipeImage()
         );
 
-        return ResponseEntity.ok(DataResponse.from(DailyRecipeDetailResponseDto.from(result.dailyRecipe(), result.weeklyGoalAchieved())));
+        return ResponseEntity.ok(DataResponse.from(DailyRecipeUpdateResponseDto.from(result.dailyRecipe(), result.weeklyGoalAchieved(), result.photoCookieAwarded())));
     }
 
     @Operation(

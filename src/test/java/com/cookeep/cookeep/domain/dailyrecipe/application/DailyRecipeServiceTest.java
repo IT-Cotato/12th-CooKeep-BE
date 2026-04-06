@@ -70,7 +70,7 @@ class DailyRecipeServiceTest {
     }
 
     @Nested
-    @DisplayName("createDailyRecipe - PHOTO_RECORD 목표 연동")
+    @DisplayName("createDailyRecipe")
     class CreateDailyRecipe {
 
         @Test
@@ -108,36 +108,74 @@ class DailyRecipeServiceTest {
 
             assertThat(result.weeklyGoalAchieved()).isFalse();
         }
+
+        @Test
+        @DisplayName("사진 포함 등록 시 photoCookieAwarded=true를 반환한다")
+        void 사진포함_등록_photoCookieAwarded_true() {
+            DailyRecipeService.DailyRecipeResult result =
+                    dailyRecipeService.createDailyRecipe(1L, 10L, null, null, "https://s3.example.com/photo.jpg", false);
+
+            assertThat(result.photoCookieAwarded()).isTrue();
+        }
+
+        @Test
+        @DisplayName("사진 없이 등록 시 photoCookieAwarded=false를 반환한다")
+        void 사진없음_등록_photoCookieAwarded_false() {
+            DailyRecipeService.DailyRecipeResult result =
+                    dailyRecipeService.createDailyRecipe(1L, 10L, null, null, null, false);
+
+            assertThat(result.photoCookieAwarded()).isFalse();
+        }
+
+        @Test
+        @DisplayName("사진 포함 등록 시 BASIC_FOOD_PHOTO_REG 쿠키를 지급한다")
+        void 사진포함_등록_사진쿠키_지급() {
+            dailyRecipeService.createDailyRecipe(1L, 10L, null, null, "https://s3.example.com/photo.jpg", false);
+
+            verify(cookieService).updateCookie(1L, CookieLog.CookieLogType.BASIC_FOOD_PHOTO_REG);
+        }
+
+        @Test
+        @DisplayName("사진 없이 등록 시 BASIC_FOOD_PHOTO_REG 쿠키를 지급하지 않는다")
+        void 사진없음_등록_사진쿠키_미지급() {
+            dailyRecipeService.createDailyRecipe(1L, 10L, null, null, null, false);
+
+            verify(cookieService, never()).updateCookie(1L, CookieLog.CookieLogType.BASIC_FOOD_PHOTO_REG);
+        }
     }
 
     @Nested
-    @DisplayName("updateDailyRecipe - PHOTO_RECORD 목표 연동")
+    @DisplayName("updateDailyRecipe")
     class UpdateDailyRecipe {
 
-        private DailyRecipe existingRecipeWithoutPhoto;
-        private DailyRecipe existingRecipeWithPhoto;
+        // 사진 보상 미완료 상태 (처음 사진 추가 가능)
+        private DailyRecipe rewardPendingRecipe;
+        // 사진 보상 완료 상태 (재지급 불가)
+        private DailyRecipe rewardCompletedRecipe;
 
         @BeforeEach
         void setUp() {
-            existingRecipeWithoutPhoto = DailyRecipe.builder()
+            rewardPendingRecipe = DailyRecipe.builder()
                     .title("기존 레시피")
                     .content("{}")
                     .user(user)
+                    .photoRewardCompleted(false)
                     .build();
 
-            existingRecipeWithPhoto = DailyRecipe.builder()
+            rewardCompletedRecipe = DailyRecipe.builder()
                     .title("기존 레시피")
                     .content("{}")
                     .recipeImageUrl("https://s3.example.com/existing.jpg")
+                    .photoRewardCompleted(true)
                     .user(user)
                     .build();
         }
 
         @Test
-        @DisplayName("사진이 없던 레시피에 사진을 추가하면 PHOTO_RECORD 목표 진행을 호출한다")
+        @DisplayName("보상 미완료 레시피에 처음 사진 추가 시 PHOTO_RECORD 목표 진행을 호출한다")
         void 신규사진_추가_목표진행_호출() {
             given(dailyRecipeRepository.findByIdAndUser(100L, user))
-                    .willReturn(Optional.of(existingRecipeWithoutPhoto));
+                    .willReturn(Optional.of(rewardPendingRecipe));
 
             dailyRecipeService.updateDailyRecipe(1L, 100L, null, null, "https://s3.example.com/new.jpg", false);
 
@@ -145,10 +183,10 @@ class DailyRecipeServiceTest {
         }
 
         @Test
-        @DisplayName("이미 사진이 있는 레시피에 사진을 교체하면 PHOTO_RECORD 목표 진행을 호출하지 않는다")
-        void 기존사진_교체_목표진행_미호출() {
+        @DisplayName("보상 완료된 레시피에 사진 교체 시 PHOTO_RECORD 목표 진행을 호출하지 않는다")
+        void 보상완료_사진교체_목표진행_미호출() {
             given(dailyRecipeRepository.findByIdAndUser(100L, user))
-                    .willReturn(Optional.of(existingRecipeWithPhoto));
+                    .willReturn(Optional.of(rewardCompletedRecipe));
 
             dailyRecipeService.updateDailyRecipe(1L, 100L, null, null, "https://s3.example.com/replaced.jpg", false);
 
@@ -156,16 +194,82 @@ class DailyRecipeServiceTest {
         }
 
         @Test
+        @DisplayName("보상 미완료 레시피에 처음 사진 추가 시 photoCookieAwarded=true를 반환한다")
+        void 신규사진_추가_photoCookieAwarded_true() {
+            given(dailyRecipeRepository.findByIdAndUser(100L, user))
+                    .willReturn(Optional.of(rewardPendingRecipe));
+
+            DailyRecipeService.DailyRecipeResult result =
+                    dailyRecipeService.updateDailyRecipe(1L, 100L, null, null, "https://s3.example.com/new.jpg", false);
+
+            assertThat(result.photoCookieAwarded()).isTrue();
+        }
+
+        @Test
+        @DisplayName("보상 완료된 레시피에 사진 교체 시 photoCookieAwarded=false를 반환한다")
+        void 보상완료_사진교체_photoCookieAwarded_false() {
+            given(dailyRecipeRepository.findByIdAndUser(100L, user))
+                    .willReturn(Optional.of(rewardCompletedRecipe));
+
+            DailyRecipeService.DailyRecipeResult result =
+                    dailyRecipeService.updateDailyRecipe(1L, 100L, null, null, "https://s3.example.com/replaced.jpg", false);
+
+            assertThat(result.photoCookieAwarded()).isFalse();
+        }
+
+        @Test
+        @DisplayName("보상 미완료 레시피에 처음 사진 추가 시 BASIC_FOOD_PHOTO_REG 쿠키를 지급한다")
+        void 신규사진_추가_사진쿠키_지급() {
+            given(dailyRecipeRepository.findByIdAndUser(100L, user))
+                    .willReturn(Optional.of(rewardPendingRecipe));
+
+            dailyRecipeService.updateDailyRecipe(1L, 100L, null, null, "https://s3.example.com/new.jpg", false);
+
+            verify(cookieService).updateCookie(1L, CookieLog.CookieLogType.BASIC_FOOD_PHOTO_REG);
+        }
+
+        @Test
+        @DisplayName("보상 완료된 레시피에 사진 교체 시 BASIC_FOOD_PHOTO_REG 쿠키를 지급하지 않는다")
+        void 보상완료_사진교체_사진쿠키_미지급() {
+            given(dailyRecipeRepository.findByIdAndUser(100L, user))
+                    .willReturn(Optional.of(rewardCompletedRecipe));
+
+            dailyRecipeService.updateDailyRecipe(1L, 100L, null, null, "https://s3.example.com/replaced.jpg", false);
+
+            verify(cookieService, never()).updateCookie(1L, CookieLog.CookieLogType.BASIC_FOOD_PHOTO_REG);
+        }
+
+        @Test
         @DisplayName("신규 사진 추가 시 목표 달성이면 weeklyGoalAchieved=true를 반환한다")
         void 신규사진_추가_목표달성_true반환() {
             given(dailyRecipeRepository.findByIdAndUser(100L, user))
-                    .willReturn(Optional.of(existingRecipeWithoutPhoto));
+                    .willReturn(Optional.of(rewardPendingRecipe));
             given(weeklyGoalService.handleGoalProgress(1L, GoalActionType.PHOTO_RECORD)).willReturn(true);
 
             DailyRecipeService.DailyRecipeResult result =
                     dailyRecipeService.updateDailyRecipe(1L, 100L, null, null, "https://s3.example.com/new.jpg", false);
 
             assertThat(result.weeklyGoalAchieved()).isTrue();
+        }
+
+        @Test
+        @DisplayName("사진 삭제 후 재등록 시 쿠키와 목표 진행이 중복 지급되지 않는다 (어뷰징 방지)")
+        void 사진삭제후재등록_중복지급_방지() {
+            // 이미 사진 보상을 받은 레시피에서 사진을 삭제한 상태 (photoRewardCompleted = true, recipeImageUrl = null)
+            DailyRecipe rewardedButNoPhoto = DailyRecipe.builder()
+                    .title("기존 레시피")
+                    .content("{}")
+                    .recipeImageUrl(null)
+                    .photoRewardCompleted(true)
+                    .user(user)
+                    .build();
+            given(dailyRecipeRepository.findByIdAndUser(100L, user))
+                    .willReturn(Optional.of(rewardedButNoPhoto));
+
+            dailyRecipeService.updateDailyRecipe(1L, 100L, null, null, "https://s3.example.com/re-uploaded.jpg", false);
+
+            verify(cookieService, never()).updateCookie(1L, CookieLog.CookieLogType.BASIC_FOOD_PHOTO_REG);
+            verify(weeklyGoalService, never()).handleGoalProgress(any(), any());
         }
     }
 }
