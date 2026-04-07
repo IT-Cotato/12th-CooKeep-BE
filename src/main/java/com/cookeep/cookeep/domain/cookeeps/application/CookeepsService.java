@@ -100,6 +100,7 @@ public class CookeepsService {
 				return RecipeRankDto.builder()
 						.dailyRecipeId(recipe.getId())
 						.rank(index + 1)
+						.nickname(recipe.getUser().getNickname())
 						.title(recipe.getTitle())
 						.likeCount(recipe.getLikeCount().longValue())
 						.recipeImageUrl(recipe.getRecipeImageUrl())
