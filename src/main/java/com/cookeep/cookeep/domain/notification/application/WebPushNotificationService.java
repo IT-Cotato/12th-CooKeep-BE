@@ -69,7 +69,7 @@ public class WebPushNotificationService {
 
         // 6. 성공 횟수가 0이면 모든 구독이 만료됐거나 전송에 실패한 것
         return successCount > 0
-                ? WebPushSendResponseDto.sent()
+                ? WebPushSendResponseDto.sent(NotificationType.EXPIRATION)
                 : WebPushSendResponseDto.allSubscriptionsExpired();
 
     }

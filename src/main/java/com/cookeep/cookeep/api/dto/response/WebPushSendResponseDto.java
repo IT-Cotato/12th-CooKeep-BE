@@ -1,5 +1,6 @@
 package com.cookeep.cookeep.api.dto.response;
 
+import com.cookeep.cookeep.domain.notification.entity.NotificationType;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -18,9 +19,11 @@ public class WebPushSendResponseDto {
     @Schema(description = "결과 메시지", example = "유통기한 만료 재료 알림이 전송되었습니다.")
     private String message;
 
-    public static WebPushSendResponseDto sent() {
-        return new WebPushSendResponseDto(true, "유통기한 만료 재료 알림(EXPIRATION)이 전송되었습니다.");
+    public static WebPushSendResponseDto sent(NotificationType type) {
+        return new WebPushSendResponseDto(true,
+                type.getDisplayName() + " 알림이 전송되었습니다.");
     }
+
 
     public static WebPushSendResponseDto notConsented() {
         return new WebPushSendResponseDto(false, "알림 수신 동의가 되어있지 않습니다.");
