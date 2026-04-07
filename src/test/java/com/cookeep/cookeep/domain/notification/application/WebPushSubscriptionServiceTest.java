@@ -382,7 +382,7 @@ public class WebPushSubscriptionServiceTest {
             WebPushSendResponseDto result = webPushNotificationService.sendExpirationAlert(USER_ID);
 
             assertThat(result.getSent()).isTrue();
-            assertThat(result.getMessage()).contains("전송되었습니다");
+            assertThat(result.getMessage()).isEqualTo("유통기한임박 알림이 전송되었습니다.");
         }
 
         @Test
