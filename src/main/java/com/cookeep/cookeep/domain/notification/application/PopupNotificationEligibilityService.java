@@ -1,7 +1,5 @@
 package com.cookeep.cookeep.domain.notification.application;
 
-import com.cookeep.cookeep.common.exception.AppException;
-import com.cookeep.cookeep.common.exception.ErrorCode;
 import com.cookeep.cookeep.domain.ingredient.useringredient.dao.UserIngredientRepository;
 import com.cookeep.cookeep.domain.notification.dto.PushNotificationEligibilityResponseDto;
 import com.cookeep.cookeep.domain.user.application.UserReader;
@@ -13,15 +11,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
-import java.util.List;
-import java.util.stream.Collectors;
 
-// 푸시 알림 실제 전송
+// 팝업(모달) 알림 실제 전송
 @Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
-public class PushNotificationEligibilityService {
+public class PopupNotificationEligibilityService {
 
     private final UserIngredientRepository userIngredientRepository;
     private final UserRepository userRepository;

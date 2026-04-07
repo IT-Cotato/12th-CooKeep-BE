@@ -76,3 +76,7 @@ otp:
   ttl-seconds: 300 # OTP 유효 시간 5분
   send-cooldown-seconds: 60 # 재전송 제한 시간 1분
   max-verify-failures: 5 # 인증 실패 허용 횟수, 초과시 잠금
+
+vapid:
+  public-key: ${VAPID_PUBLIC_KEY}
+  private-key: ${VAPID_PRIVATE_KEY}
