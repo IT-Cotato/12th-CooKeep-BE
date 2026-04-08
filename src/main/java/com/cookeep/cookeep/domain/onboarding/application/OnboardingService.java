@@ -7,15 +7,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.cookeep.cookeep.api.dto.request.AgreementRequestDTO;
 import com.cookeep.cookeep.api.dto.request.OnboardingRequestDTO;
-import com.cookeep.cookeep.common.exception.AppException;
-import com.cookeep.cookeep.common.exception.ErrorCode;
+import com.cookeep.cookeep.domain.ingredient.defaultingredient.entity.DefaultIngredient;
 import com.cookeep.cookeep.domain.onboarding.dao.UserFoodPreferenceRepository;
 import com.cookeep.cookeep.domain.onboarding.dao.UserOnboardingRepository;
 import com.cookeep.cookeep.domain.onboarding.dao.WeeklyGoalRepository;
-import com.cookeep.cookeep.domain.onboarding.entity.FoodType;
-import com.cookeep.cookeep.domain.onboarding.entity.GoalActionType;
-import com.cookeep.cookeep.domain.onboarding.entity.UserFoodPreference;
-import com.cookeep.cookeep.domain.onboarding.entity.UserOnboarding;
 import com.cookeep.cookeep.domain.onboarding.entity.WeeklyGoal;
 import com.cookeep.cookeep.domain.user.application.UserReader;
 import com.cookeep.cookeep.domain.user.dao.UserRepository;
@@ -62,8 +57,7 @@ public class OnboardingService {
 		// 서비스 플로우상 온보딩은 최초 1회만 하게 되지만,
 		// 중복 클릭, 네트워크 재시도 등으로 재요청이 들어오는 경우를 고려하여 업데이트 되도록 처리함
 
-		upsertUserOnboarding(userId, user, onboardingRequestDTO);
-		upsertUserFoodPreference(userId, user, onboardingRequestDTO);
+		user.updateDislikedIngredients(onboardingRequestDTO.dislikedIngredients());
 		appendWeeklyGoal(user, onboardingRequestDTO);
 
 		// 온보딩을 마쳤으므로 userStatus를 ACTIVE로 변경
@@ -72,6 +66,7 @@ public class OnboardingService {
 		}
 	}
 
+	/* 기획 변경에 따라 임시 제거
 	// 온보딩 내 요리 수준을 upsert하는 메서드
 	// 중복 발생시 최신 1개만 저장하도록 함
 	private void upsertUserOnboarding(Long userId, User user, OnboardingRequestDTO onboardingRequestDTO) {
@@ -121,6 +116,7 @@ public class OnboardingService {
 					.build()
 			));
 	}
+	*/
 
 	// 온보딩 내 주간 목표를 저장하는 메서드
 	// 중복 발생시에도 동일하게 저장함
