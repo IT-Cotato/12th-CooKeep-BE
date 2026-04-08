@@ -71,5 +71,7 @@ jobs:
               -e SMS_KEY=${{ secrets.SMS_KEY }} \
               -e SMS_SECRET=${{ secrets.SMS_SECRET }} \
               -e SMS_SENDER=${{ secrets.SMS_SENDER }} \
+              -e VAPID_PUBLIC_KEY=${{ secrets.VAPID_PUBLIC_KEY }} \
+              -e VAPID_PRIVATE_KEY=${{ secrets.VAPID_PRIVATE_KEY }} \
               ${{ secrets.DOCKER_USERNAME }}/cookeep:latest
             docker image prune -f
