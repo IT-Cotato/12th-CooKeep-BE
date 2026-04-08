@@ -26,6 +26,7 @@ public class RankingResponseDto {
 	public static class RecipeRankDto {
 		private Long dailyRecipeId;
 		private Integer rank;
+		private String nickname;
 		private String title;
 		private Long likeCount;
 		private String recipeImageUrl;
