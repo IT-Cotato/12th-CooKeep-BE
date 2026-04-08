@@ -73,12 +73,10 @@ public class OnboardingService {
 		// 주간 목표 설정을 건너뛴 경우
 		if (goalActionType == null) return;
 
-		if (goalActionType != null) {
-			if (targetCount == null) { // goalActionType이 존재하는데, targetCount을 입력하지 않았다면 에러 발생
-				throw new AppException(ErrorCode.INVALID_WEEKLY_GOAL_TARGET_COUNT);
-			} else if (targetCount < 1 || targetCount > 10) { // 1~10 사이가 아닐 경우 에러 발생
-				throw new AppException(ErrorCode.INVALID_TARGET_COUNT);
-			}
+		if (targetCount == null) { // goalActionType이 존재하는데, targetCount을 입력하지 않았다면 에러 발생
+			throw new AppException(ErrorCode.INVALID_WEEKLY_GOAL_TARGET_COUNT);
+		} else if (targetCount < 1 || targetCount > 10) { // 1~10 사이가 아닐 경우 에러 발생
+			throw new AppException(ErrorCode.INVALID_TARGET_COUNT);
 		}
 
 		WeeklyGoal weeklyGoal = WeeklyGoal.builder()
