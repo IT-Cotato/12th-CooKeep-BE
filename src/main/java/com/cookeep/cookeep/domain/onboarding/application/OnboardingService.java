@@ -1,19 +1,13 @@
 package com.cookeep.cookeep.domain.onboarding.application;
 
-import java.util.List;
-
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.cookeep.cookeep.api.dto.request.AgreementRequestDTO;
 import com.cookeep.cookeep.api.dto.request.OnboardingRequestDTO;
-import com.cookeep.cookeep.domain.ingredient.defaultingredient.entity.DefaultIngredient;
-import com.cookeep.cookeep.domain.onboarding.dao.UserFoodPreferenceRepository;
-import com.cookeep.cookeep.domain.onboarding.dao.UserOnboardingRepository;
 import com.cookeep.cookeep.domain.onboarding.dao.WeeklyGoalRepository;
 import com.cookeep.cookeep.domain.onboarding.entity.WeeklyGoal;
 import com.cookeep.cookeep.domain.user.application.UserReader;
-import com.cookeep.cookeep.domain.user.dao.UserRepository;
 import com.cookeep.cookeep.domain.user.entity.User;
 import com.cookeep.cookeep.domain.user.entity.UserStatus;
 
@@ -22,9 +16,6 @@ import lombok.RequiredArgsConstructor;
 @Service
 @RequiredArgsConstructor
 public class OnboardingService {
-	private final UserRepository userRepository;
-	private final UserFoodPreferenceRepository userFoodPreferenceRepository;
-	private final UserOnboardingRepository userOnboardingRepository;
 	private final WeeklyGoalRepository weeklyGoalRepository;
 	private final UserReader userReader;
 
@@ -64,6 +55,28 @@ public class OnboardingService {
 		if (user.getUserStatus() == UserStatus.CREATED) {
 			user.activate();
 		}
+	}
+
+	// 온보딩 내 주간 목표를 저장하는 메서드
+	// 중복 발생시에도 동일하게 저장함
+	private void appendWeeklyGoal(User user, OnboardingRequestDTO onboardingRequestDTO) {
+		// 주간 목표는 히스토리 성격의 데이터이므로 delete & insert 방식 사용 X
+		// 온보딩 플로우 재진입 등 예외 상황에서 기존 목표 데이터가 삭제되는 것을 방지하기 위해
+		// 새로운 값만 추가 저장하는 방식 사용
+
+		// 주간 목표 설정을 건너뛴 경우
+		if (onboardingRequestDTO.goalActionType() == null) return;
+
+		WeeklyGoal weeklyGoal = WeeklyGoal.builder()
+			.user(user)
+			.goalActionType(onboardingRequestDTO.goalActionType())
+			.targetCount(onboardingRequestDTO.targetCount())
+			.build();
+
+		// 주차 시작일 설정
+		weeklyGoal.initWeekStartDate();
+
+		weeklyGoalRepository.save(weeklyGoal);
 	}
 
 	/* 기획 변경에 따라 임시 제거
@@ -117,26 +130,4 @@ public class OnboardingService {
 			));
 	}
 	*/
-
-	// 온보딩 내 주간 목표를 저장하는 메서드
-	// 중복 발생시에도 동일하게 저장함
-	private void appendWeeklyGoal(User user, OnboardingRequestDTO onboardingRequestDTO) {
-		// 주간 목표는 히스토리 성격의 데이터이므로 delete & insert 방식 사용 X
-		// 온보딩 플로우 재진입 등 예외 상황에서 기존 목표 데이터가 삭제되는 것을 방지하기 위해
-		// 새로운 값만 추가 저장하는 방식 사용
-
-		// 주간 목표 설정을 건너뛴 경우
-		if (onboardingRequestDTO.goalActionType() == null) return;
-
-		WeeklyGoal weeklyGoal = WeeklyGoal.builder()
-			.user(user)
-			.goalActionType(onboardingRequestDTO.goalActionType())
-			.targetCount(onboardingRequestDTO.targetCount())
-			.build();
-
-		// 주차 시작일 설정
-		weeklyGoal.initWeekStartDate();
-
-		weeklyGoalRepository.save(weeklyGoal);
-	}
 }
