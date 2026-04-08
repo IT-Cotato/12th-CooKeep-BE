@@ -1,8 +1,9 @@
 package com.cookeep.cookeep.api.controller;
 
+import com.cookeep.cookeep.api.dto.response.CookeepsFeedResponseDto;
 import com.cookeep.cookeep.api.dto.response.RecipeBookmarkResponseDto;
-import com.cookeep.cookeep.api.dto.response.WeeklyRecipeResponseDto;
 import com.cookeep.cookeep.common.dto.DataResponse;
+import com.cookeep.cookeep.common.dto.SliceResponse;
 import com.cookeep.cookeep.common.exception.ErrorCode;
 import com.cookeep.cookeep.config.ApiErrorCodeExamples;
 import com.cookeep.cookeep.domain.dailyrecipe.application.RecipeBookmarkService;
@@ -13,7 +14,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -86,10 +86,10 @@ public class RecipeBookmarkController {
             @ApiResponse(responseCode = "401", description = "인증되지 않은 사용자", content = @Content)
     })
     @GetMapping("/my")
-    public ResponseEntity<DataResponse<Page<WeeklyRecipeResponseDto>>> getMyBookmarkedRecipes(
+    public ResponseEntity<DataResponse<SliceResponse<CookeepsFeedResponseDto>>> getMyBookmarkedRecipes(
             @AuthenticationPrincipal(expression = "userId") Long userId,
             @org.springdoc.core.annotations.ParameterObject Pageable pageable
     ) {
-        return ResponseEntity.ok(DataResponse.from(recipeBookmarkService.getMyBookmarkedRecipes(userId, pageable)));
+        return ResponseEntity.ok(DataResponse.from(SliceResponse.from(recipeBookmarkService.getMyBookmarkedRecipes(userId, pageable))));
     }
 }
