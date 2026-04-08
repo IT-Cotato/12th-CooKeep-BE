@@ -1,5 +1,6 @@
 package com.cookeep.cookeep.domain.dailyrecipe.application;
 
+import com.cookeep.cookeep.api.dto.response.CookeepsFeedResponseDto;
 import com.cookeep.cookeep.common.exception.AppException;
 import com.cookeep.cookeep.common.exception.ErrorCode;
 import com.cookeep.cookeep.domain.dailyrecipe.dao.DailyRecipeRepository;
@@ -20,7 +21,14 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
+import org.springframework.data.domain.SliceImpl;
+import org.springframework.test.util.ReflectionTestUtils;
 
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -198,6 +206,82 @@ class RecipeLikeServiceTest {
                     .hasMessageContaining(ErrorCode.DAILY_RECIPE_NOT_FOUND.getMessage());
 
             verifyNoInteractions(weeklyGoalService);
+        }
+    }
+
+    @Nested
+    @DisplayName("getMyLikedRecipes - 내가 좋아요 누른 레시피 목록 조회")
+    class GetMyLikedRecipes {
+
+        private DailyRecipe likedRecipe;
+        private Pageable pageable;
+
+        @BeforeEach
+        void setUp() {
+            pageable = PageRequest.of(0, 10);
+            likedRecipe = DailyRecipe.builder()
+                    .title("좋아요한 레시피")
+                    .content("{}")
+                    .isPublic(true)
+                    .likeCount(5)
+                    .recipeImageUrl("http://image.url")
+                    .user(recipeOwner)
+                    .build();
+            ReflectionTestUtils.setField(likedRecipe, "id", 10L);
+            ReflectionTestUtils.setField(likedRecipe, "createdAt", LocalDateTime.of(2024, 1, 1, 12, 0));
+
+            given(userReader.readById(1L)).willReturn(liker);
+        }
+
+        @Test
+        @DisplayName("레시피 목록을 CookeepsFeedResponseDto의 필드에 올바르게 매핑한다")
+        void 목록조회_DTO_필드_매핑() {
+            Slice<DailyRecipe> slice = new SliceImpl<>(List.of(likedRecipe), pageable, false);
+            given(recipeLikeRepository.findMyLikedRecipes(liker, pageable)).willReturn(slice);
+
+            Slice<CookeepsFeedResponseDto> result = recipeLikeService.getMyLikedRecipes(1L, pageable);
+
+            assertThat(result.getContent()).hasSize(1);
+            CookeepsFeedResponseDto dto = result.getContent().get(0);
+            assertThat(dto.getDailyRecipeId()).isEqualTo(10L);
+            assertThat(dto.getTitle()).isEqualTo("좋아요한 레시피");
+            assertThat(dto.getLikeCount()).isEqualTo(5);
+            assertThat(dto.getRecipeImageUrl()).isEqualTo("http://image.url");
+            assertThat(dto.getCreatedAt()).isEqualTo(LocalDateTime.of(2024, 1, 1, 12, 0));
+        }
+
+        @Test
+        @DisplayName("다음 페이지가 있으면 last=false를 반환한다")
+        void 다음페이지있으면_last_false() {
+            Slice<DailyRecipe> slice = new SliceImpl<>(List.of(likedRecipe), pageable, true);
+            given(recipeLikeRepository.findMyLikedRecipes(liker, pageable)).willReturn(slice);
+
+            Slice<CookeepsFeedResponseDto> result = recipeLikeService.getMyLikedRecipes(1L, pageable);
+
+            assertThat(result.isLast()).isFalse();
+        }
+
+        @Test
+        @DisplayName("마지막 페이지이면 last=true를 반환한다")
+        void 마지막페이지이면_last_true() {
+            Slice<DailyRecipe> slice = new SliceImpl<>(List.of(likedRecipe), pageable, false);
+            given(recipeLikeRepository.findMyLikedRecipes(liker, pageable)).willReturn(slice);
+
+            Slice<CookeepsFeedResponseDto> result = recipeLikeService.getMyLikedRecipes(1L, pageable);
+
+            assertThat(result.isLast()).isTrue();
+        }
+
+        @Test
+        @DisplayName("좋아요한 레시피가 없으면 빈 Slice를 반환한다")
+        void 좋아요레시피없으면_빈Slice() {
+            Slice<DailyRecipe> emptySlice = new SliceImpl<>(List.of(), pageable, false);
+            given(recipeLikeRepository.findMyLikedRecipes(liker, pageable)).willReturn(emptySlice);
+
+            Slice<CookeepsFeedResponseDto> result = recipeLikeService.getMyLikedRecipes(1L, pageable);
+
+            assertThat(result.getContent()).isEmpty();
+            assertThat(result.isLast()).isTrue();
         }
     }
 }
