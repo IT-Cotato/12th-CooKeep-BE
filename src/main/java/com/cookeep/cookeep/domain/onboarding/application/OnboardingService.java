@@ -1,7 +1,5 @@
 package com.cookeep.cookeep.domain.onboarding.application;
 
-import java.util.List;
-
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -9,16 +7,10 @@ import com.cookeep.cookeep.api.dto.request.AgreementRequestDTO;
 import com.cookeep.cookeep.api.dto.request.OnboardingRequestDTO;
 import com.cookeep.cookeep.common.exception.AppException;
 import com.cookeep.cookeep.common.exception.ErrorCode;
-import com.cookeep.cookeep.domain.onboarding.dao.UserFoodPreferenceRepository;
-import com.cookeep.cookeep.domain.onboarding.dao.UserOnboardingRepository;
 import com.cookeep.cookeep.domain.onboarding.dao.WeeklyGoalRepository;
-import com.cookeep.cookeep.domain.onboarding.entity.FoodType;
 import com.cookeep.cookeep.domain.onboarding.entity.GoalActionType;
-import com.cookeep.cookeep.domain.onboarding.entity.UserFoodPreference;
-import com.cookeep.cookeep.domain.onboarding.entity.UserOnboarding;
 import com.cookeep.cookeep.domain.onboarding.entity.WeeklyGoal;
 import com.cookeep.cookeep.domain.user.application.UserReader;
-import com.cookeep.cookeep.domain.user.dao.UserRepository;
 import com.cookeep.cookeep.domain.user.entity.User;
 import com.cookeep.cookeep.domain.user.entity.UserStatus;
 
@@ -27,9 +19,6 @@ import lombok.RequiredArgsConstructor;
 @Service
 @RequiredArgsConstructor
 public class OnboardingService {
-	private final UserRepository userRepository;
-	private final UserFoodPreferenceRepository userFoodPreferenceRepository;
-	private final UserOnboardingRepository userOnboardingRepository;
 	private final WeeklyGoalRepository weeklyGoalRepository;
 	private final UserReader userReader;
 
@@ -62,8 +51,7 @@ public class OnboardingService {
 		// 서비스 플로우상 온보딩은 최초 1회만 하게 되지만,
 		// 중복 클릭, 네트워크 재시도 등으로 재요청이 들어오는 경우를 고려하여 업데이트 되도록 처리함
 
-		upsertUserOnboarding(userId, user, onboardingRequestDTO);
-		upsertUserFoodPreference(userId, user, onboardingRequestDTO);
+		user.updateDislikedIngredients(onboardingRequestDTO.dislikedIngredients());
 		appendWeeklyGoal(user, onboardingRequestDTO);
 
 		// 온보딩을 마쳤으므로 userStatus를 ACTIVE로 변경
@@ -72,6 +60,38 @@ public class OnboardingService {
 		}
 	}
 
+	// 온보딩 내 주간 목표를 저장하는 메서드
+	// 중복 발생시에도 동일하게 저장함
+	private void appendWeeklyGoal(User user, OnboardingRequestDTO onboardingRequestDTO) {
+		// 주간 목표는 히스토리 성격의 데이터이므로 delete & insert 방식 사용 X
+		// 온보딩 플로우 재진입 등 예외 상황에서 기존 목표 데이터가 삭제되는 것을 방지하기 위해
+		// 새로운 값만 추가 저장하는 방식 사용
+
+		GoalActionType goalActionType = onboardingRequestDTO.goalActionType();
+		Integer targetCount = onboardingRequestDTO.targetCount();
+
+		// 주간 목표 설정을 건너뛴 경우
+		if (goalActionType == null) return;
+
+		if (targetCount == null) { // goalActionType이 존재하는데, targetCount을 입력하지 않았다면 에러 발생
+			throw new AppException(ErrorCode.INVALID_WEEKLY_GOAL_TARGET_COUNT);
+		} else if (targetCount < 1 || targetCount > 10) { // 1~10 사이가 아닐 경우 에러 발생
+			throw new AppException(ErrorCode.INVALID_TARGET_COUNT);
+		}
+
+		WeeklyGoal weeklyGoal = WeeklyGoal.builder()
+			.user(user)
+			.goalActionType(onboardingRequestDTO.goalActionType())
+			.targetCount(onboardingRequestDTO.targetCount())
+			.build();
+
+		// 주차 시작일 설정
+		weeklyGoal.initWeekStartDate();
+
+		weeklyGoalRepository.save(weeklyGoal);
+	}
+
+	/* 기획 변경에 따라 임시 제거
 	// 온보딩 내 요리 수준을 upsert하는 메서드
 	// 중복 발생시 최신 1개만 저장하도록 함
 	private void upsertUserOnboarding(Long userId, User user, OnboardingRequestDTO onboardingRequestDTO) {
@@ -121,26 +141,5 @@ public class OnboardingService {
 					.build()
 			));
 	}
-
-	// 온보딩 내 주간 목표를 저장하는 메서드
-	// 중복 발생시에도 동일하게 저장함
-	private void appendWeeklyGoal(User user, OnboardingRequestDTO onboardingRequestDTO) {
-		// 주간 목표는 히스토리 성격의 데이터이므로 delete & insert 방식 사용 X
-		// 온보딩 플로우 재진입 등 예외 상황에서 기존 목표 데이터가 삭제되는 것을 방지하기 위해
-		// 새로운 값만 추가 저장하는 방식 사용
-
-		// 주간 목표 설정을 건너뛴 경우
-		if (onboardingRequestDTO.goalActionType() == null) return;
-
-		WeeklyGoal weeklyGoal = WeeklyGoal.builder()
-			.user(user)
-			.goalActionType(onboardingRequestDTO.goalActionType())
-			.targetCount(onboardingRequestDTO.targetCount())
-			.build();
-
-		// 주차 시작일 설정
-		weeklyGoal.initWeekStartDate();
-
-		weeklyGoalRepository.save(weeklyGoal);
-	}
+	*/
 }

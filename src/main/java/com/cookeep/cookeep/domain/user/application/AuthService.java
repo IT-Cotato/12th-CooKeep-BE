@@ -34,7 +34,6 @@ import com.cookeep.cookeep.security.JwtTokenProvider;
 import com.cookeep.cookeep.domain.user.dao.UserAuthRepository;
 import com.cookeep.cookeep.domain.user.dao.UserRepository;
 import com.cookeep.cookeep.domain.user.dao.UserSessionRepository;
-import com.cookeep.cookeep.domain.user.dto.KakaoUserInfoResponseDTO;
 import com.cookeep.cookeep.domain.user.entity.NextStep;
 import com.cookeep.cookeep.domain.user.entity.User;
 import com.cookeep.cookeep.domain.user.entity.UserAuth;
