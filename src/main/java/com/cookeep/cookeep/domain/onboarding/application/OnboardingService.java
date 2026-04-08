@@ -5,7 +5,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.cookeep.cookeep.api.dto.request.AgreementRequestDTO;
 import com.cookeep.cookeep.api.dto.request.OnboardingRequestDTO;
+import com.cookeep.cookeep.common.exception.AppException;
+import com.cookeep.cookeep.common.exception.ErrorCode;
 import com.cookeep.cookeep.domain.onboarding.dao.WeeklyGoalRepository;
+import com.cookeep.cookeep.domain.onboarding.entity.GoalActionType;
 import com.cookeep.cookeep.domain.onboarding.entity.WeeklyGoal;
 import com.cookeep.cookeep.domain.user.application.UserReader;
 import com.cookeep.cookeep.domain.user.entity.User;
@@ -64,8 +67,19 @@ public class OnboardingService {
 		// 온보딩 플로우 재진입 등 예외 상황에서 기존 목표 데이터가 삭제되는 것을 방지하기 위해
 		// 새로운 값만 추가 저장하는 방식 사용
 
+		GoalActionType goalActionType = onboardingRequestDTO.goalActionType();
+		Integer targetCount = onboardingRequestDTO.targetCount();
+
 		// 주간 목표 설정을 건너뛴 경우
-		if (onboardingRequestDTO.goalActionType() == null) return;
+		if (goalActionType == null) return;
+
+		if (goalActionType != null) {
+			if (targetCount == null) { // goalActionType이 존재하는데, targetCount을 입력하지 않았다면 에러 발생
+				throw new AppException(ErrorCode.INVALID_WEEKLY_GOAL_TARGET_COUNT);
+			} else if (targetCount < 1 || targetCount > 10) { // 1~10 사이가 아닐 경우 에러 발생
+				throw new AppException(ErrorCode.INVALID_TARGET_COUNT);
+			}
+		}
 
 		WeeklyGoal weeklyGoal = WeeklyGoal.builder()
 			.user(user)
