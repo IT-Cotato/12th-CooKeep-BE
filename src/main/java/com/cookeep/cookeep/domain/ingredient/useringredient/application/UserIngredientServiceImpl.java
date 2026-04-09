@@ -8,6 +8,8 @@ import com.cookeep.cookeep.api.dto.response.UserIngredientListPreviewResponseDto
 import com.cookeep.cookeep.api.dto.response.UserIngredientPreviewResponseDto;
 import com.cookeep.cookeep.common.exception.AppException;
 import com.cookeep.cookeep.common.exception.ErrorCode;
+import com.cookeep.cookeep.domain.cookie.application.CookieService;
+import com.cookeep.cookeep.domain.cookie.entity.CookieLog;
 import com.cookeep.cookeep.domain.ingredient.common.domain.Storage;
 import com.cookeep.cookeep.domain.ingredient.common.domain.Type;
 import com.cookeep.cookeep.domain.ingredient.common.domain.Unit;
@@ -41,6 +43,7 @@ public class UserIngredientServiceImpl implements UserIngredientService {
     private final ConsumptionReportService consumptionReportService;
     private final UserRepository userRepository;
     private final RecentIngredientService recentIngredientService;
+    private final CookieService cookieService;
 
     // 1. 기본 정보 조회 (저장 안 함)
     @Override
@@ -86,6 +89,9 @@ public class UserIngredientServiceImpl implements UserIngredientService {
 
         // 최신 배치 ID 저장 (upsert)
         recentIngredientService.saveBatch(userId, batchId);
+
+        // 최초 재료 등록 온보딩 쿠키 지급 (일회성)
+        grantFirstIngredientRewardIfEligible(user);
 
         return UserIngredientListCreateResponseDto.of(results);
     }
@@ -176,6 +182,14 @@ public class UserIngredientServiceImpl implements UserIngredientService {
     private LocalDate calcExpiration(Integer expirationDays) {
         if (expirationDays == null) return null;
         return LocalDate.now().plusDays(expirationDays);
+    }
+
+    // 온보딩 재료 추가 여부 확인
+    private void grantFirstIngredientRewardIfEligible(User user) {
+        if (!user.isFirstIngredientReward()) {
+            cookieService.updateCookie(user.getUserId(), CookieLog.CookieLogType.ONBOARDING_INGREDIENT);
+            user.markFirstIngredientRewarded();
+        }
     }
 
 }
