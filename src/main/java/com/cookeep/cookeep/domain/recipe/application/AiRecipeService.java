@@ -253,7 +253,7 @@ public class AiRecipeService {
         boolean cookingGoalAchieved = weeklyGoalService.handleGoalProgress(userId, GoalActionType.COOKING);
 
         // 최초 레시피 채택 온보딩 쿠키 지급 (일회성)
-        grantFirstRecipeRewardIfEligible(userId);
+        boolean rewardGranted = grantFirstRecipeRewardIfEligible(userId);
 
         // 6. 세션의 ingredientIds 조회
         List<Long> ingredientIds;
@@ -282,6 +282,7 @@ public class AiRecipeService {
                 .message("레시피가 성공적으로 채택되었습니다.")
                 .completedAt(session.getCompletedAt())
                 .weeklyGoalAchieved(weeklyGoalAchieved)
+                .recipeRewardGranted(rewardGranted)
                 .build();
     }
 
@@ -835,13 +836,16 @@ public class AiRecipeService {
     }
 
     // 첫 레시피 채택 여부 조회
-    private void grantFirstRecipeRewardIfEligible(Long userId) {
+    private boolean grantFirstRecipeRewardIfEligible(Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+
         if (!user.isFirstRecipeReward()) {
             cookieService.updateCookie(userId, CookieLog.CookieLogType.ONBOARDING_RECIPE);
             user.markFirstRecipeRewarded();
+            return true;
         }
+        return false;
     }
 
 }

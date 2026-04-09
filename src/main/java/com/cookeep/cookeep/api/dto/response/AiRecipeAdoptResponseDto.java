@@ -49,4 +49,10 @@ public class AiRecipeAdoptResponseDto {
             example = "false"
     )
     private boolean weeklyGoalAchieved;
+
+    @Schema(
+            description = "첫 레시피 채택 쿠키 지급 여부",
+            example = "true"
+    )
+    private boolean recipeRewardGranted;
 }
