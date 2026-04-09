@@ -252,6 +252,9 @@ public class AiRecipeService {
         // 5. 레시피 채택 시 COOKING 목표 카운트 증가
         boolean cookingGoalAchieved = weeklyGoalService.handleGoalProgress(userId, GoalActionType.COOKING);
 
+        // 최초 레시피 채택 온보딩 쿠키 지급 (일회성)
+        grantFirstRecipeRewardIfEligible(userId);
+
         // 6. 세션의 ingredientIds 조회
         List<Long> ingredientIds;
         try {
@@ -829,6 +832,16 @@ public class AiRecipeService {
         return userRepository.findById(userId)
                 .map(User::getDislikedIngredients)
                 .orElse(List.of());
+    }
+
+    // 첫 레시피 채택 여부 조회
+    private void grantFirstRecipeRewardIfEligible(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+        if (!user.isFirstRecipeReward()) {
+            cookieService.updateCookie(userId, CookieLog.CookieLogType.ONBOARDING_RECIPE);
+            user.markFirstRecipeRewarded();
+        }
     }
 
 }
