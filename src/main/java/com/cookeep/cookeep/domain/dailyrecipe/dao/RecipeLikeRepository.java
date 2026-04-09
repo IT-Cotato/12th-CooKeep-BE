@@ -3,8 +3,8 @@ package com.cookeep.cookeep.domain.dailyrecipe.dao;
 import com.cookeep.cookeep.domain.dailyrecipe.entity.RecipeLike;
 import com.cookeep.cookeep.domain.dailyrecipe.entity.DailyRecipe;
 import com.cookeep.cookeep.domain.user.entity.User;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -38,5 +38,5 @@ public interface RecipeLikeRepository extends JpaRepository<RecipeLike, Long> {
 	@Query("SELECT rl.dailyRecipe FROM RecipeLike rl " +
 			"WHERE rl.user = :user " +
 			"ORDER BY rl.dailyRecipe.likeCount DESC, rl.dailyRecipe.createdAt DESC")
-	Page<DailyRecipe> findMyLikedRecipes(@Param("user") User user, Pageable pageable);
+	Slice<DailyRecipe> findMyLikedRecipes(@Param("user") User user, Pageable pageable);
 }
