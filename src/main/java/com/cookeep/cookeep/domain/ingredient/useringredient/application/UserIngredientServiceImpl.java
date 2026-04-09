@@ -91,9 +91,9 @@ public class UserIngredientServiceImpl implements UserIngredientService {
         recentIngredientService.saveBatch(userId, batchId);
 
         // 최초 재료 등록 온보딩 쿠키 지급 (일회성)
-        grantFirstIngredientRewardIfEligible(user);
+        boolean rewardGranted = grantFirstIngredientRewardIfEligible(user);
 
-        return UserIngredientListCreateResponseDto.of(results);
+        return UserIngredientListCreateResponseDto.of(results, rewardGranted);
     }
 
     private UserIngredientCreateResponseDto createOne(
@@ -185,11 +185,13 @@ public class UserIngredientServiceImpl implements UserIngredientService {
     }
 
     // 온보딩 재료 추가 여부 확인
-    private void grantFirstIngredientRewardIfEligible(User user) {
+    private boolean grantFirstIngredientRewardIfEligible(User user) {
         if (!user.isFirstIngredientReward()) {
             cookieService.updateCookie(user.getUserId(), CookieLog.CookieLogType.ONBOARDING_INGREDIENT);
             user.markFirstIngredientRewarded();
+            return true;
         }
+        return false;
     }
 
 }
