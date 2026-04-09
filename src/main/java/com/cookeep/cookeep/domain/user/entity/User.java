@@ -109,6 +109,14 @@ public class User extends BaseEntity {
 	@Column(name = "disliked_ingredients", columnDefinition = "JSON")
 	private String dislikedIngredientsJson; // 못먹는 재료 목록 (JSON 배열로 저장)
 
+	@Builder.Default
+	@Column(name = "is_first_recipe_reward", nullable = false)
+	private boolean isFirstRecipeReward = false;
+
+	@Builder.Default
+	@Column(name = "is_first_ingredient_reward", nullable = false)
+	private boolean isFirstIngredientReward = false;
+
 	// 유저가 API를 통해 직접 프로필을 변경할 때 호출
 	public void updateProfilePlant(UserPlant nesUserPlant) {
 		this.profilePlant = nesUserPlant;
@@ -198,5 +206,21 @@ public class User extends BaseEntity {
 		} catch (Exception e) {
 			this.dislikedIngredientsJson = null;
 		}
+	}
+
+	public boolean isFirstRecipeReward() {
+		return isFirstRecipeReward;
+	}
+
+	public void markFirstRecipeRewarded() {
+		this.isFirstRecipeReward = true;
+	}
+
+	public boolean isFirstIngredientReward() {
+		return isFirstIngredientReward;
+	}
+
+	public void markFirstIngredientRewarded() {
+		this.isFirstIngredientReward = true;
 	}
 }
