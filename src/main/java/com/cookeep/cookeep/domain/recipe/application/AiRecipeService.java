@@ -24,6 +24,7 @@ import com.cookeep.cookeep.domain.recipe.dao.AiRecipeRepository;
 import com.cookeep.cookeep.domain.recipe.dao.AiSessionRepository;
 import com.cookeep.cookeep.domain.recipe.dto.*;
 import com.cookeep.cookeep.domain.recipe.entity.*;
+import com.cookeep.cookeep.domain.user.application.UserReader;
 import com.cookeep.cookeep.domain.user.dao.UserRepository;
 import com.cookeep.cookeep.domain.user.entity.User;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -64,6 +65,7 @@ public class AiRecipeService {
     private final WeeklyGoalService weeklyGoalService;
     private final UserRepository userRepository;
     private final AiRateLimitService rateLimitService;
+    private final UserReader userReader;
 
     // sessionId 유무에 따라 신규/재요청 로직 분기
     public AiRecipeResponseDto generateRecipe(Long userId, AiRecipeRequestDto request) {
@@ -837,8 +839,7 @@ public class AiRecipeService {
 
     // 첫 레시피 채택 여부 조회
     private boolean grantFirstRecipeRewardIfEligible(Long userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+        User user = userReader.readById(userId);
 
         if (!user.isFirstRecipeReward()) {
             cookieService.updateCookie(userId, CookieLog.CookieLogType.ONBOARDING_RECIPE);
