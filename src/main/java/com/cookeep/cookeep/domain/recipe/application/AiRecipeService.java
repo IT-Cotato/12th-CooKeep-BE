@@ -24,6 +24,7 @@ import com.cookeep.cookeep.domain.recipe.dao.AiRecipeRepository;
 import com.cookeep.cookeep.domain.recipe.dao.AiSessionRepository;
 import com.cookeep.cookeep.domain.recipe.dto.*;
 import com.cookeep.cookeep.domain.recipe.entity.*;
+import com.cookeep.cookeep.domain.user.application.UserReader;
 import com.cookeep.cookeep.domain.user.dao.UserRepository;
 import com.cookeep.cookeep.domain.user.entity.User;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -64,6 +65,7 @@ public class AiRecipeService {
     private final WeeklyGoalService weeklyGoalService;
     private final UserRepository userRepository;
     private final AiRateLimitService rateLimitService;
+    private final UserReader userReader;
 
     // sessionId 유무에 따라 신규/재요청 로직 분기
     public AiRecipeResponseDto generateRecipe(Long userId, AiRecipeRequestDto request) {
@@ -252,6 +254,9 @@ public class AiRecipeService {
         // 5. 레시피 채택 시 COOKING 목표 카운트 증가
         boolean cookingGoalAchieved = weeklyGoalService.handleGoalProgress(userId, GoalActionType.COOKING);
 
+        // 최초 레시피 채택 온보딩 쿠키 지급 (일회성)
+        boolean rewardGranted = grantFirstRecipeRewardIfEligible(userId);
+
         // 6. 세션의 ingredientIds 조회
         List<Long> ingredientIds;
         try {
@@ -279,6 +284,7 @@ public class AiRecipeService {
                 .message("레시피가 성공적으로 채택되었습니다.")
                 .completedAt(session.getCompletedAt())
                 .weeklyGoalAchieved(weeklyGoalAchieved)
+                .recipeRewardGranted(rewardGranted)
                 .build();
     }
 
@@ -829,6 +835,18 @@ public class AiRecipeService {
         return userRepository.findById(userId)
                 .map(User::getDislikedIngredients)
                 .orElse(List.of());
+    }
+
+    // 첫 레시피 채택 여부 조회
+    private boolean grantFirstRecipeRewardIfEligible(Long userId) {
+        User user = userReader.readById(userId);
+
+        if (!user.isFirstRecipeReward()) {
+            cookieService.updateCookie(userId, CookieLog.CookieLogType.ONBOARDING_RECIPE);
+            user.markFirstRecipeRewarded();
+            return true;
+        }
+        return false;
     }
 
 }
