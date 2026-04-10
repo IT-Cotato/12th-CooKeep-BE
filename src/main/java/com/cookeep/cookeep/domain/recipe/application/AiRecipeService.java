@@ -270,7 +270,7 @@ public class AiRecipeService {
         }
 
         // 7. 임박 재료(leftDays=0) 포함 세션이면 쿠키 지급 (하루 1회)
-        grantUrgentCookieRewardIfEligible(userId, ingredientIds);
+        boolean urgentRewardGranted = grantUrgentCookieRewardIfEligible(userId, ingredientIds);
 
         // 8. 요청 재료 소비 처리 후 USE_EXPIRING_INGREDIENT 주간 목표 카운트 증가
         boolean expiringGoalAchieved = consumeIngredientsAndTrackExpiringGoal(userId, ingredientIds);
@@ -285,6 +285,7 @@ public class AiRecipeService {
                 .completedAt(session.getCompletedAt())
                 .weeklyGoalAchieved(weeklyGoalAchieved)
                 .recipeRewardGranted(rewardGranted)
+                .urgentIngredientRewardGranted(urgentRewardGranted)
                 .build();
     }
 
