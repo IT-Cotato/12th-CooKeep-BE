@@ -178,6 +178,7 @@ public class AiRecipeController {
             @ApiResponse(responseCode = "404", description = """
                     리소스를 찾을 수 없습니다. 다음 오류가 발생할 수 있습니다:
                     - AI_SESSION_NOT_FOUND: AI 레시피 세션을 찾을 수 없습니다.
+                    - USER_NOT_FOUND: 사용자를 찾을 수 없습니다.
                     """, content = @Content),
             @ApiResponse(responseCode = "500", description = """
                     서버 오류입니다. 다음 오류가 발생할 수 있습니다:
