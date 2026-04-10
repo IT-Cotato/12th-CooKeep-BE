@@ -55,4 +55,10 @@ public class AiRecipeAdoptResponseDto {
             example = "true"
     )
     private boolean recipeRewardGranted;
+
+    @Schema(
+            description = "임박 재료 사용 쿠키 지급 여부 (BONUS_URGENT_INGREDIENT_USE)",
+            example = "true"
+    )
+    private boolean urgentIngredientRewardGranted;
 }

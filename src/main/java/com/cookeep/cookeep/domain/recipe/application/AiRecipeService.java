@@ -583,9 +583,9 @@ public class AiRecipeService {
     }
 
     // 임박 식재료 레시피 채택 시 리워드 지급
-    private void grantUrgentCookieRewardIfEligible(Long userId, List<Long> ingredientIds) {
+    private boolean grantUrgentCookieRewardIfEligible(Long userId, List<Long> ingredientIds) {
         if (ingredientIds == null || ingredientIds.isEmpty()) {
-            return;
+            return false;
         }
 
         // 세션에 요청된 재료 중 leftDays == 0인 항목이 있는지 확인
@@ -593,14 +593,14 @@ public class AiRecipeService {
                 .findAllByIngredientIdInAndUser_UserId(ingredientIds, userId);
 
         if (targets.isEmpty()) {
-            return;
+            return false;
         }
 
         boolean hasUrgent = targets.stream()
                 .anyMatch(ui -> ui.getLeftDays() == URGENT);
 
         if (!hasUrgent) {
-            return;
+            return false;
         }
 
         CookieLog.CookieLogType urgentType =
@@ -615,6 +615,8 @@ public class AiRecipeService {
         } else {
             log.info("임박 재료 쿠키 오늘 이미 지급됨 - userId={}", userId);
         }
+
+        return granted;
 
     }
 
