@@ -228,6 +228,20 @@ public class ConsumeIngredientServiceTest {
         }
 
         @Test
+        @DisplayName("하루 첫 소비 시 dailyFirstConsumeAchieved=true를 반환한다")
+        void 첫소비_dailyFirstConsumeAchieved_true() {
+            given(userIngredientRepository.findAllByIngredientIdInAndUser_UserId(anyList(), anyLong()))
+                    .willReturn(List.of(buildNormalIngredient()));
+            given(cookieService.grantDailyCookie(1L, CookieLog.CookieLogType.BASIC_DAILY_FIRST_CONSUME))
+                    .willReturn(true);
+
+            ConsumeIngredientsResponseDto result =
+                    consumeIngredientService.consumeIngredients(1L, buildRequest(List.of(1L)));
+
+            assertThat(result.isDailyFirstConsumeAchieved()).isTrue();
+        }
+
+        @Test
         @DisplayName("당일 이미 지급된 경우 granted=false, points=0을 반환한다")
         void 중복소비_쿠키미지급() {
             given(userIngredientRepository.findAllByIngredientIdInAndUser_UserId(anyList(), anyLong()))
@@ -240,6 +254,20 @@ public class ConsumeIngredientServiceTest {
 
             assertThat(result.getReward().getGranted()).isFalse();
             assertThat(result.getReward().getPoints()).isZero();
+        }
+
+        @Test
+        @DisplayName("당일 이미 지급된 경우 dailyFirstConsumeAchieved=false를 반환한다")
+        void 중복소비_dailyFirstConsumeAchieved_false() {
+            given(userIngredientRepository.findAllByIngredientIdInAndUser_UserId(anyList(), anyLong()))
+                    .willReturn(List.of(buildNormalIngredient()));
+            given(cookieService.grantDailyCookie(1L, CookieLog.CookieLogType.BASIC_DAILY_FIRST_CONSUME))
+                    .willReturn(false);
+
+            ConsumeIngredientsResponseDto result =
+                    consumeIngredientService.consumeIngredients(1L, buildRequest(List.of(1L)));
+
+            assertThat(result.isDailyFirstConsumeAchieved()).isFalse();
         }
 
         @Test
@@ -287,102 +315,22 @@ public class ConsumeIngredientServiceTest {
     }
 
     @Nested
-    @DisplayName("consumeIngredients - BONUS_URGENT_INGREDIENT_USE 쿠키 지급")
-    class UrgentCookieGrant {
-
-        @Test
-        @DisplayName("임박 재료 소비 시 BONUS_URGENT_INGREDIENT_USE 쿠키 지급 시도를 1회 한다")
-        void 임박재료_소비_urgent_쿠키_지급_시도() {
-            given(userIngredientRepository.findAllByIngredientIdInAndUser_UserId(anyList(), anyLong()))
-                    .willReturn(List.of(buildUrgentIngredient()));
-
-            consumeIngredientService.consumeIngredients(1L, buildRequest(List.of(1L)));
-
-            verify(cookieService).grantDailyCookie(1L, CookieLog.CookieLogType.BONUS_URGENT_INGREDIENT_USE);
-        }
-
-        @Test
-        @DisplayName("일반 재료만 소비 시 BONUS_URGENT_INGREDIENT_USE 쿠키 지급을 시도하지 않는다")
-        void 일반재료만_소비_urgent_쿠키_미시도() {
-            given(userIngredientRepository.findAllByIngredientIdInAndUser_UserId(anyList(), anyLong()))
-                    .willReturn(List.of(buildNormalIngredient()));
-
-            consumeIngredientService.consumeIngredients(1L, buildRequest(List.of(1L)));
-
-            verify(cookieService, never()).grantDailyCookie(1L, CookieLog.CookieLogType.BONUS_URGENT_INGREDIENT_USE);
-        }
-
-        @Test
-        @DisplayName("임박 재료 소비 + BONUS_URGENT 지급 시 grantedTypes에 포함된다")
-        void 임박재료_소비_grantedTypes_포함() {
-            given(userIngredientRepository.findAllByIngredientIdInAndUser_UserId(anyList(), anyLong()))
-                    .willReturn(List.of(buildUrgentIngredient()));
-            given(cookieService.grantDailyCookie(1L, CookieLog.CookieLogType.BONUS_URGENT_INGREDIENT_USE))
-                    .willReturn(true);
-
-            ConsumeIngredientsResponseDto result =
-                    consumeIngredientService.consumeIngredients(1L, buildRequest(List.of(1L)));
-
-            assertThat(result.getReward().getGrantedTypes())
-                    .contains(CookieLog.CookieLogType.BONUS_URGENT_INGREDIENT_USE);
-        }
-
-        @Test
-        @DisplayName("임박 재료 소비했지만 오늘 이미 BONUS_URGENT 지급 시 grantedTypes에 포함되지 않는다")
-        void 임박재료_소비_오늘이미지급_grantedTypes_미포함() {
-            given(userIngredientRepository.findAllByIngredientIdInAndUser_UserId(anyList(), anyLong()))
-                    .willReturn(List.of(buildUrgentIngredient()));
-            given(cookieService.grantDailyCookie(1L, CookieLog.CookieLogType.BONUS_URGENT_INGREDIENT_USE))
-                    .willReturn(false);
-
-            ConsumeIngredientsResponseDto result =
-                    consumeIngredientService.consumeIngredients(1L, buildRequest(List.of(1L)));
-
-            assertThat(result.getReward().getGrantedTypes())
-                    .doesNotContain(CookieLog.CookieLogType.BONUS_URGENT_INGREDIENT_USE);
-        }
-
-        @Test
-        @DisplayName("임박 재료 소비 + BONUS_URGENT 지급 시 points에 3이 더해진다")
-        void 임박재료_소비_points_3추가() {
-            given(userIngredientRepository.findAllByIngredientIdInAndUser_UserId(anyList(), anyLong()))
-                    .willReturn(List.of(buildUrgentIngredient()));
-            given(cookieService.grantDailyCookie(1L, CookieLog.CookieLogType.BONUS_URGENT_INGREDIENT_USE))
-                    .willReturn(true);
-            given(cookieService.grantDailyCookie(1L, CookieLog.CookieLogType.BASIC_DAILY_FIRST_CONSUME))
-                    .willReturn(false); // 기본 미지급
-
-            ConsumeIngredientsResponseDto result =
-                    consumeIngredientService.consumeIngredients(1L, buildRequest(List.of(1L)));
-
-            assertThat(result.getReward().getPoints()).isEqualTo(3);
-        }
-    }
-
-    @Nested
     @DisplayName("consumeIngredients - RewardInfo grantedTypes 종합 검증")
     class RewardInfoGrantedTypes {
 
         @Test
-        @DisplayName("기본 리워드 + 임박 리워드 모두 지급 시 grantedTypes에 두 타입 모두 포함된다")
-        void 기본_임박_모두지급_grantedTypes_두타입() {
+        @DisplayName("기본 리워드 지급 시 grantedTypes에 BASIC_DAILY_FIRST_CONSUME이 포함된다")
+        void 기본리워드_지급_grantedTypes_포함() {
             given(userIngredientRepository.findAllByIngredientIdInAndUser_UserId(anyList(), anyLong()))
-                    .willReturn(List.of(buildUrgentIngredient()));
+                    .willReturn(List.of(buildNormalIngredient()));
             given(cookieService.grantDailyCookie(1L, CookieLog.CookieLogType.BASIC_DAILY_FIRST_CONSUME))
-                    .willReturn(true);
-            given(cookieService.grantDailyCookie(1L, CookieLog.CookieLogType.BONUS_URGENT_INGREDIENT_USE))
                     .willReturn(true);
 
             ConsumeIngredientsResponseDto result =
                     consumeIngredientService.consumeIngredients(1L, buildRequest(List.of(1L)));
 
             assertThat(result.getReward().getGrantedTypes())
-                    .containsExactlyInAnyOrder(
-                            CookieLog.CookieLogType.BASIC_DAILY_FIRST_CONSUME,
-                            CookieLog.CookieLogType.BONUS_URGENT_INGREDIENT_USE
-                    );
-            assertThat(result.getReward().getGranted()).isTrue();
-            assertThat(result.getReward().getPoints()).isEqualTo(4); // 1 + 3
+                    .containsExactly(CookieLog.CookieLogType.BASIC_DAILY_FIRST_CONSUME);
         }
 
         @Test
@@ -414,6 +362,21 @@ public class ConsumeIngredientServiceTest {
 
             assertThat(result.getReward().getGrantedTypes())
                     .contains(CookieLog.CookieLogType.BONUS_WEEKLY_GOAL_ACHIEVE);
+        }
+
+        @Test
+        @DisplayName("BONUS_URGENT_INGREDIENT_USE는 직접 소비에서 지급되지 않는다")
+        void 직접소비_BONUS_URGENT_미지급() {
+            given(userIngredientRepository.findAllByIngredientIdInAndUser_UserId(anyList(), anyLong()))
+                    .willReturn(List.of(buildUrgentIngredient()));
+
+            ConsumeIngredientsResponseDto result =
+                    consumeIngredientService.consumeIngredients(1L, buildRequest(List.of(1L)));
+
+            assertThat(result.getReward().getGrantedTypes())
+                    .doesNotContain(CookieLog.CookieLogType.BONUS_URGENT_INGREDIENT_USE);
+            verify(cookieService, never())
+                    .grantDailyCookie(anyLong(), eq(CookieLog.CookieLogType.BONUS_URGENT_INGREDIENT_USE));
         }
     }
 
