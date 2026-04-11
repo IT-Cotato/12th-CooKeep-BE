@@ -29,6 +29,7 @@ import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -59,12 +60,12 @@ public class UserIngredientServiceRewardTest {
     @BeforeEach
     void setUp() {
         firstTimeUser = User.builder()
-                .nickname("신규유저")
+                .userId(1L)
                 .isFirstIngredientReward(false)
                 .build();
 
         rewardedUser = User.builder()
-                .nickname("기존유저")
+                .userId(1L)
                 .isFirstIngredientReward(true)
                 .build();
 
@@ -78,7 +79,11 @@ public class UserIngredientServiceRewardTest {
 
         given(defaultIngredientRepository.findById(1L)).willReturn(Optional.of(defaultIngredient));
         given(userIngredientRepository.save(any(UserIngredient.class)))
-                .willAnswer(inv -> inv.getArgument(0));
+                .willAnswer(inv -> {
+                    UserIngredient entity = inv.getArgument(0);
+                    ReflectionTestUtils.setField(entity, "createdAt", LocalDateTime.now());
+                    return entity;
+                });
         doNothing().when(consumptionReportService).createLogForNewIngredient(any(), any());
         doNothing().when(recentIngredientService).saveBatch(anyLong(), any());
     }
