@@ -23,6 +23,9 @@ public class ConsumeIngredientsResponseDto {
     )
     private RewardInfo reward;
 
+    @Schema(description = "오늘 첫 소비 쿠키(BASIC_DAILY_FIRST_CONSUME) 지급 여부", example = "true")
+    private boolean dailyFirstConsumeAchieved;
+
     @Schema(description = "이번 소비로 주간 목표(COOKING) 달성 여부", example = "false")
     private boolean weeklyGoalAchieved;
 
@@ -56,6 +59,7 @@ public class ConsumeIngredientsResponseDto {
             boolean granted,
             int points,
             List<CookieLog.CookieLogType> grantedTypes,
+            boolean dailyFirstConsumeAchieved,
             boolean weeklyGoalAchieved) {
         return ConsumeIngredientsResponseDto.builder()
                 .reward(RewardInfo.builder()
@@ -63,6 +67,7 @@ public class ConsumeIngredientsResponseDto {
                         .points(points)
                         .grantedTypes(grantedTypes)
                         .build())
+                .dailyFirstConsumeAchieved(dailyFirstConsumeAchieved)
                 .weeklyGoalAchieved(weeklyGoalAchieved)
                 .build();
     }
