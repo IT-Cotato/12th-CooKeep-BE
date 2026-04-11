@@ -79,17 +79,7 @@ public class ConsumeIngredientService {
         // 6. 재료 삭제
         userIngredientRepository.deleteAll(userIngredients);
 
-        // 7. 임박 재료 1일 1회 쿠키 지급 (BONUS_URGENT_INGREDIENT_USE)
-        if (urgentCount > 0) {
-            CookieLog.CookieLogType urgentType = CookieLog.CookieLogType.BONUS_URGENT_INGREDIENT_USE;
-            boolean urgentGranted = cookieService.grantDailyCookie(userId, urgentType);
-            if (urgentGranted) {
-                grantedTypes.add(urgentType);
-                points += urgentType.getDefaultAmount();
-            }
-        }
-
-        // 8. 임박 재료 개수만큼 주간 목표(USE_EXPIRING_INGREDIENT) 카운트 증가
+        // 7. 임박 재료 개수만큼 주간 목표(USE_EXPIRING_INGREDIENT) 카운트 증가
         boolean weeklyGoalAchieved = false;
         for (int i = 0; i < urgentCount; i++) {
             // handleGoalProgress는 이미 달성된 경우 false를 반환하므로 중복 지급 없음
@@ -107,7 +97,9 @@ public class ConsumeIngredientService {
         log.info("User {} consumed {} ingredients. dailyGranted: {}, urgentCount: {}, weeklyGoalAchieved: {}",
                 userId, userIngredients.size(), dailyGranted, urgentCount, weeklyGoalAchieved);
 
-        return ConsumeIngredientsResponseDto.of(!grantedTypes.isEmpty(), points, grantedTypes, weeklyGoalAchieved);
+        return ConsumeIngredientsResponseDto.of(
+                !grantedTypes.isEmpty(), points, grantedTypes, dailyGranted, weeklyGoalAchieved);
+
     }
 
 }
