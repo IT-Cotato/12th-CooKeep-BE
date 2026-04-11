@@ -31,7 +31,7 @@ public class ConsumeIngredientsResponseDto {
     @AllArgsConstructor
     public static class RewardInfo {
         @Schema(
-                description = "오늘 리워드 지급 여부",
+                description = "리워드 지급 여부",
                 example = "true",
                 requiredMode = Schema.RequiredMode.REQUIRED
         )
