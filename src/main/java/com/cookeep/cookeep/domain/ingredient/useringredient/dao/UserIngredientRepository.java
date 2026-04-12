@@ -15,29 +15,6 @@ import java.util.Optional;
 
 public interface UserIngredientRepository extends JpaRepository<UserIngredient, Long> {
 
-    @Query("""
-        SELECT ui
-        FROM UserIngredient ui
-        WHERE ui.user.userId = :userId
-          AND ui.type = :type
-          AND ui.referenceId = :referenceId
-        ORDER BY ui.ingredientId ASC
-        LIMIT 1
-    """)
-    Optional<UserIngredient> findByUserIdAndTypeAndReferenceId(
-            @Param("userId") Long userId,
-            @Param("type") Type type,
-            @Param("referenceId")Long referenceId
-    );
-
-    @Query("SELECT ui FROM UserIngredient ui WHERE ui.user.userId = :userId " +
-            "AND ui.type = :type AND ui.referenceId IN :referenceIds")
-    List<UserIngredient> findUserIngredients(
-            @Param("userId") Long userId,
-            @Param("type") Type type,
-            @Param("referenceIds") List<Long> referenceIds
-    );
-
     List<UserIngredient> findAllByIngredientIdInAndUser_UserId(
             List<Long> ingredientIds,
             Long userId
@@ -115,19 +92,6 @@ public interface UserIngredientRepository extends JpaRepository<UserIngredient, 
         ) THEN true ELSE false END
     """)
     boolean existsByUserIdAndExpirationDate(
-            @Param("userId") Long userId,
-            @Param("expirationDate") LocalDate expirationDate
-    );
-
-    // 유통기한 당일(D-0) 식재료 조회
-    @Query("""
-        SELECT ui
-        FROM UserIngredient ui
-        WHERE ui.user.userId = :userId
-        AND ui.expirationDate = :expirationDate
-        ORDER BY ui.ingredientId ASC
-    """)
-    List<UserIngredient> findByUserIdAndExpirationDateOrderByIngredientIdAsc(
             @Param("userId") Long userId,
             @Param("expirationDate") LocalDate expirationDate
     );
