@@ -24,6 +24,7 @@ public class UserIngredientScheduler {
 
     private final UserIngredientRepository userIngredientRepository;
     private final ConsumptionReportService consumptionReportService;
+    private final WebPushNotificationService webPushNotificationService;
 
     /**
      * 매일 자정(00:00)에 모든 식재료의 남은 일수(leftDays) 업데이트
@@ -62,9 +63,6 @@ public class UserIngredientScheduler {
             // 에러가 발생해도 스케줄러는 계속 실행되어야 함
         }
     }
-
-    @Autowired
-    private WebPushNotificationService webPushNotificationService;
 
     @Scheduled(cron = "0 0 9 * * *", zone = "Asia/Seoul")
     public void sendDailyExpirationPush() {
