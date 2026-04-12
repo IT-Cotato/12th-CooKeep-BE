@@ -254,10 +254,10 @@ public class AiRecipeService {
         // 5. 레시피 채택 시 COOKING 목표 카운트 증가
         boolean cookingGoalAchieved = weeklyGoalService.handleGoalProgress(userId, GoalActionType.COOKING);
 
-        // 최초 레시피 채택 온보딩 쿠키 지급 (일회성)
+        // 6. 최초 레시피 채택 온보딩 쿠키 지급 (일회성)
         boolean rewardGranted = grantFirstRecipeRewardIfEligible(userId);
 
-        // 6. 세션의 ingredientIds 조회
+        // 7. 세션의 ingredientIds 조회
         List<Long> ingredientIds;
         try {
             ingredientIds = objectMapper.readValue(
@@ -269,14 +269,31 @@ public class AiRecipeService {
             throw new AppException(ErrorCode.INTERNAL_SERVER_ERROR);
         }
 
-        // 7. 임박 재료(leftDays=0) 포함 세션이면 쿠키 지급 (하루 1회)
+        // 8. 임박 재료(leftDays=0) 포함 세션이면 쿠키 지급 (하루 1회)
         boolean urgentRewardGranted = grantUrgentCookieRewardIfEligible(userId, ingredientIds);
 
-        // 8. 요청 재료 소비 처리 후 USE_EXPIRING_INGREDIENT 주간 목표 카운트 증가
+        // 9. 요청 재료 소비 처리 후 USE_EXPIRING_INGREDIENT 주간 목표 카운트 증가
         boolean expiringGoalAchieved = consumeIngredientsAndTrackExpiringGoal(userId, ingredientIds);
 
-        // 9. COOKING / USE_EXPIRING_INGREDIENT 중 하나라도 달성되면 weeklyGoalAchieved = true
+        // 10. COOKING / USE_EXPIRING_INGREDIENT 중 하나라도 달성되면 weeklyGoalAchieved = true
         boolean weeklyGoalAchieved = cookingGoalAchieved || expiringGoalAchieved;
+
+        // 11. RewardInfo 빌드
+        List<CookieLog.CookieLogType> grantedTypes = new java.util.ArrayList<>();
+        int totalPoints = 0;
+        if (rewardGranted) {
+            grantedTypes.add(CookieLog.CookieLogType.ONBOARDING_RECIPE);
+            totalPoints += CookieLog.CookieLogType.ONBOARDING_RECIPE.getDefaultAmount();
+        }
+        if (urgentRewardGranted) {
+            grantedTypes.add(CookieLog.CookieLogType.BONUS_URGENT_INGREDIENT_USE);
+            totalPoints += CookieLog.CookieLogType.BONUS_URGENT_INGREDIENT_USE.getDefaultAmount();
+        }
+        AiRecipeAdoptResponseDto.RewardInfo rewardInfo = AiRecipeAdoptResponseDto.RewardInfo.builder()
+                .granted(!grantedTypes.isEmpty())
+                .points(totalPoints)
+                .grantedTypes(grantedTypes)
+                .build();
 
         return AiRecipeAdoptResponseDto.builder()
                 .sessionId(session.getId())
@@ -286,6 +303,7 @@ public class AiRecipeService {
                 .weeklyGoalAchieved(weeklyGoalAchieved)
                 .recipeRewardGranted(rewardGranted)
                 .urgentIngredientRewardGranted(urgentRewardGranted)
+                .reward(rewardInfo)
                 .build();
     }
 

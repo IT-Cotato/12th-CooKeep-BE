@@ -4,6 +4,7 @@ import com.cookeep.cookeep.api.dto.response.AiRecipeAdoptResponseDto;
 import com.cookeep.cookeep.common.exception.AppException;
 import com.cookeep.cookeep.common.exception.ErrorCode;
 import com.cookeep.cookeep.domain.cookie.application.CookieService;
+import com.cookeep.cookeep.domain.cookie.entity.CookieLog;
 import com.cookeep.cookeep.domain.dailyrecipe.dao.DailyRecipeRepository;
 import com.cookeep.cookeep.domain.ingredient.common.domain.Storage;
 import com.cookeep.cookeep.domain.ingredient.common.domain.Type;
@@ -19,6 +20,7 @@ import com.cookeep.cookeep.domain.recipe.dao.AiMessageRepository;
 import com.cookeep.cookeep.domain.recipe.dao.AiRecipeRepository;
 import com.cookeep.cookeep.domain.recipe.dao.AiSessionRepository;
 import com.cookeep.cookeep.domain.recipe.entity.*;
+import com.cookeep.cookeep.domain.user.application.UserReader;
 import com.cookeep.cookeep.domain.user.dao.UserRepository;
 import com.cookeep.cookeep.domain.user.entity.User;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -63,6 +65,7 @@ public class AiRecipeServiceTest {
     @Mock private WeeklyGoalService weeklyGoalService;
     @Mock private AiRateLimitService rateLimitService;
     @Mock private UserRepository userRepository;
+    @Mock private UserReader userReader;
 
     @Spy
     private ObjectMapper objectMapper = new ObjectMapper();
@@ -92,6 +95,9 @@ public class AiRecipeServiceTest {
     @BeforeEach
     void setUp() throws Exception {
         user = User.builder().nickname("테스터").build();
+
+        given(userReader.readById(anyLong()))
+                .willReturn(user);
 
         given(userRepository.findById(anyLong()))
                 .willReturn(Optional.of(user));
@@ -271,57 +277,73 @@ public class AiRecipeServiceTest {
     }
 
     @Nested
-    @DisplayName("adoptRecipe - COOKING + USE_EXPIRING_INGREDIENT 조합")
-    class BothGoals {
+    @DisplayName("adoptRecipe - RewardInfo 검증")
+    class AdoptRecipeRewardInfo {
 
         @Test
-        @DisplayName("COOKING만 달성 시 weeklyGoalAchieved=true를 반환한다")
-        void COOKING만_달성_true() {
+        @DisplayName("ONBOARDING_RECIPE 최초 지급 시 RewardInfo에 포함된다")
+        void ONBOARDING_RECIPE_지급_RewardInfo_포함() {
             given(userIngredientRepository.findAllByIngredientIdInAndUser_UserId(anyList(), eq(1L)))
                     .willReturn(List.of(buildNormalIngredient()));
-            given(weeklyGoalService.handleGoalProgress(1L, GoalActionType.COOKING)).willReturn(true);
+            // grantFirstRecipeRewardIfEligible가 true를 반환하려면 user.isFirstRecipeReward()=false이어야 함
+            // setUp의 user는 isFirstRecipeReward=false (기본값)
 
             AiRecipeAdoptResponseDto result = aiRecipeService.adoptRecipe(1L, 10L);
 
-            assertThat(result.isWeeklyGoalAchieved()).isTrue();
+            assertThat(result.getReward()).isNotNull();
+            assertThat(result.getReward().getGrantedTypes())
+                    .contains(CookieLog.CookieLogType.ONBOARDING_RECIPE);
+            assertThat(result.isRecipeRewardGranted()).isTrue();
         }
 
         @Test
-        @DisplayName("USE_EXPIRING만 달성 시 weeklyGoalAchieved=true를 반환한다")
-        void USE_EXPIRING만_달성_true() {
+        @DisplayName("임박 재료 포함 + BONUS_URGENT 지급 시 RewardInfo에 포함된다")
+        void BONUS_URGENT_지급_RewardInfo_포함() {
             given(userIngredientRepository.findAllByIngredientIdInAndUser_UserId(anyList(), eq(1L)))
                     .willReturn(List.of(buildUrgentIngredient()));
-            given(weeklyGoalService.handleGoalProgress(1L, GoalActionType.COOKING)).willReturn(false);
-            given(weeklyGoalService.handleGoalProgress(1L, GoalActionType.USE_EXPIRING_INGREDIENT)).willReturn(true);
+            given(cookieService.grantDailyCookie(1L, CookieLog.CookieLogType.BONUS_URGENT_INGREDIENT_USE))
+                    .willReturn(true);
 
             AiRecipeAdoptResponseDto result = aiRecipeService.adoptRecipe(1L, 10L);
 
-            assertThat(result.isWeeklyGoalAchieved()).isTrue();
+            assertThat(result.getReward().getGrantedTypes())
+                    .contains(CookieLog.CookieLogType.BONUS_URGENT_INGREDIENT_USE);
+            assertThat(result.isUrgentIngredientRewardGranted()).isTrue();
         }
 
         @Test
-        @DisplayName("COOKING과 USE_EXPIRING 모두 달성 시 weeklyGoalAchieved=true를 반환한다")
-        void 둘다_달성_true() {
-            given(userIngredientRepository.findAllByIngredientIdInAndUser_UserId(anyList(), eq(1L)))
-                    .willReturn(List.of(buildUrgentIngredient()));
-            given(weeklyGoalService.handleGoalProgress(1L, GoalActionType.COOKING)).willReturn(true);
-            given(weeklyGoalService.handleGoalProgress(1L, GoalActionType.USE_EXPIRING_INGREDIENT)).willReturn(true);
-
-            AiRecipeAdoptResponseDto result = aiRecipeService.adoptRecipe(1L, 10L);
-
-            assertThat(result.isWeeklyGoalAchieved()).isTrue();
-        }
-
-        @Test
-        @DisplayName("COOKING과 USE_EXPIRING 모두 미달성 시 weeklyGoalAchieved=false를 반환한다")
-        void 둘다_미달성_false() {
+        @DisplayName("아무 리워드도 없으면 RewardInfo.granted=false이고 grantedTypes는 비어있다")
+        void 미지급_RewardInfo_granted_false() {
+            // user.isFirstRecipeReward=true 상태 모킹 (이미 받은 상태)
+            User rewardedUser = User.builder()
+                    .nickname("테스터")
+                    .isFirstRecipeReward(true)
+                    .build();
+            given(userReader.readById(anyLong()))
+                    .willReturn(rewardedUser);
             given(userIngredientRepository.findAllByIngredientIdInAndUser_UserId(anyList(), eq(1L)))
                     .willReturn(List.of(buildNormalIngredient()));
-            // 기본값이 false이므로 별도 stubbing 불필요
 
             AiRecipeAdoptResponseDto result = aiRecipeService.adoptRecipe(1L, 10L);
 
-            assertThat(result.isWeeklyGoalAchieved()).isFalse();
+            assertThat(result.getReward().getGranted()).isFalse();
+            assertThat(result.getReward().getGrantedTypes()).isEmpty();
+            assertThat(result.getReward().getPoints()).isZero();
+        }
+
+        @Test
+        @DisplayName("ONBOARDING_RECIPE + BONUS_URGENT 모두 지급 시 points 합산이 맞다")
+        void 두개_지급_points_합산() {
+            given(userIngredientRepository.findAllByIngredientIdInAndUser_UserId(anyList(), eq(1L)))
+                    .willReturn(List.of(buildUrgentIngredient()));
+            given(cookieService.grantDailyCookie(1L, CookieLog.CookieLogType.BONUS_URGENT_INGREDIENT_USE))
+                    .willReturn(true);
+
+            AiRecipeAdoptResponseDto result = aiRecipeService.adoptRecipe(1L, 10L);
+
+            // ONBOARDING_RECIPE(1) + BONUS_URGENT(3) = 4
+            assertThat(result.getReward().getPoints()).isEqualTo(4);
+            assertThat(result.getReward().getGranted()).isTrue();
         }
     }
 

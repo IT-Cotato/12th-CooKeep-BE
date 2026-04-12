@@ -16,7 +16,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -61,25 +60,26 @@ public class ConsumeIngredientService {
 
         // 3. 기본 일일 소비 리워드 처리
         CookieLog.CookieLogType dailyType = CookieLog.CookieLogType.BASIC_DAILY_FIRST_CONSUME;
-        boolean granted = cookieService.grantDailyCookie(userId, dailyType);
+        boolean dailyGranted = cookieService.grantDailyCookie(userId, dailyType);
 
-        int points = granted ? dailyType.getDefaultAmount() : 0;
+        int points = dailyGranted ? dailyType.getDefaultAmount() : 0;
         List<CookieLog.CookieLogType> grantedTypes = new ArrayList<>();
-        if (granted) {
+        if (dailyGranted) {
             grantedTypes.add(dailyType);
         }
 
         // 4. 주간 소비 리포트 기록 (삭제 전에 호출해야 leftDays 읽기 가능)
         consumptionReportService.markConsumed(userId, userIngredients);
 
-        // 5. 재료 삭제
-        userIngredientRepository.deleteAll(userIngredients);
-
-        // 6. 임박 재료(leftDays=0) 개수만큼 주간 목표(USE_EXPIRING_INGREDIENT) 카운트 증가
+        // 5. 임박 재료(leftDays=0) 개수만큼 주간 목표(USE_EXPIRING_INGREDIENT) 카운트 증가
         long urgentCount = userIngredients.stream()
                 .filter(ui -> ui.getLeftDays() == URGENT)
                 .count();
 
+        // 6. 재료 삭제
+        userIngredientRepository.deleteAll(userIngredients);
+
+        // 7. 임박 재료 개수만큼 주간 목표(USE_EXPIRING_INGREDIENT) 카운트 증가
         boolean weeklyGoalAchieved = false;
         for (int i = 0; i < urgentCount; i++) {
             // handleGoalProgress는 이미 달성된 경우 false를 반환하므로 중복 지급 없음
@@ -88,11 +88,18 @@ public class ConsumeIngredientService {
             }
         }
 
-        log.info("User {} consumed {} ingredients via manual action. " +
-                        "Reward granted: {}, points: {}, urgentCount: {}, weeklyGoalAchieved: {}",
-                userId, userIngredients.size(), granted, points, urgentCount, weeklyGoalAchieved);
+        // 쿠키 타입 기록 (주간 목표 달성 쿠키는 WeeklyGoalService 내부에서 지급)
+        if (weeklyGoalAchieved) {
+            grantedTypes.add(CookieLog.CookieLogType.BONUS_WEEKLY_GOAL_ACHIEVE);
+            points += CookieLog.CookieLogType.BONUS_WEEKLY_GOAL_ACHIEVE.getDefaultAmount();
+        }
 
-        return ConsumeIngredientsResponseDto.of(granted, points, grantedTypes, weeklyGoalAchieved);
+        log.info("User {} consumed {} ingredients. dailyGranted: {}, urgentCount: {}, weeklyGoalAchieved: {}",
+                userId, userIngredients.size(), dailyGranted, urgentCount, weeklyGoalAchieved);
+
+        return ConsumeIngredientsResponseDto.of(
+                !grantedTypes.isEmpty(), points, grantedTypes, dailyGranted, weeklyGoalAchieved);
+
     }
 
 }
