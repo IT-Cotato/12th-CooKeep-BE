@@ -332,20 +332,18 @@ public class WebPushSubscriptionServiceTest {
         }
 
         @Test
-        @DisplayName("구독 정보가 없으면 SUBSCRIPTION_NOT_FOUND 예외가 발생하고 pushService는 호출되지 않는다")
-        void 구독정보없음_예외발생() throws Exception {
-            // given
+        @DisplayName("구독 정보가 없으면 sent=false와 구독없음 메시지를 반환한다")
+        void 구독정보없음_sent_false() throws Exception {
             given(user.getMarketingConsent()).willReturn(true);
             given(userIngredientRepository.existsByUserIdAndExpirationDate(eq(USER_ID), any()))
                     .willReturn(true);
             given(webPushSubscriptionRepository.findAllByUser_UserId(USER_ID))
                     .willReturn(List.of());
 
-            // when & then
-            assertThatThrownBy(() -> webPushNotificationService.sendExpirationAlert(USER_ID))
-                    .isInstanceOf(AppException.class)
-                    .hasMessageContaining(ErrorCode.SUBSCRIPTION_NOT_FOUND.getMessage());
+            WebPushSendResponseDto result = webPushNotificationService.sendExpirationAlert(USER_ID);
 
+            assertThat(result.getSent()).isFalse();
+            assertThat(result.getMessage()).isEqualTo("구독 정보가 없습니다.");
             verify(pushService, never()).send(any());
         }
 

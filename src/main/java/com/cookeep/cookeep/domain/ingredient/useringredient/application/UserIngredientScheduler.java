@@ -3,8 +3,10 @@ package com.cookeep.cookeep.domain.ingredient.useringredient.application;
 import com.cookeep.cookeep.domain.ingredient.useringredient.dao.UserIngredientRepository;
 import com.cookeep.cookeep.domain.ingredient.useringredient.entity.UserIngredient;
 import com.cookeep.cookeep.domain.mycookeep.application.ConsumptionReportService;
+import com.cookeep.cookeep.domain.notification.application.WebPushNotificationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,6 +24,7 @@ public class UserIngredientScheduler {
 
     private final UserIngredientRepository userIngredientRepository;
     private final ConsumptionReportService consumptionReportService;
+    private final WebPushNotificationService webPushNotificationService;
 
     /**
      * 매일 자정(00:00)에 모든 식재료의 남은 일수(leftDays) 업데이트
@@ -59,6 +62,26 @@ public class UserIngredientScheduler {
             log.error("=== Error updating leftDays ===", e);
             // 에러가 발생해도 스케줄러는 계속 실행되어야 함
         }
+    }
+
+    @Scheduled(cron = "0 0 11 * * *", zone = "Asia/Seoul")
+    public void sendDailyExpirationPush() {
+        log.info("=== Starting daily expiration push notification ===");
+
+        List<Long> targetUserIds = userIngredientRepository
+                .findUserIdsWithExpiringTodayAndMarketingConsent(LocalDate.now());
+
+        log.info("푸시 알림 대상 유저 수: {}", targetUserIds.size());
+
+        for (Long userId : targetUserIds) {
+            try {
+                webPushNotificationService.sendExpirationAlert(userId);
+            } catch (Exception e) {
+                log.error("푸시 알림 전송 실패. userId={}, error={}", userId, e.getMessage());
+            }
+        }
+
+        log.info("=== 푸시 알림 전송 완료 ===");
     }
 
     /**
