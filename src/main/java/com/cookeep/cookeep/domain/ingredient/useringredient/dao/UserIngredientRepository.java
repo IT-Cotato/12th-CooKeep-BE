@@ -145,4 +145,15 @@ public interface UserIngredientRepository extends JpaRepository<UserIngredient, 
             @Param("batchId") String batchId
     );
 
+    @Query("""
+        SELECT DISTINCT ui.user.userId
+        FROM UserIngredient ui
+        JOIN ui.user u
+        WHERE ui.expirationDate = :today
+          AND u.marketingConsent = true
+    """)
+    List<Long> findUserIdsWithExpiringTodayAndMarketingConsent(
+            @Param("today") LocalDate today
+    );
+
 }
