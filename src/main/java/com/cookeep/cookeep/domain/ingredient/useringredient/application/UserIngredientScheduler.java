@@ -64,7 +64,7 @@ public class UserIngredientScheduler {
         }
     }
 
-    @Scheduled(cron = "0 0 9 * * *", zone = "Asia/Seoul")
+    @Scheduled(cron = "0 0 11 * * *", zone = "Asia/Seoul")
     public void sendDailyExpirationPush() {
         log.info("=== Starting daily expiration push notification ===");
 

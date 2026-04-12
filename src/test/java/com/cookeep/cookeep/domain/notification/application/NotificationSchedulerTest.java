@@ -103,7 +103,7 @@ public class NotificationSchedulerTest {
                     .findUserIdsWithExpiringTodayAndMarketingConsent(LocalDate.now()))
                     .willThrow(new RuntimeException("DB 오류"));
 
-            // DB 예외는 스케줄러 밖으로 전파될 수 있음 (의도적 미처리)
+            // DB 예외는 throw
             org.assertj.core.api.Assertions.assertThatThrownBy(
                     () -> scheduler.sendDailyExpirationPush()
             ).isInstanceOf(RuntimeException.class);
