@@ -38,4 +38,9 @@ public class WebPushSendResponseDto {
         return new WebPushSendResponseDto(false, "유효한 구독이 없어 알림을 전송하지 못했습니다.");
     }
 
+    // 구독 정보 없음
+    public static WebPushSendResponseDto noSubscription() {
+        return new WebPushSendResponseDto(false, "구독 정보가 없습니다.");
+    }
+
 }

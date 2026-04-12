@@ -55,7 +55,8 @@ public class WebPushNotificationService {
                 webPushSubscriptionRepository.findAllByUser_UserId(userId);
 
         if (subscriptions.isEmpty()) {
-            throw new AppException(ErrorCode.SUBSCRIPTION_NOT_FOUND);
+            log.debug("웹 푸시 알림 미전송 - 구독 정보 없음. userId={}", userId);
+            return WebPushSendResponseDto.noSubscription();
         }
 
         // 4. 알림 페이로드 생성
@@ -129,4 +130,5 @@ public class WebPushNotificationService {
         return successCount;
 
     }
+
 }
