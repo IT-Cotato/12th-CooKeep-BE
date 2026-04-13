@@ -4,6 +4,7 @@ import com.cookeep.cookeep.domain.plant.entity.UserPlant;
 import com.cookeep.cookeep.domain.user.entity.User;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -25,4 +26,8 @@ public interface UserPlantRepository extends JpaRepository<UserPlant, Long>{
 
     // 유저가 보유한 식물이 존재하는지 확인
     boolean existsByUser(User user);
+
+    // 현재 키우는 식물이 있는 유저 ID 목록 조회 (스케줄러용)
+    @Query("SELECT up.user.userId FROM UserPlant up WHERE up.isHarvested = false")
+    List<Long> findUserIdsWithGrowingPlant();
 }
