@@ -7,6 +7,7 @@ import com.cookeep.cookeep.config.ApiErrorCodeExamples;
 import com.cookeep.cookeep.domain.notification.application.PopupNotificationEligibilityService;
 import com.cookeep.cookeep.domain.notification.application.WebPushNotificationService;
 import com.cookeep.cookeep.domain.notification.dto.PushNotificationEligibilityResponseDto;
+import com.cookeep.cookeep.domain.notification.entity.NotificationType;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -102,4 +103,35 @@ public class PushNotificationController {
 //        WebPushSendResponseDto response = webPushNotificationService.sendExpirationAlert(userId);
 //        return ResponseEntity.ok(DataResponse.from(response));
 //    }
+
+    // ===== 아래는 FCM 실제 연동 테스트용 엔드포인트입니다. =====
+
+    @Operation(summary = "[테스트] 식물 시듦 알림 전송", description = "로그인한 유저에게 PLANT_WILTING 웹 푸시를 즉시 전송합니다. (FCM 연동 테스트용)")
+    @PostMapping("/web/push/test/plant-wilting")
+    public ResponseEntity<DataResponse<WebPushSendResponseDto>> testPlantWiltingPush(
+            @AuthenticationPrincipal(expression = "userId") Long userId
+    ) {
+        WebPushSendResponseDto response =
+                webPushNotificationService.sendPlantStatusAlert(userId, NotificationType.PLANT_WILTING);
+        return ResponseEntity.ok(DataResponse.from(response));
+    }
+
+    @Operation(summary = "[테스트] 식물 성장정지 알림 전송", description = "로그인한 유저에게 PLANT_GROWTH_STOP 웹 푸시를 즉시 전송합니다. (FCM 연동 테스트용)")
+    @PostMapping("/web/push/test/plant-frozen")
+    public ResponseEntity<DataResponse<WebPushSendResponseDto>> testPlantFrozenPush(
+            @AuthenticationPrincipal(expression = "userId") Long userId
+    ) {
+        WebPushSendResponseDto response =
+                webPushNotificationService.sendPlantStatusAlert(userId, NotificationType.PLANT_GROWTH_STOP);
+        return ResponseEntity.ok(DataResponse.from(response));
+    }
+
+    @Operation(summary = "[테스트] 유통기한 임박 알림 전송", description = "로그인한 유저에게 EXPIRATION 웹 푸시를 즉시 전송합니다. (FCM 연동 테스트용)")
+    @PostMapping("/web/push/test/expiration")
+    public ResponseEntity<DataResponse<WebPushSendResponseDto>> testExpirationPush(
+            @AuthenticationPrincipal(expression = "userId") Long userId
+    ) {
+        WebPushSendResponseDto response = webPushNotificationService.sendExpirationAlert(userId);
+        return ResponseEntity.ok(DataResponse.from(response));
+    }
 }
