@@ -37,16 +37,10 @@ public class UserPlantService {
     private final CookieService cookieService;
     private final UserReader userReader;
 
-    // 스케줄러용: userId로 유저를 직접 로드해 식물 상태 갱신 (트랜잭션 경계 내에서 managed 상태 유지)
+    // 미접속 일수 기반 식물 상태 계산 및 성장 정지 처리 (스케줄러에서 호출)
     @Transactional
     public void checkAndUpdatePlantStatusById(Long userId) {
         User user = userReader.readById(userId);
-        checkAndUpdatePlantStatus(user);
-    }
-
-    // 로그인/토큰 갱신 시 호출: 미접속 일수 기반 식물 상태 계산 및 성장 정지 처리
-    @Transactional
-    public void checkAndUpdatePlantStatus(User user) {
         LocalDateTime lastAccess = user.getLastAccessAt();
 
         // lastAccessAt이 null이면 (기존 유저 or 최초 적용) NORMAL 처리

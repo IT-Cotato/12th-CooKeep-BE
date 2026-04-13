@@ -42,8 +42,6 @@ import com.cookeep.cookeep.domain.user.entity.UserStatus;
 import com.cookeep.cookeep.common.exception.AppException;
 import com.cookeep.cookeep.common.exception.ErrorCode;
 
-import com.cookeep.cookeep.domain.plant.application.UserPlantService;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -59,7 +57,6 @@ public class AuthService {
 	private final UserReader userReader;
 	private final PasswordEncoder passwordEncoder;
 	private final NicknameGenerator nicknameGenerator;
-	private final UserPlantService userPlantService;
 	private final SmsVerificationService smsVerificationService;
 
 	// 액세스 토큰이 만료되었을 경우 리프레쉬 토큰으로 액세스 토큰 갱신
@@ -81,8 +78,6 @@ public class AuthService {
 
 		User user = userReader.readById(userId);
 
-		// 미접속 일수 기반 식물 상태 계산 및 성장 정지 처리
-		userPlantService.checkAndUpdatePlantStatus(user);
 		user.updateLastAccessAt(LocalDateTime.now());
 
 		// 새로운 액세스토큰 발급
@@ -111,8 +106,6 @@ public class AuthService {
 	}
 
 	private TokenPair issueTokensAndUpsertSession(User user) {
-		// 미접속 일수 기반 식물 상태 계산 및 성장 정지 처리
-		userPlantService.checkAndUpdatePlantStatus(user);
 		user.updateLastAccessAt(LocalDateTime.now());
 
 		// 액세스 토큰, 리프레쉬 토큰 발급
