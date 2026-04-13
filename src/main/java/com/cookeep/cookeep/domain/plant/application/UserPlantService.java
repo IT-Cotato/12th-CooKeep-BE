@@ -139,6 +139,10 @@ public class UserPlantService {
         // 5. 자동 모드(isProfileAutoUpdate=true)일 때만 프로필 갱신
         user.setProfilePlantAuto(newUserPlant);
 
+        // 6. 새 식물 등록 시 plantStatus를 NORMAL로 초기화
+        // (키우는 식물 없이 14일+ 미접속 후 로그인하면 FROZEN이 설정될 수 있으므로)
+        user.updatePlantStatus(PlantStatus.NORMAL);
+
         String message = isFirstPlant ? "첫 식물 등록이 완료되었습니다." : "식물 등록이 완료되었습니다.";
         return new RegisterPlantResponseDto(newUserPlant.getUserPlantId(), message);
     }
