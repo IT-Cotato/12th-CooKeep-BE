@@ -16,8 +16,11 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
+import reactor.core.publisher.Mono;
+import reactor.util.retry.Retry;
 
 import java.net.URI;
+import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -79,7 +82,29 @@ public class GeminiService {
                     .contentType(MediaType.APPLICATION_JSON)
                     .bodyValue(requestBody)
                     .retrieve()
+                    .onStatus(
+                            status -> status.is5xxServerError(),
+                            clientResponse -> clientResponse.bodyToMono(String.class)
+                                    .flatMap(body -> Mono.error(
+                                            new WebClientResponseException(
+                                                    clientResponse.statusCode().value(),
+                                                    "Gemini 5xx error: " + body,
+                                                    null, null, null
+                                            )
+                                    ))
+                    )
                     .bodyToMono(String.class)
+                    .timeout(Duration.ofSeconds(120))
+                    .retryWhen(
+                            Retry.backoff(3, Duration.ofSeconds(2))
+                                    .maxBackoff(Duration.ofSeconds(10))
+                                    .filter(this::isRetryableError)
+                                    .doBeforeRetry(retrySignal ->
+                                            log.warn("Gemini 재시도 중... attempt={}, cause={}",
+                                                    retrySignal.totalRetries() + 1,
+                                                    retrySignal.failure().getMessage())
+                                    )
+                    )
                     .block();
 
             log.info("Gemini API 응답 수신 완료");
@@ -197,5 +222,15 @@ public class GeminiService {
                 "5. steps는 단계별 조리 방법을 작성하세요.\n\n" +
                 "[user_ingredients]\n" +
                 ingredientsJson + "\n";
+    }
+
+    private boolean isRetryableError(Throwable e) {
+        if (e instanceof java.util.concurrent.TimeoutException) {
+            return true;
+        }
+        if (e instanceof WebClientResponseException webEx) {
+            return webEx.getStatusCode().is5xxServerError();
+        }
+        return false;
     }
 }
