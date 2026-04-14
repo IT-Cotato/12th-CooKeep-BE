@@ -37,9 +37,10 @@ public class UserPlantService {
     private final CookieService cookieService;
     private final UserReader userReader;
 
-    // 로그인/토큰 갱신 시 호출: 미접속 일수 기반 식물 상태 계산 및 성장 정지 처리
+    // 미접속 일수 기반 식물 상태 계산 및 성장 정지 처리 (스케줄러에서 호출)
     @Transactional
-    public void checkAndUpdatePlantStatus(User user) {
+    public void checkAndUpdatePlantStatusById(Long userId) {
+        User user = userReader.readById(userId);
         LocalDateTime lastAccess = user.getLastAccessAt();
 
         // lastAccessAt이 null이면 (기존 유저 or 최초 적용) NORMAL 처리
@@ -138,6 +139,10 @@ public class UserPlantService {
 
         // 5. 자동 모드(isProfileAutoUpdate=true)일 때만 프로필 갱신
         user.setProfilePlantAuto(newUserPlant);
+
+        // 6. 새 식물 등록 시 plantStatus를 NORMAL로 초기화
+        // (키우는 식물 없이 14일+ 미접속 후 로그인하면 FROZEN이 설정될 수 있으므로)
+        user.updatePlantStatus(PlantStatus.NORMAL);
 
         String message = isFirstPlant ? "첫 식물 등록이 완료되었습니다." : "식물 등록이 완료되었습니다.";
         return new RegisterPlantResponseDto(newUserPlant.getUserPlantId(), message);

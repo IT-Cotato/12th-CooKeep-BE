@@ -12,20 +12,18 @@ public enum NotificationType {
             "유통기한임박",
             "유통기한임박",
             "오늘 유통기한이 만료되는 재료가 있어요! \n 지금 확인하고 요리해볼까요?",
-            "/api/users/me/refrigerator/home"),
+            "/fridge"),
 
-    //필요시수정(to.현정)
     PLANT_WILTING(
             "시듦",
-            "시듦",
-            "식물이 시들었어요!",
-            "/api/users/me"),
+            "식물이 시들기 시작했어요",
+            "오늘 한 끼만 챙겨주면 다시 살아나요🌱",
+            "/cookeeps"),
     PLANT_GROWTH_STOP(
             "성장정지",
-            "성장정지",
-            "성장정지되었어요",
-            "/api/users/me"
-            );
+            "🛑식물 성장이 멈췄어요",
+            "지금 돌아오면 다시 키울 수 있어요!",
+            "/cookeeps");
     private final String displayName;
     private final String title;
     private final String body;
