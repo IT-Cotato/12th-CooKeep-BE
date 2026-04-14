@@ -3,6 +3,7 @@ package com.cookeep.cookeep.domain.user.application;
 import static com.cookeep.cookeep.domain.user.entity.Provider.*;
 
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
@@ -15,6 +16,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.cookeep.cookeep.api.controller.UserIngredientUpdateController;
 import com.cookeep.cookeep.api.dto.request.LoginRequestDTO;
 import com.cookeep.cookeep.api.dto.request.ResetPasswordRequestDTO;
 import com.cookeep.cookeep.api.dto.request.SendCodeRequestDTO;
@@ -25,6 +27,8 @@ import com.cookeep.cookeep.api.dto.response.SocialLoginResponseDTO;
 import com.cookeep.cookeep.api.dto.response.LoginResponseDTO;
 import com.cookeep.cookeep.api.dto.response.SignUpResponseDTO;
 import com.cookeep.cookeep.api.dto.response.TokenRefreshResponseDTO;
+import com.cookeep.cookeep.domain.cookie.application.CookieService;
+import com.cookeep.cookeep.domain.cookie.entity.CookieLog;
 import com.cookeep.cookeep.domain.user.dto.OAuthUserInfoDTO;
 import com.cookeep.cookeep.domain.user.dto.TokenPair;
 import com.cookeep.cookeep.domain.user.entity.Provider;
@@ -61,6 +65,7 @@ public class AuthService {
 	private final NicknameGenerator nicknameGenerator;
 	private final UserPlantService userPlantService;
 	private final SmsVerificationService smsVerificationService;
+	private final CookieService cookieService;
 
 	// 액세스 토큰이 만료되었을 경우 리프레쉬 토큰으로 액세스 토큰 갱신
 	@Transactional
@@ -83,6 +88,7 @@ public class AuthService {
 
 		// 미접속 일수 기반 식물 상태 계산 및 성장 정지 처리
 		userPlantService.checkAndUpdatePlantStatus(user);
+		issueComebackReward(user);
 		user.updateLastAccessAt(LocalDateTime.now());
 
 		// 새로운 액세스토큰 발급
@@ -100,6 +106,25 @@ public class AuthService {
 		}
 	}
 
+	private void issueComebackReward(User user) {
+		LocalDateTime lastAccessAt = user.getLastAccessAt();
+
+		if (lastAccessAt == null) {
+			log.warn("lastAccessAt가 null입니다. userId=", user.getUserId());
+			return;
+		}
+
+		LocalDateTime now = LocalDateTime.now();
+
+		long inactivedDays = ChronoUnit.DAYS.between(lastAccessAt, now);
+
+		if (inactivedDays < 14) {
+			// 14일 미만일 경우 해당되지 않으므로 return하고 끝냄
+			return;
+		}
+
+		cookieService.updateCookie(user.getUserId(), CookieLog.CookieLogType.BONUS_RETENTION_REWARD);
+	}
 
 	private Long extractUserIdFromRefreshToken(String refreshToken) {
 		// 리프레쉬 토큰에서 UserId 추출
@@ -113,6 +138,7 @@ public class AuthService {
 	private TokenPair issueTokensAndUpsertSession(User user) {
 		// 미접속 일수 기반 식물 상태 계산 및 성장 정지 처리
 		userPlantService.checkAndUpdatePlantStatus(user);
+		issueComebackReward(user);
 		user.updateLastAccessAt(LocalDateTime.now());
 
 		// 액세스 토큰, 리프레쉬 토큰 발급
