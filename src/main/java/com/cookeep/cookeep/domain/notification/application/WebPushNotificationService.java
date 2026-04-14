@@ -55,7 +55,8 @@ public class WebPushNotificationService {
                 webPushSubscriptionRepository.findAllByUser_UserId(userId);
 
         if (subscriptions.isEmpty()) {
-            throw new AppException(ErrorCode.SUBSCRIPTION_NOT_FOUND);
+            log.debug("웹 푸시 알림 미전송 - 구독 정보 없음. userId={}", userId);
+            return WebPushSendResponseDto.noSubscription();
         }
 
         // 4. 알림 페이로드 생성
@@ -72,6 +73,37 @@ public class WebPushNotificationService {
                 ? WebPushSendResponseDto.sent(NotificationType.EXPIRATION)
                 : WebPushSendResponseDto.allSubscriptionsExpired();
 
+    }
+
+    public WebPushSendResponseDto sendPlantStatusAlert(Long userId, NotificationType type) {
+
+        User user = userReader.readById(userId);
+
+        // 1. 마케팅 수신 동의 확인 (쿼리에서 이미 필터링되나 방어적 검증)
+        if (!Boolean.TRUE.equals(user.getMarketingConsent())) {
+            log.debug("식물 상태 푸시 알림 미전송 - 수신 미동의. userId={}", userId);
+            return WebPushSendResponseDto.notConsented();
+        }
+
+        // 2. 구독 정보 조회
+        List<WebPushSubscription> subscriptions =
+                webPushSubscriptionRepository.findAllByUser_UserId(userId);
+
+        if (subscriptions.isEmpty()) {
+            log.debug("식물 상태 푸시 알림 미전송 - 구독 정보 없음. userId={}, type={}", userId, type);
+            return WebPushSendResponseDto.noSubscription();
+        }
+
+        // 3. 페이로드 생성 및 전송
+        String payload = buildPayload(type);
+        int successCount = sendToSubscriptions(subscriptions, payload);
+
+        log.info("식물 상태 푸시 알림 전송 완료. userId={}, type={}, total={}, success={}",
+                userId, type, subscriptions.size(), successCount);
+
+        return successCount > 0
+                ? WebPushSendResponseDto.sent(type)
+                : WebPushSendResponseDto.allSubscriptionsExpired();
     }
 
     // --- 내부 메서드 ---
@@ -129,4 +161,5 @@ public class WebPushNotificationService {
         return successCount;
 
     }
+
 }

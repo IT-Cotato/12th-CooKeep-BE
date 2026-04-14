@@ -228,6 +228,20 @@ public class ConsumeIngredientServiceTest {
         }
 
         @Test
+        @DisplayName("하루 첫 소비 시 dailyFirstConsumeAchieved=true를 반환한다")
+        void 첫소비_dailyFirstConsumeAchieved_true() {
+            given(userIngredientRepository.findAllByIngredientIdInAndUser_UserId(anyList(), anyLong()))
+                    .willReturn(List.of(buildNormalIngredient()));
+            given(cookieService.grantDailyCookie(1L, CookieLog.CookieLogType.BASIC_DAILY_FIRST_CONSUME))
+                    .willReturn(true);
+
+            ConsumeIngredientsResponseDto result =
+                    consumeIngredientService.consumeIngredients(1L, buildRequest(List.of(1L)));
+
+            assertThat(result.isDailyFirstConsumeAchieved()).isTrue();
+        }
+
+        @Test
         @DisplayName("당일 이미 지급된 경우 granted=false, points=0을 반환한다")
         void 중복소비_쿠키미지급() {
             given(userIngredientRepository.findAllByIngredientIdInAndUser_UserId(anyList(), anyLong()))
@@ -240,6 +254,20 @@ public class ConsumeIngredientServiceTest {
 
             assertThat(result.getReward().getGranted()).isFalse();
             assertThat(result.getReward().getPoints()).isZero();
+        }
+
+        @Test
+        @DisplayName("당일 이미 지급된 경우 dailyFirstConsumeAchieved=false를 반환한다")
+        void 중복소비_dailyFirstConsumeAchieved_false() {
+            given(userIngredientRepository.findAllByIngredientIdInAndUser_UserId(anyList(), anyLong()))
+                    .willReturn(List.of(buildNormalIngredient()));
+            given(cookieService.grantDailyCookie(1L, CookieLog.CookieLogType.BASIC_DAILY_FIRST_CONSUME))
+                    .willReturn(false);
+
+            ConsumeIngredientsResponseDto result =
+                    consumeIngredientService.consumeIngredients(1L, buildRequest(List.of(1L)));
+
+            assertThat(result.isDailyFirstConsumeAchieved()).isFalse();
         }
 
         @Test
@@ -283,6 +311,72 @@ public class ConsumeIngredientServiceTest {
             ).isInstanceOf(AppException.class);
 
             verifyNoInteractions(weeklyGoalService);
+        }
+    }
+
+    @Nested
+    @DisplayName("consumeIngredients - RewardInfo grantedTypes 종합 검증")
+    class RewardInfoGrantedTypes {
+
+        @Test
+        @DisplayName("기본 리워드 지급 시 grantedTypes에 BASIC_DAILY_FIRST_CONSUME이 포함된다")
+        void 기본리워드_지급_grantedTypes_포함() {
+            given(userIngredientRepository.findAllByIngredientIdInAndUser_UserId(anyList(), anyLong()))
+                    .willReturn(List.of(buildNormalIngredient()));
+            given(cookieService.grantDailyCookie(1L, CookieLog.CookieLogType.BASIC_DAILY_FIRST_CONSUME))
+                    .willReturn(true);
+
+            ConsumeIngredientsResponseDto result =
+                    consumeIngredientService.consumeIngredients(1L, buildRequest(List.of(1L)));
+
+            assertThat(result.getReward().getGrantedTypes())
+                    .containsExactly(CookieLog.CookieLogType.BASIC_DAILY_FIRST_CONSUME);
+        }
+
+        @Test
+        @DisplayName("아무 리워드도 지급되지 않으면 granted=false이고 grantedTypes는 비어있다")
+        void 미지급_granted_false_grantedTypes_empty() {
+            given(userIngredientRepository.findAllByIngredientIdInAndUser_UserId(anyList(), anyLong()))
+                    .willReturn(List.of(buildNormalIngredient()));
+            given(cookieService.grantDailyCookie(1L, CookieLog.CookieLogType.BASIC_DAILY_FIRST_CONSUME))
+                    .willReturn(false);
+
+            ConsumeIngredientsResponseDto result =
+                    consumeIngredientService.consumeIngredients(1L, buildRequest(List.of(1L)));
+
+            assertThat(result.getReward().getGranted()).isFalse();
+            assertThat(result.getReward().getGrantedTypes()).isEmpty();
+            assertThat(result.getReward().getPoints()).isZero();
+        }
+
+        @Test
+        @DisplayName("주간 목표 달성 시 BONUS_WEEKLY_GOAL_ACHIEVE가 grantedTypes에 포함된다")
+        void 주간목표_달성_grantedTypes_포함() {
+            given(userIngredientRepository.findAllByIngredientIdInAndUser_UserId(anyList(), anyLong()))
+                    .willReturn(List.of(buildUrgentIngredient()));
+            given(weeklyGoalService.handleGoalProgress(1L, GoalActionType.USE_EXPIRING_INGREDIENT))
+                    .willReturn(true);
+
+            ConsumeIngredientsResponseDto result =
+                    consumeIngredientService.consumeIngredients(1L, buildRequest(List.of(1L)));
+
+            assertThat(result.getReward().getGrantedTypes())
+                    .contains(CookieLog.CookieLogType.BONUS_WEEKLY_GOAL_ACHIEVE);
+        }
+
+        @Test
+        @DisplayName("BONUS_URGENT_INGREDIENT_USE는 직접 소비에서 지급되지 않는다")
+        void 직접소비_BONUS_URGENT_미지급() {
+            given(userIngredientRepository.findAllByIngredientIdInAndUser_UserId(anyList(), anyLong()))
+                    .willReturn(List.of(buildUrgentIngredient()));
+
+            ConsumeIngredientsResponseDto result =
+                    consumeIngredientService.consumeIngredients(1L, buildRequest(List.of(1L)));
+
+            assertThat(result.getReward().getGrantedTypes())
+                    .doesNotContain(CookieLog.CookieLogType.BONUS_URGENT_INGREDIENT_USE);
+            verify(cookieService, never())
+                    .grantDailyCookie(anyLong(), eq(CookieLog.CookieLogType.BONUS_URGENT_INGREDIENT_USE));
         }
     }
 

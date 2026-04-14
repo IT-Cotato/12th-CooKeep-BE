@@ -24,6 +24,7 @@ import com.cookeep.cookeep.domain.recipe.dao.AiRecipeRepository;
 import com.cookeep.cookeep.domain.recipe.dao.AiSessionRepository;
 import com.cookeep.cookeep.domain.recipe.dto.*;
 import com.cookeep.cookeep.domain.recipe.entity.*;
+import com.cookeep.cookeep.domain.user.application.UserReader;
 import com.cookeep.cookeep.domain.user.dao.UserRepository;
 import com.cookeep.cookeep.domain.user.entity.User;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -64,6 +65,7 @@ public class AiRecipeService {
     private final WeeklyGoalService weeklyGoalService;
     private final UserRepository userRepository;
     private final AiRateLimitService rateLimitService;
+    private final UserReader userReader;
 
     // sessionId 유무에 따라 신규/재요청 로직 분기
     public AiRecipeResponseDto generateRecipe(Long userId, AiRecipeRequestDto request) {
@@ -252,7 +254,10 @@ public class AiRecipeService {
         // 5. 레시피 채택 시 COOKING 목표 카운트 증가
         boolean cookingGoalAchieved = weeklyGoalService.handleGoalProgress(userId, GoalActionType.COOKING);
 
-        // 6. 세션의 ingredientIds 조회
+        // 6. 최초 레시피 채택 온보딩 쿠키 지급 (일회성)
+        boolean rewardGranted = grantFirstRecipeRewardIfEligible(userId);
+
+        // 7. 세션의 ingredientIds 조회
         List<Long> ingredientIds;
         try {
             ingredientIds = objectMapper.readValue(
@@ -264,14 +269,31 @@ public class AiRecipeService {
             throw new AppException(ErrorCode.INTERNAL_SERVER_ERROR);
         }
 
-        // 7. 임박 재료(leftDays=0) 포함 세션이면 쿠키 지급 (하루 1회)
-        grantUrgentCookieRewardIfEligible(userId, ingredientIds);
+        // 8. 임박 재료(leftDays=0) 포함 세션이면 쿠키 지급 (하루 1회)
+        boolean urgentRewardGranted = grantUrgentCookieRewardIfEligible(userId, ingredientIds);
 
-        // 8. 요청 재료 소비 처리 후 USE_EXPIRING_INGREDIENT 주간 목표 카운트 증가
+        // 9. 요청 재료 소비 처리 후 USE_EXPIRING_INGREDIENT 주간 목표 카운트 증가
         boolean expiringGoalAchieved = consumeIngredientsAndTrackExpiringGoal(userId, ingredientIds);
 
-        // 9. COOKING / USE_EXPIRING_INGREDIENT 중 하나라도 달성되면 weeklyGoalAchieved = true
+        // 10. COOKING / USE_EXPIRING_INGREDIENT 중 하나라도 달성되면 weeklyGoalAchieved = true
         boolean weeklyGoalAchieved = cookingGoalAchieved || expiringGoalAchieved;
+
+        // 11. RewardInfo 빌드
+        List<CookieLog.CookieLogType> grantedTypes = new java.util.ArrayList<>();
+        int totalPoints = 0;
+        if (rewardGranted) {
+            grantedTypes.add(CookieLog.CookieLogType.ONBOARDING_RECIPE);
+            totalPoints += CookieLog.CookieLogType.ONBOARDING_RECIPE.getDefaultAmount();
+        }
+        if (urgentRewardGranted) {
+            grantedTypes.add(CookieLog.CookieLogType.BONUS_URGENT_INGREDIENT_USE);
+            totalPoints += CookieLog.CookieLogType.BONUS_URGENT_INGREDIENT_USE.getDefaultAmount();
+        }
+        AiRecipeAdoptResponseDto.RewardInfo rewardInfo = AiRecipeAdoptResponseDto.RewardInfo.builder()
+                .granted(!grantedTypes.isEmpty())
+                .points(totalPoints)
+                .grantedTypes(grantedTypes)
+                .build();
 
         return AiRecipeAdoptResponseDto.builder()
                 .sessionId(session.getId())
@@ -279,6 +301,9 @@ public class AiRecipeService {
                 .message("레시피가 성공적으로 채택되었습니다.")
                 .completedAt(session.getCompletedAt())
                 .weeklyGoalAchieved(weeklyGoalAchieved)
+                .recipeRewardGranted(rewardGranted)
+                .urgentIngredientRewardGranted(urgentRewardGranted)
+                .reward(rewardInfo)
                 .build();
     }
 
@@ -577,9 +602,9 @@ public class AiRecipeService {
     }
 
     // 임박 식재료 레시피 채택 시 리워드 지급
-    private void grantUrgentCookieRewardIfEligible(Long userId, List<Long> ingredientIds) {
+    private boolean grantUrgentCookieRewardIfEligible(Long userId, List<Long> ingredientIds) {
         if (ingredientIds == null || ingredientIds.isEmpty()) {
-            return;
+            return false;
         }
 
         // 세션에 요청된 재료 중 leftDays == 0인 항목이 있는지 확인
@@ -587,14 +612,14 @@ public class AiRecipeService {
                 .findAllByIngredientIdInAndUser_UserId(ingredientIds, userId);
 
         if (targets.isEmpty()) {
-            return;
+            return false;
         }
 
         boolean hasUrgent = targets.stream()
                 .anyMatch(ui -> ui.getLeftDays() == URGENT);
 
         if (!hasUrgent) {
-            return;
+            return false;
         }
 
         CookieLog.CookieLogType urgentType =
@@ -609,6 +634,8 @@ public class AiRecipeService {
         } else {
             log.info("임박 재료 쿠키 오늘 이미 지급됨 - userId={}", userId);
         }
+
+        return granted;
 
     }
 
@@ -829,6 +856,18 @@ public class AiRecipeService {
         return userRepository.findById(userId)
                 .map(User::getDislikedIngredients)
                 .orElse(List.of());
+    }
+
+    // 첫 레시피 채택 여부 조회
+    private boolean grantFirstRecipeRewardIfEligible(Long userId) {
+        User user = userReader.readById(userId);
+
+        if (!user.isFirstRecipeReward()) {
+            cookieService.updateCookie(userId, CookieLog.CookieLogType.ONBOARDING_RECIPE);
+            user.markFirstRecipeRewarded();
+            return true;
+        }
+        return false;
     }
 
 }
