@@ -8,7 +8,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -23,8 +26,8 @@ public class YoutubeSearchService {
     private final WebClient webClient;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    private static final String YOUTUBE_SEARCH_URL = "https://www.googleapis.com/youtube/v3/search";
     private static final int MAX_RESULTS_PER_QUERY = 1;
+    private static final Duration YOUTUBE_TIMEOUT = Duration.ofSeconds(20);
 
     /**
      * [검색 방법]
@@ -39,52 +42,41 @@ public class YoutubeSearchService {
             return new ArrayList<>();
         }
 
-        List<YoutubeReferenceDto> results = new ArrayList<>();
-
-        for (String query : searchQueries) {
-            try {
-                YoutubeReferenceDto video = searchSingleVideo(query);
-                if (video != null) {
-                    results.add(video);
-                }
-            } catch (Exception e) {
-                // 하나의 검색어가 실패해도 나머지는 계속 진행
-                log.warn("유튜브 검색 실패 (검색어: '{}'): {}", query, e.getMessage());
-            }
-        }
-
-        return results;
+        return Flux.fromIterable(searchQueries)
+                .flatMap(query ->
+                        searchSingleVideo(query)
+                                .onErrorResume(e -> {
+                                    log.warn("유튜브 검색 실패 (검색어: '{}'): {}", query, e.getMessage());
+                                    return Mono.empty();
+                                })
+                )
+                .collectList()
+                .block();
     }
 
     // --- 내부 메서드 ---
 
     // 유튜브 영상 1개 검색 수행
-    private YoutubeReferenceDto searchSingleVideo(String query) {
-        try {
-            String responseBody = webClient.get()
-                    .uri(uriBuilder -> uriBuilder
-                            .scheme("https")
-                            .host("www.googleapis.com")
-                            .path("/youtube/v3/search")
-                            .queryParam("part", "snippet")
-                            .queryParam("q", query)
-                            .queryParam("type", "video")
-                            .queryParam("maxResults", MAX_RESULTS_PER_QUERY)
-                            .queryParam("regionCode", "KR")       // 한국 지역 영상 우선
-                            .queryParam("relevanceLanguage", "ko") // 한국어 영상 우선
-                            .queryParam("key", youtubeApiKey)
-                            .build()
-                    )
-                    .retrieve()
-                    .bodyToMono(String.class)
-                    .block();
-
-            return parseSearchResult(responseBody, query);
-
-        } catch (Exception e) {
-            log.error("YouTube API 호출 실패 (검색어: '{}')", query, e);
-            return null;
-        }
+    private Mono<YoutubeReferenceDto> searchSingleVideo(String query) {
+        return webClient.get()
+                .uri(uriBuilder -> uriBuilder
+                        .scheme("https")
+                        .host("www.googleapis.com")
+                        .path("/youtube/v3/search")
+                        .queryParam("part", "snippet")
+                        .queryParam("q", query)
+                        .queryParam("type", "video")
+                        .queryParam("maxResults", MAX_RESULTS_PER_QUERY)
+                        .queryParam("regionCode", "KR")
+                        .queryParam("relevanceLanguage", "ko")
+                        .queryParam("key", youtubeApiKey)
+                        .build()
+                )
+                .retrieve()
+                .bodyToMono(String.class)
+                .timeout(YOUTUBE_TIMEOUT)
+                .mapNotNull(responseBody -> parseSearchResult(responseBody, query))
+                .doOnError(e -> log.error("YouTube API 호출 실패 (검색어: '{}')", query, e));
     }
 
     // YouTube API 응답 dto로 파싱
