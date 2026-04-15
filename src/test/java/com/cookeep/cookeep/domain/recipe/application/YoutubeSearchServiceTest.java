@@ -7,9 +7,11 @@ import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
+import org.springframework.web.reactive.function.client.ClientRequest;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import java.io.IOException;
+import java.net.URI;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -49,12 +51,26 @@ public class YoutubeSearchServiceTest {
         mockWebServer.start();
 
         WebClient webClient = WebClient.builder()
-                .baseUrl(mockWebServer.url("/").toString())
+                .filter((request, next) -> {
+                    URI originalUri = request.url();
+
+                    String pathWithQuery = originalUri.getRawPath();
+                    if (originalUri.getRawQuery() != null) {
+                        pathWithQuery += "?" + originalUri.getRawQuery();
+                    }
+
+                    URI newUri = mockWebServer.url(pathWithQuery).uri();
+
+                    return next.exchange(
+                            ClientRequest.from(request)
+                                    .url(newUri)
+                                    .build()
+                    );
+                })
                 .build();
 
         youtubeSearchService = new YoutubeSearchService(webClient);
-        // MockWebServer 주소로 override (실제 googleapis.com 대신)
-        ReflectionTestUtils.setField(youtubeSearchService, "youtubeApiKey", "test-api-key");
+        ReflectionTestUtils.setField(youtubeSearchService, "youtubeApiKey", "test-key");
     }
 
     @AfterEach
