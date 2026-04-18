@@ -132,7 +132,6 @@ public class AuthService {
 	}
 
 	private TokenPair issueTokensAndUpsertSession(User user) {
-		// 미접속 일수 기반 식물 상태 계산 및 성장 정지 처리
 		boolean isRewarded = issueComebackReward(user);
 		user.updateLastAccessAt(LocalDateTime.now());
 
