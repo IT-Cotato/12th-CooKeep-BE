@@ -46,12 +46,25 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
             docker pull ${{ secrets.DOCKER_USERNAME }}/cookeep:latest
+            docker network create cookeep-network 2>/dev/null || true
+            docker run -d \
+              --name cookeep-redis \
+              --network cookeep-network \
+              --restart unless-stopped \
+              -v redis-data:/data \
+              redis:7.2-alpine \
+              redis-server --appendonly yes --requirepass ${{ secrets.REDIS_PASSWORD }} \
+              2>/dev/null || true
             docker stop cookeep || true
             docker rm cookeep || true
             docker run -d \
               --name cookeep \
+              --network cookeep-network \
               -p 8080:8080 \
               -e TZ=Asia/Seoul \
+              -e REDIS_HOST=cookeep-redis \
+              -e REDIS_PORT=6379 \
+              -e REDIS_PASSWORD=${{ secrets.REDIS_PASSWORD }} \
               -e DB_URL=${{ secrets.DB_URL }} \
               -e DB_USERNAME=${{ secrets.DB_USERNAME }} \
               -e DB_PASSWORD=${{ secrets.DB_PASSWORD }} \
