@@ -82,14 +82,13 @@ public class AuthService {
 		}
 
 		User user = userReader.readById(userId);
-
-		issueComebackReward(user);
+		boolean isRewarded = issueComebackReward(user);
 		user.updateLastAccessAt(LocalDateTime.now());
 
 		// 새로운 액세스토큰 발급
 		String accessToken = jwtTokenProvider.createAccessToken(user.getUserId());
 
-		return new TokenRefreshResponseDTO(accessToken);
+		return new TokenRefreshResponseDTO(accessToken, isRewarded);
 	}
 
 	private void validateRefreshToken(String refreshToken) {
@@ -101,12 +100,12 @@ public class AuthService {
 		}
 	}
 
-	private void issueComebackReward(User user) {
+	private boolean issueComebackReward(User user) {
 		LocalDateTime lastAccessAt = user.getLastAccessAt();
 
 		if (lastAccessAt == null) {
 			log.warn("lastAccessAt가 null입니다. userId=", user.getUserId());
-			return;
+			return false;
 		}
 
 		LocalDateTime now = LocalDateTime.now();
@@ -114,11 +113,13 @@ public class AuthService {
 		long inactivedDays = ChronoUnit.DAYS.between(lastAccessAt, now);
 
 		if (inactivedDays < 14) {
-			// 14일 미만일 경우 해당되지 않으므로 return하고 끝냄
-			return;
+			// 14일 미만일 경우 해당되지 않으므로 false 리턴하고 끝냄
+			return false;
 		}
 
 		cookieService.updateCookie(user.getUserId(), CookieLog.CookieLogType.BONUS_RETENTION_REWARD);
+
+		return true;
 	}
 
 	private Long extractUserIdFromRefreshToken(String refreshToken) {
@@ -131,7 +132,7 @@ public class AuthService {
 	}
 
 	private TokenPair issueTokensAndUpsertSession(User user) {
-		issueComebackReward(user);
+		boolean isRewarded = issueComebackReward(user);
 		user.updateLastAccessAt(LocalDateTime.now());
 
 		// 액세스 토큰, 리프레쉬 토큰 발급
@@ -148,7 +149,7 @@ public class AuthService {
 
 		userSessionRepository.save(userSession);
 
-		return new TokenPair(accessToken, refreshToken);
+		return new TokenPair(accessToken, refreshToken, isRewarded);
 	}
 
 	// 닉네임 제약 위반 시 재시도 횟수를 제한하기 위한 값 (무한 반복 방지)
@@ -216,7 +217,7 @@ public class AuthService {
 
 		return new SocialLoginResponseDTO(
 			user.getUserId(), tokenPair.accessToken(), tokenPair.refreshToken(),
-			userStatus, nextStep
+			userStatus, nextStep, tokenPair.isRewarded()
 		);
 	}
 
@@ -419,7 +420,7 @@ public class AuthService {
 		UserStatus userStatus = user.getUserStatus();
 
 		return new LoginResponseDTO(
-			user.getUserId(), tokenPair.accessToken(), tokenPair.refreshToken(), userStatus
+			user.getUserId(), tokenPair.accessToken(), tokenPair.refreshToken(), userStatus, tokenPair.isRewarded()
 		);
 	}
 
