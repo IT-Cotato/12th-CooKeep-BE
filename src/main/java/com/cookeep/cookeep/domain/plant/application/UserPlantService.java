@@ -201,7 +201,7 @@ public class UserPlantService {
         userPlant.giveWater();
 
         WateringLog log = WateringLog.builder()
-                .userPlant(userPlant)
+                .userPlantId(userPlant.getUserPlantId())
                 .user(user)
                 .build();
         wateringLogRepository.save(log);
