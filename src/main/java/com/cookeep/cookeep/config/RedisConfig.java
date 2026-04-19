@@ -38,14 +38,14 @@ public class RedisConfig {
         StringRedisSerializer keySerializer = new StringRedisSerializer();
 
         RedisCacheConfiguration wateringConfig = RedisCacheConfiguration.defaultCacheConfig()
-            .entryTtl(Duration.ofHours(1))
+            .entryTtl(Duration.ofMinutes(10))
             .serializeKeysWith(RedisSerializationContext.SerializationPair.fromSerializer(keySerializer))
             .serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(
                 typedSerializer(objectMapper, wateringType)))
             .disableCachingNullValues();
 
         RedisCacheConfiguration recipeConfig = RedisCacheConfiguration.defaultCacheConfig()
-            .entryTtl(Duration.ofMinutes(30))
+            .entryTtl(Duration.ofMinutes(10))
             .serializeKeysWith(RedisSerializationContext.SerializationPair.fromSerializer(keySerializer))
             .serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(
                 typedSerializer(objectMapper, recipeType)))

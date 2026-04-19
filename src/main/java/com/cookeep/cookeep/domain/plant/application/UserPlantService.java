@@ -18,7 +18,6 @@ import com.cookeep.cookeep.domain.user.application.UserReader;
 import com.cookeep.cookeep.domain.user.dao.UserRepository;
 import com.cookeep.cookeep.domain.user.entity.User;
 import lombok.RequiredArgsConstructor;
-import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -177,7 +176,6 @@ public class UserPlantService {
 
     // 식물에게 물 주기 (무료 물주기 여부 반환)
     @Transactional
-    @CacheEvict(cacheNames = "wateringRanking", allEntries = true)
     public boolean giveWater(Long userId, Long userPlantId) {
         // 1. 식물 조회
         UserPlant userPlant = userPlantRepository.findById(userPlantId)
