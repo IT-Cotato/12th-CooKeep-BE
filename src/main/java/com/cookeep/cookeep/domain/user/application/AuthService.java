@@ -28,7 +28,7 @@ import com.cookeep.cookeep.api.dto.response.TokenRefreshResponseDTO;
 import com.cookeep.cookeep.domain.user.dto.OAuthUserInfoDTO;
 import com.cookeep.cookeep.domain.user.dto.TokenPair;
 import com.cookeep.cookeep.domain.user.entity.Provider;
-import com.cookeep.cookeep.domain.verification.application.SmsVerificationService;
+import com.cookeep.cookeep.domain.verification.application.EmailVerificationService;
 import com.cookeep.cookeep.domain.verification.entity.VerificationPurpose;
 import com.cookeep.cookeep.security.JwtTokenProvider;
 import com.cookeep.cookeep.domain.user.dao.UserAuthRepository;
@@ -57,7 +57,7 @@ public class AuthService {
 	private final UserReader userReader;
 	private final PasswordEncoder passwordEncoder;
 	private final NicknameGenerator nicknameGenerator;
-	private final SmsVerificationService smsVerificationService;
+	private final EmailVerificationService emailVerificationService;
 
 	// 액세스 토큰이 만료되었을 경우 리프레쉬 토큰으로 액세스 토큰 갱신
 	@Transactional
@@ -222,42 +222,42 @@ public class AuthService {
 
 	@Transactional
 	public void sendSignupCode(SendCodeRequestDTO sendCodeRequestDTO) {
-		String phoneNumber = sendCodeRequestDTO.phoneNumber();
+		String email = sendCodeRequestDTO.email();
 
-		if (userRepository.existsByPhoneNumber(phoneNumber)) {
-			// 이미 가입된 전화번호일 경우
-			throw new AppException(ErrorCode.USER_PHONE_ALREADY_EXISTS);
+		if (userRepository.existsByEmail(email)) {
+			// 이미 가입된 이메일일 경우
+			throw new AppException(ErrorCode.USER_EMAIL_ALREADY_EXISTS);
 		}
-		smsVerificationService.sendCode(phoneNumber, VerificationPurpose.SIGNUP);
+		emailVerificationService.sendCode(email, VerificationPurpose.SIGNUP);
 	}
 
-	@Transactional
-	public void sendPasswordResetCode(SendCodeRequestDTO sendCodeRequestDTO) {
-		String phoneNumber = sendCodeRequestDTO.phoneNumber();
-
-		if (!userRepository.existsByPhoneNumber(phoneNumber)) {
-			// 가입되지 않은 전화번호일 경우
-			throw new AppException(ErrorCode.AUTH_PHONE_NOT_REGISTERED);
-		}
-
-		smsVerificationService.sendCode(phoneNumber, VerificationPurpose.RESET_PASSWORD);
-	}
+	// @Transactional
+	// public void sendPasswordResetCode(SendCodeRequestDTO sendCodeRequestDTO) {
+	// 	String phoneNumber = sendCodeRequestDTO.phoneNumber();
+	//
+	// 	if (!userRepository.existsByPhoneNumber(phoneNumber)) {
+	// 		// 가입되지 않은 전화번호일 경우
+	// 		throw new AppException(ErrorCode.AUTH_PHONE_NOT_REGISTERED);
+	// 	}
+	//
+	// 	smsVerificationService.sendCode(phoneNumber, VerificationPurpose.RESET_PASSWORD);
+	// }
 
 	@Transactional
 	public void verifySignupCode(VerifyCodeRequestDTO verifyCodeRequestDTO) {
-		String phoneNumber = verifyCodeRequestDTO.phoneNumber();
+		String email = verifyCodeRequestDTO.email();
 		String code = verifyCodeRequestDTO.code();
 
-		smsVerificationService.verifyCode(phoneNumber, VerificationPurpose.SIGNUP, code);
+		emailVerificationService.verifyCode(email, VerificationPurpose.SIGNUP, code);
 	}
 
-	@Transactional
-	public void verifyPasswordResetCode(VerifyCodeRequestDTO verifyCodeRequestDTO) {
-		String phoneNumber = verifyCodeRequestDTO.phoneNumber();
-		String code = verifyCodeRequestDTO.code();
-
-		smsVerificationService.verifyCode(phoneNumber, VerificationPurpose.RESET_PASSWORD, code);
-	}
+	// @Transactional
+	// public void verifyPasswordResetCode(VerifyCodeRequestDTO verifyCodeRequestDTO) {
+	// 	String phoneNumber = verifyCodeRequestDTO.phoneNumber();
+	// 	String code = verifyCodeRequestDTO.code();
+	//
+	// 	smsVerificationService.verifyCode(phoneNumber, VerificationPurpose.RESET_PASSWORD, code);
+	// }
 
 	@Transactional
 	public SignUpResponseDTO signUp(SignupRequestDTO signupRequestDTO) {
@@ -397,24 +397,24 @@ public class AuthService {
 		);
 	}
 
-	@Transactional
-	public void resetPassword(ResetPasswordRequestDTO resetPasswordRequestDTO) {
-
-		// 인증 완료 여부 확인
-		smsVerificationService.assertVerified(resetPasswordRequestDTO.phoneNumber(), VerificationPurpose.RESET_PASSWORD);
-
-		User user = userRepository.findByPhoneNumber(resetPasswordRequestDTO.phoneNumber())
-			.orElseThrow(() ->  new AppException(ErrorCode.AUTH_PHONE_NOT_REGISTERED));
-
-		String encodedPassword = passwordEncoder.encode(resetPasswordRequestDTO.password());
-
-		// 기존에 등록되어 있던 비밀번호와 새로 들어온 비밀번호가 동일할 경우
-		if (passwordEncoder.matches(resetPasswordRequestDTO.password(), user.getPassword())) {
-			throw new AppException(ErrorCode.SAME_AS_PREVIOUS_PASSWORD);
-		}
-
-		user.updatePassword(encodedPassword);
-	}
+	// @Transactional
+	// public void resetPassword(ResetPasswordRequestDTO resetPasswordRequestDTO) {
+	//
+	// 	// 인증 완료 여부 확인
+	// 	smsVerificationService.assertVerified(resetPasswordRequestDTO.phoneNumber(), VerificationPurpose.RESET_PASSWORD);
+	//
+	// 	User user = userRepository.findByPhoneNumber(resetPasswordRequestDTO.phoneNumber())
+	// 		.orElseThrow(() ->  new AppException(ErrorCode.AUTH_PHONE_NOT_REGISTERED));
+	//
+	// 	String encodedPassword = passwordEncoder.encode(resetPasswordRequestDTO.password());
+	//
+	// 	// 기존에 등록되어 있던 비밀번호와 새로 들어온 비밀번호가 동일할 경우
+	// 	if (passwordEncoder.matches(resetPasswordRequestDTO.password(), user.getPassword())) {
+	// 		throw new AppException(ErrorCode.SAME_AS_PREVIOUS_PASSWORD);
+	// 	}
+	//
+	// 	user.updatePassword(encodedPassword);
+	// }
 
 	@Transactional
 	public void logout(Long userId) {

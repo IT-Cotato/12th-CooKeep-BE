@@ -20,7 +20,7 @@ public class EmailVerificationSender implements VerificationSender {
 	private final JavaMailSender mailSender;
 
 	// 발신자 메일
-	@Value("${spring.email.username}")
+	@Value("${email.username}")
 	private String from;
 
 	@Override
