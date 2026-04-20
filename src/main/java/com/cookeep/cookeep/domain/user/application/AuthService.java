@@ -231,17 +231,17 @@ public class AuthService {
 		emailVerificationService.sendCode(email, VerificationPurpose.SIGNUP);
 	}
 
-	// @Transactional
-	// public void sendPasswordResetCode(SendCodeRequestDTO sendCodeRequestDTO) {
-	// 	String phoneNumber = sendCodeRequestDTO.phoneNumber();
-	//
-	// 	if (!userRepository.existsByPhoneNumber(phoneNumber)) {
-	// 		// 가입되지 않은 전화번호일 경우
-	// 		throw new AppException(ErrorCode.AUTH_PHONE_NOT_REGISTERED);
-	// 	}
-	//
-	// 	smsVerificationService.sendCode(phoneNumber, VerificationPurpose.RESET_PASSWORD);
-	// }
+	@Transactional
+	public void sendPasswordResetCode(SendCodeRequestDTO sendCodeRequestDTO) {
+		String email = sendCodeRequestDTO.email();
+
+		if (!userRepository.existsByEmail(email)) {
+			// 가입되지 않은 이메일일 경우
+			throw new AppException(ErrorCode.EMAIL_NOT_REGISTERED);
+		}
+
+		emailVerificationService.sendCode(email, VerificationPurpose.RESET_PASSWORD);
+	}
 
 	@Transactional
 	public void verifySignupCode(VerifyCodeRequestDTO verifyCodeRequestDTO) {
@@ -251,13 +251,13 @@ public class AuthService {
 		emailVerificationService.verifyCode(email, VerificationPurpose.SIGNUP, code);
 	}
 
-	// @Transactional
-	// public void verifyPasswordResetCode(VerifyCodeRequestDTO verifyCodeRequestDTO) {
-	// 	String phoneNumber = verifyCodeRequestDTO.phoneNumber();
-	// 	String code = verifyCodeRequestDTO.code();
-	//
-	// 	smsVerificationService.verifyCode(phoneNumber, VerificationPurpose.RESET_PASSWORD, code);
-	// }
+	@Transactional
+	public void verifyPasswordResetCode(VerifyCodeRequestDTO verifyCodeRequestDTO) {
+		String email = verifyCodeRequestDTO.email();
+		String code = verifyCodeRequestDTO.code();
+
+		emailVerificationService.verifyCode(email, VerificationPurpose.RESET_PASSWORD, code);
+	}
 
 	@Transactional
 	public SignUpResponseDTO signUp(SignupRequestDTO signupRequestDTO) {
@@ -374,28 +374,28 @@ public class AuthService {
 		}
 	}
 
-	@Transactional
-	public LoginResponseDTO login(LoginRequestDTO loginRequestDTO) {
-		String phoneNumber = loginRequestDTO.phoneNumber();
-		String password = loginRequestDTO.password();
-
-		// 전화번호 기반으로 유저 조회, 없을 경우 AUTH_PHONE_NOT_REGISTERED
-		User user = userRepository.findByPhoneNumber(phoneNumber)
-			.orElseThrow(() -> new AppException(ErrorCode.AUTH_PHONE_NOT_REGISTERED));
-
-		// 비밀번호가 틀렸을 경우
-		if (!passwordEncoder.matches(password, user.getPassword())) {
-			throw new AppException(ErrorCode.AUTH_PASSWORD_MISMATCH);
-		}
-
-		TokenPair tokenPair = issueTokensAndUpsertSession(user);
-
-		UserStatus userStatus = user.getUserStatus();
-
-		return new LoginResponseDTO(
-			user.getUserId(), tokenPair.accessToken(), tokenPair.refreshToken(), userStatus
-		);
-	}
+	// @Transactional
+	// public LoginResponseDTO login(LoginRequestDTO loginRequestDTO) {
+	// 	String phoneNumber = loginRequestDTO.phoneNumber();
+	// 	String password = loginRequestDTO.password();
+	//
+	// 	// 전화번호 기반으로 유저 조회, 없을 경우 AUTH_PHONE_NOT_REGISTERED
+	// 	User user = userRepository.findByPhoneNumber(phoneNumber)
+	// 		.orElseThrow(() -> new AppException(ErrorCode.AUTH_PHONE_NOT_REGISTERED));
+	//
+	// 	// 비밀번호가 틀렸을 경우
+	// 	if (!passwordEncoder.matches(password, user.getPassword())) {
+	// 		throw new AppException(ErrorCode.AUTH_PASSWORD_MISMATCH);
+	// 	}
+	//
+	// 	TokenPair tokenPair = issueTokensAndUpsertSession(user);
+	//
+	// 	UserStatus userStatus = user.getUserStatus();
+	//
+	// 	return new LoginResponseDTO(
+	// 		user.getUserId(), tokenPair.accessToken(), tokenPair.refreshToken(), userStatus
+	// 	);
+	// }
 
 	// @Transactional
 	// public void resetPassword(ResetPasswordRequestDTO resetPasswordRequestDTO) {
