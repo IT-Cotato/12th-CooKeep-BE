@@ -31,7 +31,7 @@ public class EmailVerification extends BaseEntity {
 	private Long emailVerificationId;
 
 	@Email
-	@Column(length = 255, nullable = false, unique = true)
+	@Column(length = 255, nullable = false)
 	private String email;
 
 	// SIGNUP / RESET_PASSWORD / CHANGE_EMAIL / PASSWORD_VERIFICATION
