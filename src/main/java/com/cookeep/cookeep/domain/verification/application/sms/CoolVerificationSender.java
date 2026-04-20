@@ -12,7 +12,7 @@ import org.springframework.stereotype.Component;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class CoolSmsSender implements SmsSender {
+public class CoolVerificationSender implements VerificationSender {
 
 	private final DefaultMessageService messageService;
 
@@ -20,7 +20,7 @@ public class CoolSmsSender implements SmsSender {
 	private String from010; // 발신번호
 
 	@Override
-	public void send(String to010, String text) {
+	public void send(String to010, String title, String text) {
 		try {
 			log.info("[SMS] send attempt. to={}", mask(to010));
 
@@ -34,7 +34,7 @@ public class CoolSmsSender implements SmsSender {
 			log.info("[SMS] send success. to={}", mask(to010));
 		} catch (Exception e) {
 			log.error("[SMS] CoolSMS send failed. to={}", mask(to010), e);
-			throw new AppException(ErrorCode.SMS_PROVIDER_ERROR);
+			throw new AppException(ErrorCode.EMAIL_PROVIDER_ERROR);
 		}
 	}
 

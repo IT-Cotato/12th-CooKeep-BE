@@ -80,3 +80,8 @@ otp:
 vapid:
   public-key: ${VAPID_PUBLIC_KEY}
   private-key: ${VAPID_PRIVATE_KEY}
+
+email:
+  host: smtp.gmail.com
+  username: ${EMAIL_USERNAME}
+  password: ${EMAIL_PASSWORD}

@@ -59,6 +59,9 @@ dependencies {
 	// CoolSMS
 	implementation 'net.nurigo:sdk:4.3.0'
 
+	// 이메일 인증 - 구글 SMTP
+	implementation 'org.springframework.boot:spring-boot-starter-mail'
+
 }
 
 tasks.named('test') {

@@ -64,12 +64,10 @@ public enum ErrorCode {
 	INVALID_SORT_TYPE(HttpStatus.BAD_REQUEST, "유효하지 않은 정렬 타입입니다.", "REFRIGERATOR-002"),
 	REFRIGERATOR_SEARCH_QUERY_REQUIRED(HttpStatus.BAD_REQUEST,"검색어를 입력해주세요.", "REFRIGERATOR-003"),
 
-	// SMS
-	INVALID_PHONE_NUMBER(HttpStatus.BAD_REQUEST, "유효하지 않은 전화번호 형식입니다.", "SMS-001"),
-	INVALID_VERIFICATION_CODE(HttpStatus.BAD_REQUEST, "인증번호가 일치하지 않습니다.", "SMS-002"),
-	VERIFICATION_CODE_EXPIRED(HttpStatus.BAD_REQUEST, "인증번호가 만료되었습니다.", "SMS-003"),
-	// VERIFICATION_NOT_COMPLETED(HttpStatus.BAD_REQUEST, "전화번호 인증을 실패했습니다.", "SMS-004"),
-	VERIFICATION_NOT_VERIFIED(HttpStatus.BAD_REQUEST, "전화번호 인증이 완료되지 않았습니다.", "SMS-009"),
+	// EMAIL
+	INVALID_PHONE_NUMBER(HttpStatus.BAD_REQUEST, "유효하지 않은 이메일 형식입니다.", "EMAIL-001"),
+	INVALID_VERIFICATION_CODE(HttpStatus.BAD_REQUEST, "인증번호가 일치하지 않습니다.", "EMAIL-002"),
+	VERIFICATION_CODE_EXPIRED(HttpStatus.BAD_REQUEST, "인증번호가 만료되었습니다.", "EMAIL-003"),
 
 	// DAILY_RECIPE
 	DAILY_RECIPE_UPDATE_FIELDS_REQUIRED(HttpStatus.BAD_REQUEST, "수정할 항목(제목 또는 한줄평 또는 이미지)을 입력해주세요.", "DAILY_RECIPE-004"),
@@ -77,6 +75,9 @@ public enum ErrorCode {
 	CANNOT_BOOKMARK_OWN_RECIPE(HttpStatus.BAD_REQUEST, "자신의 레시피에는 북마크를 누를 수 없습니다.", "DAILY_RECIPE-007"),
 	DAILY_RECIPE_TITLE_BLANK(HttpStatus.BAD_REQUEST, "레시피 제목은 빈 값으로 수정할 수 없습니다.", "DAILY_RECIPE-008"),
 	DAILY_RECIPE_IMAGE_SAME_URL(HttpStatus.BAD_REQUEST, "기존 사진과 동일한 URL로 변경할 수 없습니다.", "DAILY_RECIPE-009"),
+
+	// EMAIL
+	VERIFICATION_NOT_VERIFIED(HttpStatus.BAD_REQUEST, "이메일 인증이 완료되지 않았습니다.", "EMAIL-009"),
 
 	// AUTH
 	SAME_AS_PREVIOUS_PASSWORD(HttpStatus.BAD_REQUEST, "기존 등록된 비밀번호와 동일한 비밀번호입니다.", "AUTH-005"),
@@ -138,15 +139,13 @@ public enum ErrorCode {
 	INGREDIENT_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 재료입니다.", "RECIPE-011"),
 	AI_RECIPE_TITLE_MISSING(HttpStatus.NOT_FOUND, "AI 응답에 레시피 제목이 존재하지 않습니다.", "RECIPE-019"),
 
-	// AUTH
-	AUTH_PHONE_NOT_REGISTERED (HttpStatus.NOT_FOUND, "가입되지 않은 전화번호입니다.", "AUTH-004"),
-
 	// DAILY_RECIPE
 	AI_RECIPE_NOT_FOUND(HttpStatus.NOT_FOUND, "해당 AI 레시피를 찾을 수 없습니다.", "DAILY_RECIPE-002"),
 	DAILY_RECIPE_NOT_FOUND(HttpStatus.NOT_FOUND, "해당 데일리 레시피를 찾을 수 없습니다.", "DAILY_RECIPE-003"),
 
-	// SMS
-	VERIFICATION_NOT_FOUND(HttpStatus.NOT_FOUND, "인증 요청 내역이 없습니다.", "SMS-004"),
+	// EMAIL
+	VERIFICATION_NOT_FOUND(HttpStatus.NOT_FOUND, "인증 요청 내역이 없습니다.", "EMAIL-004"),
+	EMAIL_NOT_REGISTERED (HttpStatus.NOT_FOUND, "가입되지 않은 이메일입니다.", "EMAIL-010"),
 
 	// NOTIFICATION
 	SUBSCRIPTION_NOT_FOUND(HttpStatus.NOT_FOUND, "해당 subscription을 찾을 수 없습니다.", "NOTIFICATION-003"),
@@ -183,9 +182,9 @@ public enum ErrorCode {
 	// 429 TOO_MANY_REQUESTS
 	// ==============================
 
-	// SMS
-	SMS_RESEND_TOO_FAST(HttpStatus.TOO_MANY_REQUESTS, "인증번호 재전송 요청이 너무 빠릅니다. 잠시 후 다시 시도해주세요.", "SMS-005"),
-	SMS_TOO_MANY_ATTEMPTS(HttpStatus.TOO_MANY_REQUESTS, "인증 시도 횟수를 초과하였습니다. 잠시 후 다시 시도해주세요.", "SMS-006"),
+	// EMAIL
+	EMAIL_RESEND_TOO_FAST(HttpStatus.TOO_MANY_REQUESTS, "인증번호 재전송 요청이 너무 빠릅니다. 잠시 후 다시 시도해주세요.", "EMAIL-005"),
+	EMAIL_TOO_MANY_ATTEMPTS(HttpStatus.TOO_MANY_REQUESTS, "인증 시도 횟수를 초과하였습니다. 잠시 후 다시 시도해주세요.", "EMAIL-006"),
 
 	// RECIPE
 	AI_RATE_LIMIT_EXCEEDED(HttpStatus.TOO_MANY_REQUESTS, "AI API rate limit exceeded(토큰 부족)", "RECIPE-26"),
@@ -209,9 +208,9 @@ public enum ErrorCode {
 	RECIPE_TITLE_PARSE_FAILED(HttpStatus.INTERNAL_SERVER_ERROR,"레시피 제목 파싱 실패","RECIPE-020"),
 	INGREDIENTS_JSON_CONVERSION_FAILED(HttpStatus.INTERNAL_SERVER_ERROR,"재료 JSON 변환에 실패했습니다.","RECIPE-021"),
 
-	// SMS
-	SMS_PROVIDER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "SMS 서비스 오류가 발생했습니다.", "SMS-007"),
-	SMS_SEND_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "인증번호 발송 중 오류가 발생했습니다.", "SMS-008"),
+	// EMAIL
+	EMAIL_PROVIDER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "EMAIL 서비스 오류가 발생했습니다.", "EMAIL-007"),
+	EMAIL_SEND_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "인증번호 발송 중 오류가 발생했습니다.", "EMAIL-008"),
 
 	// AUTH
 	USERAUTH_DOES_NOT_EXIST (HttpStatus.INTERNAL_SERVER_ERROR, "UserAuth 정보가 존재하지 않습니다.", "AUTH-009"),
