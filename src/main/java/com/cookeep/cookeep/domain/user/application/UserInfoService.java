@@ -193,35 +193,35 @@ public class UserInfoService {
         );
     }
 
-    // // 비밀번호 검증 실패 시 전화번호 인증 요청
-    // public void sendPasswordVerificationCode(Long userId, SendCodeRequestDTO sendCodeRequestDTO) {
-    //     User user = userReader.readById(userId);
-    //     String phoneNumber = sendCodeRequestDTO.phoneNumber();
-    //
-    //     // 현재 등록된 전화번호와 동일하지 않은 경우
-    //     if (!phoneNumber.equals(user.getPhoneNumber())) {
-    //         throw new AppException(ErrorCode.REGISTERED_PHONE_NUMBER_MISMATCH);
-    //     }
-    //
-    //     emailVerificationService.sendCode(phoneNumber, VerificationPurpose.PASSWORD_VERIFICATION);
-    // }
+    // 비밀번호 검증 실패 시 이메일 인증 요청
+    public void sendPasswordVerificationCode(Long userId, SendCodeRequestDTO sendCodeRequestDTO) {
+        User user = userReader.readById(userId);
+        String email = sendCodeRequestDTO.email();
 
-    // // 비밀번호 검증 실패 시 전화번호 인증 확인
-    // @Transactional
-    // public void verifyPasswordVerificationCode(Long userId, VerifyCodeRequestDTO verifyCodeRequestDTO) {
-    //     User user = userReader.readById(userId);
-    //     String phoneNumber = verifyCodeRequestDTO.phoneNumber();
-    //     String code = verifyCodeRequestDTO.code();
-    //
-    //     // 현재 등록된 전화번호와 동일하지 않은 경우
-    //     if (!phoneNumber.equals(user.getPhoneNumber())) {
-    //         throw new AppException(ErrorCode.REGISTERED_PHONE_NUMBER_MISMATCH);
-    //     }
-    //
-    //     emailVerificationService.verifyCode(phoneNumber, VerificationPurpose.PASSWORD_VERIFICATION, code);
-    //
-    //     user.updatePasswordCnt(0);
-    // }
+        // 현재 등록된 전화번호와 동일하지 않은 경우
+        if (!email.equals(user.getEmail())) {
+            throw new AppException(ErrorCode.REGISTERED_EMAIL_MISMATCH);
+        }
+
+        emailVerificationService.sendCode(email, VerificationPurpose.PASSWORD_VERIFICATION);
+    }
+
+    // 비밀번호 검증 실패 시 이메일 인증 확인
+    @Transactional
+    public void verifyPasswordVerificationCode(Long userId, VerifyCodeRequestDTO verifyCodeRequestDTO) {
+        User user = userReader.readById(userId);
+        String email = verifyCodeRequestDTO.email();
+        String code = verifyCodeRequestDTO.code();
+
+        // 현재 등록된 이메일과 동일하지 않은 경우
+        if (!email.equals(user.getEmail())) {
+            throw new AppException(ErrorCode.REGISTERED_EMAIL_MISMATCH);
+        }
+
+        emailVerificationService.verifyCode(email, VerificationPurpose.PASSWORD_VERIFICATION, code);
+
+        user.updatePasswordCnt(0);
+    }
 
     // 비밀번호 변경
     @Transactional
