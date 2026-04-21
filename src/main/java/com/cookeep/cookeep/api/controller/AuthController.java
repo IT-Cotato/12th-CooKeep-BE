@@ -93,18 +93,19 @@ public class AuthController {
 		return ResponseEntity.ok(DataResponse.from(authService.login(loginRequestDTO)));
 	}
 
-	// @Operation(summary = "비밀번호 초기화 API")
-	// @ApiResponses(value = {
-	// 	@ApiResponse(responseCode = "200", description = "비밀번호 초기화 성공"),
-	// 	@ApiResponse(responseCode = "400", description = "요청 파라미터 오류")
-	// })
-	// @PatchMapping("/password/reset")
-	// public ResponseEntity<DataResponse<Void>> resetPassword(
-	// 	@Valid @RequestBody ResetPasswordRequestDTO resetPasswordRequestDTO
-	// ) {
-	// 	authService.resetPassword(resetPasswordRequestDTO);
-	// 	return ResponseEntity.ok(DataResponse.ok());
-	// }
+	@Operation(summary = "비밀번호 초기화 API")
+	@ApiResponses(value = {
+		@ApiResponse(responseCode = "200", description = "비밀번호 초기화 성공"),
+		@ApiResponse(responseCode = "400", description = "요청 파라미터 오류")
+	})
+	@PatchMapping("/password/reset")
+	public ResponseEntity<DataResponse<Void>> resetPassword(
+		@Valid @RequestBody ResetPasswordRequestDTO resetPasswordRequestDTO
+	) {
+		authService.resetPassword(resetPasswordRequestDTO);
+		return ResponseEntity.ok(DataResponse.ok());
+	}
+
 
 	@Operation(summary = "로그아웃 API")
 	@ApiResponses(value = {
