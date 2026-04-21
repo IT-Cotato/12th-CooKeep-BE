@@ -18,9 +18,8 @@ public class WateringLog extends BaseEntity {
     @Column(name = "watering_log_id")
     private Long wateringLogId;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_plant_id", nullable = false)
-    private UserPlant userPlant; // 어떤 식물에 물을 줬는지
+    @Column(name = "user_plant_id")
+    private Long userPlantId; // 어떤 식물에 물을 줬는지 (FK 없이 ID만 보관)
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)

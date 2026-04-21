@@ -3,6 +3,7 @@ package com.cookeep.cookeep.domain.user.application;
 import static com.cookeep.cookeep.domain.user.entity.Provider.*;
 
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
@@ -15,6 +16,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.cookeep.cookeep.api.controller.UserIngredientUpdateController;
 import com.cookeep.cookeep.api.dto.request.LoginRequestDTO;
 import com.cookeep.cookeep.api.dto.request.ResetPasswordRequestDTO;
 import com.cookeep.cookeep.api.dto.request.SendCodeRequestDTO;
@@ -25,6 +27,8 @@ import com.cookeep.cookeep.api.dto.response.SocialLoginResponseDTO;
 import com.cookeep.cookeep.api.dto.response.LoginResponseDTO;
 import com.cookeep.cookeep.api.dto.response.SignUpResponseDTO;
 import com.cookeep.cookeep.api.dto.response.TokenRefreshResponseDTO;
+import com.cookeep.cookeep.domain.cookie.application.CookieService;
+import com.cookeep.cookeep.domain.cookie.entity.CookieLog;
 import com.cookeep.cookeep.domain.user.dto.OAuthUserInfoDTO;
 import com.cookeep.cookeep.domain.user.dto.TokenPair;
 import com.cookeep.cookeep.domain.user.entity.Provider;
@@ -58,6 +62,7 @@ public class AuthService {
 	private final PasswordEncoder passwordEncoder;
 	private final NicknameGenerator nicknameGenerator;
 	private final EmailVerificationService emailVerificationService;
+	private final CookieService cookieService;
 
 	// 액세스 토큰이 만료되었을 경우 리프레쉬 토큰으로 액세스 토큰 갱신
 	@Transactional
@@ -77,13 +82,13 @@ public class AuthService {
 		}
 
 		User user = userReader.readById(userId);
-
+		boolean isRewarded = issueComebackReward(user);
 		user.updateLastAccessAt(LocalDateTime.now());
 
 		// 새로운 액세스토큰 발급
 		String accessToken = jwtTokenProvider.createAccessToken(user.getUserId());
 
-		return new TokenRefreshResponseDTO(accessToken);
+		return new TokenRefreshResponseDTO(accessToken, isRewarded);
 	}
 
 	private void validateRefreshToken(String refreshToken) {
@@ -95,6 +100,27 @@ public class AuthService {
 		}
 	}
 
+	private boolean issueComebackReward(User user) {
+		LocalDateTime lastAccessAt = user.getLastAccessAt();
+
+		if (lastAccessAt == null) {
+			log.warn("lastAccessAt가 null입니다. userId=", user.getUserId());
+			return false;
+		}
+
+		LocalDateTime now = LocalDateTime.now();
+
+		long inactivedDays = ChronoUnit.DAYS.between(lastAccessAt, now);
+
+		if (inactivedDays < 14) {
+			// 14일 미만일 경우 해당되지 않으므로 false 리턴하고 끝냄
+			return false;
+		}
+
+		cookieService.updateCookie(user.getUserId(), CookieLog.CookieLogType.BONUS_RETENTION_REWARD);
+
+		return true;
+	}
 
 	private Long extractUserIdFromRefreshToken(String refreshToken) {
 		// 리프레쉬 토큰에서 UserId 추출
@@ -106,6 +132,7 @@ public class AuthService {
 	}
 
 	private TokenPair issueTokensAndUpsertSession(User user) {
+		boolean isRewarded = issueComebackReward(user);
 		user.updateLastAccessAt(LocalDateTime.now());
 
 		// 액세스 토큰, 리프레쉬 토큰 발급
@@ -122,7 +149,7 @@ public class AuthService {
 
 		userSessionRepository.save(userSession);
 
-		return new TokenPair(accessToken, refreshToken);
+		return new TokenPair(accessToken, refreshToken, isRewarded);
 	}
 
 	// 닉네임 제약 위반 시 재시도 횟수를 제한하기 위한 값 (무한 반복 방지)
@@ -190,7 +217,7 @@ public class AuthService {
 
 		return new SocialLoginResponseDTO(
 			user.getUserId(), tokenPair.accessToken(), tokenPair.refreshToken(),
-			userStatus, nextStep
+			userStatus, nextStep, tokenPair.isRewarded()
 		);
 	}
 
@@ -383,7 +410,7 @@ public class AuthService {
 		UserStatus userStatus = user.getUserStatus();
 
 		return new LoginResponseDTO(
-			user.getUserId(), tokenPair.accessToken(), tokenPair.refreshToken(), userStatus
+			user.getUserId(), tokenPair.accessToken(), tokenPair.refreshToken(), userStatus, tokenPair.isRewarded()
 		);
 	}
 
