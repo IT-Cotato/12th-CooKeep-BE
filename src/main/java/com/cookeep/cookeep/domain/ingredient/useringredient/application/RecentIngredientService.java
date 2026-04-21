@@ -17,6 +17,7 @@ import com.cookeep.cookeep.domain.user.entity.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import tools.jackson.databind.ObjectMapper;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -34,9 +35,7 @@ public class RecentIngredientService {
     private final DefaultIngredientRepository defaultIngredientRepository;
     private final CustomIngredientRepository customIngredientRepository;
     private final UserRepository userRepository;
-
-    private final com.fasterxml.jackson.databind.ObjectMapper objectMapper =
-            new com.fasterxml.jackson.databind.ObjectMapper();
+    private final ObjectMapper objectMapper;
 
     // 최근 추가한 순으로 최대 6개 재료 목록 반환 (첫 등록은 빈 리스트)
     public RecentIngredientsResponseDto getRecentIngredients(Long userId) {
@@ -85,12 +84,14 @@ public class RecentIngredientService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
 
+        Optional<RecentIngredientBatch> existingBatch = batchRepository.findByUser_UserId(userId);
+
         // 이번에 등록된 UserIngredient 조회
         List<UserIngredient> newIngredients =
                 userIngredientRepository.findAllByIngredientIdInAndUser_UserId(newIngredientIds, userId);
 
         // 기존 배치의 ingredientId 목록 로드
-        List<Long> existingIds = batchRepository.findByUser_UserId(userId)
+        List<Long> existingIds = existingBatch
                 .map(b -> parseIngredientIds(b.getIngredientIdsJson()))
                 .orElse(List.of());
 
@@ -101,16 +102,16 @@ public class RecentIngredientService {
         // ingredientId 내림차순 정렬 후 referenceId 중복 제거
         Map<String, UserIngredient> deduped = new LinkedHashMap<>();
 
+        // ingredientId DESC 정렬 후 LinkedHashMap에 삽입 → 삽입 순서가 곧 최종 순서
         Stream.concat(newIngredients.stream(), existingIngredients.stream())
                 .sorted(Comparator.comparingLong(UserIngredient::getIngredientId).reversed())
                 .forEach(ui -> {
                     String key = ui.getType().name() + "_" + ui.getReferenceId();
-                    deduped.putIfAbsent(key, ui); // 먼저 들어온(ingredientId 큰) 것 유지
+                    deduped.putIfAbsent(key, ui);
                 });
 
         // ingredientId 내림차순으로 최대 6개
         List<Long> finalIds = deduped.values().stream()
-                .sorted(Comparator.comparingLong(UserIngredient::getIngredientId).reversed())
                 .limit(MAX_RECENT_COUNT)
                 .map(UserIngredient::getIngredientId)
                 .toList();
@@ -118,11 +119,7 @@ public class RecentIngredientService {
         String idsJson = toJson(finalIds);
         String batchId = generateBatchId();
 
-        // upsert: 유저당 1행
-        RecentIngredientBatch batch = batchRepository.findByUser_UserId(userId)
-                .orElse(null);
-
-        if (batch == null) {
+        if (existingBatch.isEmpty()) {
             batchRepository.save(
                     RecentIngredientBatch.builder()
                             .user(user)
@@ -131,7 +128,7 @@ public class RecentIngredientService {
                             .build()
             );
         } else {
-            batch.update(batchId, idsJson);
+            existingBatch.get().update(batchId, idsJson);
         }
     }
 
@@ -144,7 +141,7 @@ public class RecentIngredientService {
         if (json == null || json.isBlank()) return List.of();
         try {
             return objectMapper.readValue(json,
-                    new com.fasterxml.jackson.core.type.TypeReference<List<Long>>() {});
+                    objectMapper.getTypeFactory().constructCollectionType(List.class, Long.class));
         } catch (Exception e) {
             return List.of();
         }
@@ -164,20 +161,17 @@ public class RecentIngredientService {
         List<Long> defaultIds = ingredients.stream()
                 .filter(ui -> ui.getType() == Type.DEFAULT)
                 .map(UserIngredient::getReferenceId)
-                .distinct()
                 .toList();
 
         List<Long> customIds = ingredients.stream()
                 .filter(ui -> ui.getType() == Type.CUSTOM)
                 .map(UserIngredient::getReferenceId)
-                .distinct()
                 .toList();
 
         // 타입별 1번씩만 조회 후 Map으로 변환
         Map<Long, DefaultIngredient> defaultMap = defaultIngredientRepository
                 .findAllById(defaultIds).stream()
                 .collect(Collectors.toMap(DefaultIngredient::getId, d -> d));
-
         Map<Long, CustomIngredient> customMap = customIngredientRepository
                 .findAllById(customIds).stream()
                 .collect(Collectors.toMap(CustomIngredient::getId, c -> c));
@@ -186,25 +180,22 @@ public class RecentIngredientService {
         return ingredients.stream().map(ui -> {
             String name;
             String imageUrl;
-
             if (ui.getType() == Type.DEFAULT) {
                 DefaultIngredient ref = defaultMap.get(ui.getReferenceId());
-                imageUrl = ref.getImageUrl();
-                name = ref.getIngredient();
+                name = ref != null ? ref.getIngredient() : "Unknown";
+                imageUrl = ref != null ? ref.getImageUrl() : "";
             } else {
                 CustomIngredient ref = customMap.get(ui.getReferenceId());
-                name = ref.getName();
-                imageUrl = ref.getImageUrl();
+                name = ref != null ? ref.getName() : "Unknown";
+                imageUrl = ref != null ? ref.getImageUrl() : "";
             }
-
             return RecentIngredientsResponseDto.RecentIngredientItem.builder()
                     .ingredientId(ui.getIngredientId())
                     .type(ui.getType().name())
                     .name(name)
                     .imageUrl(imageUrl)
                     .build();
-        })
-        .toList();
+        }).toList();
     }
 
 }
