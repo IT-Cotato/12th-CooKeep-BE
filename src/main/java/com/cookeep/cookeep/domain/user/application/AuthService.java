@@ -261,18 +261,9 @@ public class AuthService {
 
 	@Transactional
 	public SignUpResponseDTO signUp(SignupRequestDTO signupRequestDTO) {
-
-		String phoneNumber = signupRequestDTO.phoneNumber();
-
-		if (userRepository.existsByPhoneNumber(phoneNumber)) {
-			// 이미 등록된 전화번호일 경우
-			// SMS 인증에서 1차 검증을 하지만, api 직접 호출 등을 고려해 회원가입 api에서도 중복을 검토하도록 하였음
-			throw new AppException(ErrorCode.USER_PHONE_ALREADY_EXISTS);
-		}
-
 		String email = signupRequestDTO.email();
 
-		// 이미 등록된 이메일인지 확인
+		// 이메일 중복 검증 진행
 		checkEmail(email);
 
 		String encodedPassword = passwordEncoder.encode(signupRequestDTO.password());
@@ -287,7 +278,6 @@ public class AuthService {
 
 			try {
 				user = userRepository.saveAndFlush(User.builder()
-					.phoneNumber(phoneNumber)
 					.email(email)
 					.password(encodedPassword)
 					.marketingConsent(marketingConsent)
@@ -374,28 +364,28 @@ public class AuthService {
 		}
 	}
 
-	// @Transactional
-	// public LoginResponseDTO login(LoginRequestDTO loginRequestDTO) {
-	// 	String phoneNumber = loginRequestDTO.phoneNumber();
-	// 	String password = loginRequestDTO.password();
-	//
-	// 	// 전화번호 기반으로 유저 조회, 없을 경우 AUTH_PHONE_NOT_REGISTERED
-	// 	User user = userRepository.findByPhoneNumber(phoneNumber)
-	// 		.orElseThrow(() -> new AppException(ErrorCode.AUTH_PHONE_NOT_REGISTERED));
-	//
-	// 	// 비밀번호가 틀렸을 경우
-	// 	if (!passwordEncoder.matches(password, user.getPassword())) {
-	// 		throw new AppException(ErrorCode.AUTH_PASSWORD_MISMATCH);
-	// 	}
-	//
-	// 	TokenPair tokenPair = issueTokensAndUpsertSession(user);
-	//
-	// 	UserStatus userStatus = user.getUserStatus();
-	//
-	// 	return new LoginResponseDTO(
-	// 		user.getUserId(), tokenPair.accessToken(), tokenPair.refreshToken(), userStatus
-	// 	);
-	// }
+	@Transactional
+	public LoginResponseDTO login(LoginRequestDTO loginRequestDTO) {
+		String email = loginRequestDTO.email();
+		String password = loginRequestDTO.password();
+
+		// 이메일 기반으로 유저 조회, 없을 경우 EMAIL_NOT_REGISTERED
+		User user = userRepository.findByEmail(email)
+			.orElseThrow(() -> new AppException(ErrorCode.EMAIL_NOT_REGISTERED));
+
+		// 비밀번호가 틀렸을 경우
+		if (!passwordEncoder.matches(password, user.getPassword())) {
+			throw new AppException(ErrorCode.AUTH_PASSWORD_MISMATCH);
+		}
+
+		TokenPair tokenPair = issueTokensAndUpsertSession(user);
+
+		UserStatus userStatus = user.getUserStatus();
+
+		return new LoginResponseDTO(
+			user.getUserId(), tokenPair.accessToken(), tokenPair.refreshToken(), userStatus
+		);
+	}
 
 	// @Transactional
 	// public void resetPassword(ResetPasswordRequestDTO resetPasswordRequestDTO) {
