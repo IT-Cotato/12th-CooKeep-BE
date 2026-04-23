@@ -19,21 +19,26 @@ public class RecentIngredientBatch extends BaseEntity {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
+    @JoinColumn(name = "user_id", nullable = false, unique = true)
     private User user;
 
     // 마지막 등록 배치의 UUID
     @Column(name = "batch_id", nullable = false, length = 36)
     private String batchId;
 
+    @Column(name = "ingredient_ids", columnDefinition = "JSON")
+    private String ingredientIdsJson;
+
     @Builder
-    public RecentIngredientBatch(User user, String batchId) {
+    public RecentIngredientBatch(User user, String batchId, String ingredientIdsJson) {
         this.user = user;
         this.batchId = batchId;
+        this.ingredientIdsJson = ingredientIdsJson;
     }
 
-    public void updateBatchId(String batchId) {
+    public void update(String batchId, String ingredientIdsJson) {
         this.batchId = batchId;
+        this.ingredientIdsJson = ingredientIdsJson;
     }
 
 }

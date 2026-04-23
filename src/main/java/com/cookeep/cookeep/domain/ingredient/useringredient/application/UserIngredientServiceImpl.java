@@ -87,8 +87,13 @@ public class UserIngredientServiceImpl implements UserIngredientService {
                 .map(req -> createOne(user, req, batchId))
                 .toList();
 
-        // 최신 배치 ID 저장 (upsert)
-        recentIngredientService.saveBatch(userId, batchId);
+        // 이번 등록된 ingredientId 목록 수집
+        List<Long> newIngredientIds = results.stream()
+                .map(UserIngredientCreateResponseDto::getIngredientId)
+                .toList();
+
+        // 변경된 saveBatch 호출
+        recentIngredientService.saveBatch(userId, newIngredientIds);
 
         // 최초 재료 등록 온보딩 쿠키 지급 (일회성)
         boolean rewardGranted = grantFirstIngredientRewardIfEligible(user);
