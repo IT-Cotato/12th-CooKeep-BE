@@ -28,7 +28,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.TemporalAdjusters;
 import java.util.List;
-import java.util.stream.IntStream;
+
 
 @Service
 @RequiredArgsConstructor
@@ -37,7 +37,7 @@ public class CookeepsService {
 	private final UserReader userReader;
 	private final WateringLogRepository wateringLogRepository;
 	private final DailyRecipeRepository dailyRecipeRepository;
-	private final UserRepository userRepository;
+	private final RankingCacheService rankingCacheService;
 
 	@Transactional(readOnly = true)
 	public RankingResponseDto getRanking(Long userId) {
@@ -49,8 +49,8 @@ public class CookeepsService {
 			.atStartOfDay();
 		LocalDateTime weekEnd = weekStart.plusDays(7);
 
-		List<WateringRankDto> wateringRanking = getWateringRanking(monthStart, monthEnd);
-		List<RecipeRankDto> recipeRanking = getRecipeRanking(weekStart, weekEnd);
+		List<WateringRankDto> wateringRanking = rankingCacheService.getWateringRanking(monthStart, monthEnd);
+		List<RecipeRankDto> recipeRanking = rankingCacheService.getRecipeRanking(weekStart, weekEnd);
 		Long myWateringCount = wateringLogRepository.countByUserAndMonth(userId, monthStart, monthEnd);
 
 		return RankingResponseDto.builder()
@@ -58,55 +58,6 @@ public class CookeepsService {
 			.recipeRanking(recipeRanking)
 			.myWateringCount(myWateringCount)
 			.build();
-	}
-
-	private List<WateringRankDto> getWateringRanking(LocalDateTime monthStart, LocalDateTime monthEnd) {
-		// 1단계: 이번 달 물주기 상위 3명 조회
-		List<Object[]> results = wateringLogRepository.findTopWateringUsers(
-			monthStart, monthEnd, PageRequest.of(0, 3));
-		
-		// 2단계: 인덱스를 포함한 스트림 처리
-		return IntStream.range(0, results.size()) // 0부터 results 크기-1까지
-			.mapToObj(index -> {
-				Object[] row = results.get(index);
-				User user = (User) row[0]; // 유저 객체 추출
-				Long wateringCount = (Long) row[1]; // 물주기 횟수 추출
-
-				// 프로필 이미지 URL 가져오기
-				String profileImageUrl = user.getProfilePlant() != null
-					? user.getProfilePlant().getCurrentImageUrl()
-					: null;
-
-				// DTO로 변환 (rank = 인덱스 + 1 → 1, 2, 3)
-				return WateringRankDto.builder()
-					.rank(index + 1)
-					.nickname(user.getNickname())
-					.profileImageUrl(profileImageUrl)
-					.wateringCount(wateringCount)
-					.build();
-			})
-			.toList();
-	}
-
-	private List<RecipeRankDto> getRecipeRanking(LocalDateTime weekStart, LocalDateTime weekEnd) {
-		// 이번 주 공개 레시피 중 좋아요 상위 3개 조회 (좋아요 내림차순, 동점 시 등록 오래된 순)
-		List<DailyRecipe> results = dailyRecipeRepository.findTopRankedRecipes(
-			weekStart, weekEnd, PageRequest.of(0, 3));
-
-		return IntStream.range(0, results.size())
-			.mapToObj(index -> {
-				DailyRecipe recipe = results.get(index);
-
-				return RecipeRankDto.builder()
-						.dailyRecipeId(recipe.getId())
-						.rank(index + 1)
-						.nickname(recipe.getUser().getNickname())
-						.title(recipe.getTitle())
-						.likeCount(recipe.getLikeCount().longValue())
-						.recipeImageUrl(recipe.getRecipeImageUrl())
-						.build();
-			})
-			.toList();
 	}
 
 	@Transactional(readOnly = true)
