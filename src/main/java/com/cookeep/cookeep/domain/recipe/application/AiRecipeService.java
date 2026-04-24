@@ -66,6 +66,7 @@ public class AiRecipeService {
     private final UserRepository userRepository;
     private final AiRateLimitService rateLimitService;
     private final UserReader userReader;
+    private final AiRecipeCacheService aiRecipeCacheService;
 
     // sessionId 유무에 따라 신규/재요청 로직 분기
     public AiRecipeResponseDto generateRecipe(Long userId, AiRecipeRequestDto request) {
@@ -115,6 +116,8 @@ public class AiRecipeService {
         boolean hasUrgent = userIngredients.stream()
                 .anyMatch(ui -> ui.getLeftDays() == 0);
 
+        List<String> dislikedIngredients = getDislikedIngredients(userId);
+
         // 4. 세션 생성
         AiSession session = AiSession.builder()
                 .userId(userId)
@@ -131,14 +134,26 @@ public class AiRecipeService {
         // 메시지 db에 저장
         saveInitialUserMessage(session, request);
 
-        List<String> dislikedIngredients = getDislikedIngredients(userId);
+        // 캐시 조회
+        String cacheKey = aiRecipeCacheService.buildCacheKey(request.getIngredientIds(), request.getDifficulty());
+        GeminiRecipeResponseDto aiResponse = aiRecipeCacheService.get(cacheKey);
 
         // 3. AI 레시피 생성 (이름 + 단위만 전달, AI가 quantity 생성)
-        GeminiRecipeResponseDto aiResponse = geminiService.generateRecipe(
-                enrichedIngredients,
-                request.getDifficulty(),
-                dislikedIngredients
-        );
+
+        if (aiResponse != null) {
+            List<String> existingTitles = extractRecipeTitlesFromMessages(session.getId());
+            if (existingTitles.contains(aiResponse.getTitle())) {
+                log.info("캐시 제목 중복 → Gemini 신규 호출. title={}", aiResponse.getTitle());
+                aiResponse = null;
+            } else {
+                log.info("AI 레시피 캐시 히트. key={}", cacheKey);
+            }
+        }
+
+        if (aiResponse == null) {
+            aiResponse = geminiService.generateRecipe(enrichedIngredients, request.getDifficulty(), dislikedIngredients);
+            aiRecipeCacheService.put(cacheKey, aiResponse);
+        }
 
         // 4. 세션 제목 업데이트
         updateSessionTitle(session, aiResponse);
@@ -206,6 +221,17 @@ public class AiRecipeService {
                 excludedTitles,
                 dislikedIngredients
         );
+
+        // 재요청 결과도 캐시에 저장 (다른 세션에서 재사용 가능하도록)
+        // 세션의 원본 재료 ID 목록이 필요하므로 ingredientIdsJson에서 파싱
+        try {
+            List<Long> originalIds = objectMapper.readValue(
+                    session.getIngredientIdsJson(), new TypeReference<List<Long>>() {});
+            String retryKey = aiRecipeCacheService.buildCacheKey(originalIds, session.getDifficulty());
+            aiRecipeCacheService.put(retryKey, aiResponse);
+        } catch (Exception e) {
+            log.warn("retry 결과 캐시 저장 실패", e);
+        }
 
         // 6. 시도 횟수 증가 및 저장
         session.increaseAttempt();
