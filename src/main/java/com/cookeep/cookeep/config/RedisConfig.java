@@ -25,14 +25,19 @@ import java.util.List;
 public class RedisConfig {
 
     @Bean
-    public RedisCacheManager cacheManager(RedisConnectionFactory connectionFactory) {
-        ObjectMapper objectMapper = new ObjectMapper();
-        objectMapper.registerModule(new JavaTimeModule());
-        objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+    public ObjectMapper redisObjectMapper() {
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.registerModule(new JavaTimeModule());
+        mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+        return mapper;
+    }
 
-        JavaType wateringType = objectMapper.getTypeFactory()
+    @Bean
+    public RedisCacheManager cacheManager(RedisConnectionFactory connectionFactory,
+                                          ObjectMapper redisObjectMapper) {
+        JavaType wateringType = redisObjectMapper.getTypeFactory()
             .constructCollectionType(List.class, WateringRankDto.class);
-        JavaType recipeType = objectMapper.getTypeFactory()
+        JavaType recipeType = redisObjectMapper.getTypeFactory()
             .constructCollectionType(List.class, RecipeRankDto.class);
 
         StringRedisSerializer keySerializer = new StringRedisSerializer();
@@ -41,14 +46,14 @@ public class RedisConfig {
             .entryTtl(Duration.ofMinutes(10))
             .serializeKeysWith(RedisSerializationContext.SerializationPair.fromSerializer(keySerializer))
             .serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(
-                typedSerializer(objectMapper, wateringType)))
+                typedSerializer(redisObjectMapper, wateringType)))
             .disableCachingNullValues();
 
         RedisCacheConfiguration recipeConfig = RedisCacheConfiguration.defaultCacheConfig()
             .entryTtl(Duration.ofMinutes(10))
             .serializeKeysWith(RedisSerializationContext.SerializationPair.fromSerializer(keySerializer))
             .serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(
-                typedSerializer(objectMapper, recipeType)))
+                typedSerializer(redisObjectMapper, recipeType)))
             .disableCachingNullValues();
 
         return RedisCacheManager.builder(connectionFactory)
@@ -57,13 +62,13 @@ public class RedisConfig {
             .build();
     }
 
-    private static RedisSerializer<Object> typedSerializer(ObjectMapper objectMapper, JavaType type) {
+    private static RedisSerializer<Object> typedSerializer(ObjectMapper redisObjectMapper, JavaType type) {
         return new RedisSerializer<>() {
             @Override
             public byte[] serialize(Object value) throws SerializationException {
                 if (value == null) return null;
                 try {
-                    return objectMapper.writeValueAsBytes(value);
+                    return redisObjectMapper.writeValueAsBytes(value);
                 } catch (Exception e) {
                     throw new SerializationException("Could not serialize: " + e.getMessage(), e);
                 }
@@ -73,7 +78,7 @@ public class RedisConfig {
             public Object deserialize(byte[] bytes) throws SerializationException {
                 if (bytes == null || bytes.length == 0) return null;
                 try {
-                    return objectMapper.readValue(bytes, type);
+                    return redisObjectMapper.readValue(bytes, type);
                 } catch (Exception e) {
                     throw new SerializationException("Could not deserialize: " + e.getMessage(), e);
                 }

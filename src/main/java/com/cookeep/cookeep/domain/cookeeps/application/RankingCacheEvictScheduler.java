@@ -11,12 +11,12 @@ public class RankingCacheEvictScheduler {
     private final RankingCacheService rankingCacheService;
 
     @Scheduled(cron = "0 1 0 1 * *", zone = "Asia/Seoul")
-    public void evictOnMonthStart() {
-        rankingCacheService.evictAllRankingCaches();
+    public void evictWateringRankingCache() {
+        rankingCacheService.evictWateringRankingCache();
     }
 
     @Scheduled(cron = "0 1 0 * * MON", zone = "Asia/Seoul")
-    public void evictOnWeekStart() {
-        rankingCacheService.evictAllRankingCaches();
+    public void evictRecipeRankingCache() {
+        rankingCacheService.evictRecipeRankingCache();
     }
 }
