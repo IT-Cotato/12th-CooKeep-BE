@@ -67,6 +67,7 @@ public class AiRecipeService {
     private final AiRateLimitService rateLimitService;
     private final UserReader userReader;
     private final AiRecipeCacheService aiRecipeCacheService;
+    private final GeminiQueueService geminiQueueService;
 
     // sessionId 유무에 따라 신규/재요청 로직 분기
     public AiRecipeResponseDto generateRecipe(Long userId, AiRecipeRequestDto request) {
@@ -128,7 +129,7 @@ public class AiRecipeService {
             // 신규 세션이므로 기존 제목 목록은 빈 리스트 → 캐시 제목 중복 없음
             log.info("AI 레시피 캐시 히트. key={}", cacheKey);
         } else {
-            aiResponse = geminiService.generateRecipe(
+            aiResponse = geminiQueueService.generateRecipe(
                     enrichedIngredients, request.getDifficulty(), dislikedIngredients);
             aiRecipeCacheService.put(cacheKey, aiResponse);
         }
@@ -207,7 +208,7 @@ public class AiRecipeService {
         List<String> dislikedIngredients = getDislikedIngredients(userId);
 
         // 5. AI 호출 (제외 리스트 포함)
-        GeminiRecipeResponseDto aiResponse = geminiService.generateRecipeWithExclusion(
+        GeminiRecipeResponseDto aiResponse = geminiQueueService.generateRecipeWithExclusion(
                 ingredients,
                 session.getDifficulty(),
                 excludedTitles,
