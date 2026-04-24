@@ -97,7 +97,7 @@ public class GeminiService {
                     .timeout(Duration.ofSeconds(120))
                     .retryWhen(
                             Retry.backoff(3, Duration.ofSeconds(2))
-                                    .maxBackoff(Duration.ofSeconds(10))
+                                    .maxBackoff(Duration.ofSeconds(5))
                                     .filter(this::isRetryableError)
                                     .doBeforeRetry(retrySignal ->
                                             log.warn("Gemini 재시도 중... attempt={}, cause={}",
