@@ -120,11 +120,11 @@ public class GeminiService {
             }
 
             log.error("Gemini API 호출 실패 - status={}", e.getStatusCode(), e);
-            throw new AppException(ErrorCode.AI_SEARCH_FAILED);
+            throw new AppException(ErrorCode.AI_SERVER_FAILED);
 
         } catch (Exception e) {
             log.error("Gemini API 호출 실패", e);
-            throw new AppException(ErrorCode.AI_SEARCH_FAILED);
+            throw new AppException(ErrorCode.AI_SERVER_FAILED);
         }
     }
 
