@@ -162,4 +162,21 @@ public class WebPushNotificationService {
 
     }
 
+    public void sendTestPush(Long userId) {
+
+        List<WebPushSubscription> subscriptions =
+                webPushSubscriptionRepository.findAllByUser_UserId(userId);
+
+        if (subscriptions.isEmpty()) {
+            log.warn("[TEST] 구독 없음 userId={}", userId);
+            return;
+        }
+
+        String payload = buildPayload(NotificationType.EXPIRATION);
+
+        int successCount = sendToSubscriptions(subscriptions, payload);
+
+        log.info("[TEST] 푸시 전송 완료 userId={}, success={}", userId, successCount);
+    }
+
 }
