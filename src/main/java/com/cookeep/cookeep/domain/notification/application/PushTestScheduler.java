@@ -20,17 +20,14 @@ public class PushTestScheduler {
     // 5분마다 실행
     @Scheduled(cron = "0 0/5 * * * *", zone = "Asia/Seoul")
     public void sendTestExpirationPush() {
-        log.info("=== [TEST] 유통기한 임박 푸시 알림 테스트 실행 ===");
+        log.info("=== [TEST] 강제 푸시 전송 ===");
 
-        List<Long> targetUserIds = userIngredientRepository
-                .findUserIdsWithExpiringTodayAndMarketingConsent(LocalDate.now());
+        Long testUserId = 2L;
 
-        for (Long userId : targetUserIds) {
-            try {
-                webPushNotificationService.sendExpirationAlert(userId);
-            } catch (Exception e) {
-                log.error("[TEST] 푸시 알림 전송 실패. userId={}", userId, e);
-            }
+        try {
+            webPushNotificationService.sendTestPush(testUserId);
+        } catch (Exception e) {
+            log.error("[TEST] 푸시 전송 실패 userId={}", testUserId, e);
         }
     }
 }
