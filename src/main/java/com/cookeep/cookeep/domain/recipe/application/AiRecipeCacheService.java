@@ -23,11 +23,19 @@ public class AiRecipeCacheService {
     private static final Duration TTL = Duration.ofHours(24);
     private static final String KEY_PREFIX = "recipe:cache:";
 
-    public String buildCacheKey(List<Long> ingredientIds, Difficulty difficulty) {
+    public String buildCacheKey(List<Long> ingredientIds, Difficulty difficulty, List<String> dislikedIngredients) {
         String sortedIds = ingredientIds.stream()
                 .sorted()
                 .map(String::valueOf)
                 .collect(Collectors.joining("_"));
+
+        String dislikedPart = (dislikedIngredients == null || dislikedIngredients.isEmpty())
+                ? "none"
+                : dislikedIngredients.stream()
+                .map(String::toLowerCase)
+                .sorted()
+                .collect(Collectors.joining("_"));
+
         return KEY_PREFIX + sortedIds + ":" + difficulty.name();
     }
 

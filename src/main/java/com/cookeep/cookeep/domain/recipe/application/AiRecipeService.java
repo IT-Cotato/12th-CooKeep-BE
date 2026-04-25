@@ -121,7 +121,8 @@ public class AiRecipeService {
 
         // ── AI 호출을 세션 저장보다 먼저 ──
         // 캐시 조회
-        String cacheKey = aiRecipeCacheService.buildCacheKey(request.getIngredientIds(), request.getDifficulty());
+        String cacheKey = aiRecipeCacheService.buildCacheKey(
+                request.getIngredientIds(), request.getDifficulty(), dislikedIngredients);
         GeminiRecipeResponseDto aiResponse = aiRecipeCacheService.get(cacheKey);
 
         // 4. AI 레시피 생성 (이름 + 단위만 전달, AI가 quantity 생성)
@@ -214,17 +215,6 @@ public class AiRecipeService {
                 excludedTitles,
                 dislikedIngredients
         );
-
-        // 재요청 결과도 캐시에 저장 (다른 세션에서 재사용 가능하도록)
-        // 세션의 원본 재료 ID 목록이 필요하므로 ingredientIdsJson에서 파싱
-        try {
-            List<Long> originalIds = objectMapper.readValue(
-                    session.getIngredientIdsJson(), new TypeReference<List<Long>>() {});
-            String retryKey = aiRecipeCacheService.buildCacheKey(originalIds, session.getDifficulty());
-            aiRecipeCacheService.put(retryKey, aiResponse);
-        } catch (Exception e) {
-            log.warn("retry 결과 캐시 저장 실패", e);
-        }
 
         // 6. 시도 횟수 증가 및 저장
         session.increaseAttempt();
