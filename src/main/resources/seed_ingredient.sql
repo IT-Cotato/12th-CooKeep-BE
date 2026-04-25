@@ -73,6 +73,10 @@ VALUES
     ('VEGETABLE','돌나물','PIECE','FRIDGE',7,'물기 제거 후 밀봉이 좋아요.','https://cookeep-images.s3.ap-northeast-2.amazonaws.com/ingredients/6cad2799-8e85-42f3-91f6-5bf73246a2f1.png'),
     ('VEGETABLE','명이나물','PIECE','FRIDGE',7,'공기 접촉을 줄여 보관하세요.','https://cookeep-images.s3.ap-northeast-2.amazonaws.com/ingredients/dd75dab7-78de-4df5-9519-b65c5d63d647.png'),
     ('VEGETABLE','호박잎','PIECE','FRIDGE',7,'키친타월로 감싸 보관하세요.','https://cookeep-images.s3.ap-northeast-2.amazonaws.com/ingredients/19e87dc9-305a-4677-86d4-640bd6664b07.png'),
+    ('VEGETABLE', '샐러드채소', 'PIECE', 'FRIDGE', 5, '세척 후 물기를 완전히 제거하고 키친타월과 함께 밀봉 보관하세요.', 'https://cookeep-images.s3.ap-northeast-2.amazonaws.com/ingredients/87e63acb-9198-498b-948a-06347b859420.png'),
+    ('VEGETABLE', '연잎', 'PIECE', 'FRIDGE', 5, '마르지 않도록 약간의 물기를 유지하며 밀봉 보관하세요.', 'https://cookeep-images.s3.ap-northeast-2.amazonaws.com/ingredients/01ed7517-39cc-467b-a519-710f3c0fc9c2.png'),
+    ('VEGETABLE', '알배기배추', 'PIECE', 'FRIDGE', 7, '겉잎을 제거하지 말고 통째로 밀봉 보관하세요.', 'https://cookeep-images.s3.ap-northeast-2.amazonaws.com/ingredients/7b1a88e8-8f1c-465b-afc6-e18a8ab75a61.png'),
+    ('VEGETABLE', '봄동', 'PIECE', 'FRIDGE', 7, '키친타월로 감싸 밀봉 보관하면 수분이 유지돼요.', 'https://cookeep-images.s3.ap-northeast-2.amazonaws.com/ingredients/3f635b86-e11f-45d0-9aed-849b9eb76a84.png'),
 
     -- 과일 (FRUIT)
     ('FRUIT', '사과', 'PIECE', 'FRIDGE', 7, '다른 과일과 함께 두면 빨리 무를 수 있어 따로 보관하세요.','https://cookeep-images.s3.ap-northeast-2.amazonaws.com/ingredients/사과.png'),
@@ -104,7 +108,6 @@ VALUES
     ('FRUIT', '대추', 'PIECE', 'FRIDGE', 7, '밀봉 보관하면 수분이 유지돼요.','https://cookeep-images.s3.ap-northeast-2.amazonaws.com/ingredients/c7d95c70-1052-4fef-a96d-b69bc12b2aaa.png'),
     ('FRUIT', '건대추', 'PIECE', 'FRIDGE', 7, '습기를 피해서 밀봉 보관하세요.','https://cookeep-images.s3.ap-northeast-2.amazonaws.com/ingredients/6c34c71c-bce5-4f1a-b8db-ec7edbf39d5b.png'),
     ('FRUIT', '밤', 'PIECE', 'FRIDGE', 7, '수분이 마르지 않게 밀봉 보관하면 좋아요.','https://cookeep-images.s3.ap-northeast-2.amazonaws.com/ingredients/1a190ca7-5a80-49e2-be76-c114de1862d9.png'),
-    ('FRUIT', '은행', 'PIECE', 'FRIDGE', 7, '습기를 피해 밀봉 보관하세요.','https://cookeep-images.s3.ap-northeast-2.amazonaws.com/ingredients/39f036bb-8cd6-4161-ac49-8d03709f520d.png'),
     ('FRUIT', '건포도', 'PIECE', 'FRIDGE', 7, '습기 차단을 위해 밀봉 보관이 좋아요.','https://cookeep-images.s3.ap-northeast-2.amazonaws.com/ingredients/1e5537d7-6226-49c1-a7ef-02b8251aa7ee.png'),
     ('FRUIT', '건망고', 'PIECE', 'FRIDGE', 7, '개봉 후엔 밀봉해 냉장 보관하세요.','https://cookeep-images.s3.ap-northeast-2.amazonaws.com/ingredients/a7556ecc-5a48-4fb3-b520-0bc2130e8f48.png'),
     ('FRUIT', '건바나나', 'PIECE', 'FRIDGE', 7, '습기를 피하고 밀봉 보관하세요.','https://cookeep-images.s3.ap-northeast-2.amazonaws.com/ingredients/바나나.png'),
@@ -120,6 +123,8 @@ VALUES
     ('FRUIT', '레몬청', 'PIECE', 'FRIDGE', 14, '수분/이물 혼입을 막고 냉장 보관하세요.','https://cookeep-images.s3.ap-northeast-2.amazonaws.com/ingredients/98ac383d-c078-48d0-991e-e7b6f71efd34.png'),
     ('FRUIT', '유자', 'PIECE', 'FRIDGE', 7, '밀봉 보관하면 향이 오래 유지돼요.','https://cookeep-images.s3.ap-northeast-2.amazonaws.com/ingredients/2a5ee0e9-12f6-4a23-a8e3-1feaa642f67b.png'),
     ('FRUIT', '유자청', 'PIECE', 'FRIDGE', 14, '깨끗한 도구로 덜어 사용하면 오래가요.','https://cookeep-images.s3.ap-northeast-2.amazonaws.com/ingredients/d3e6ddc7-4278-4402-9b92-0c0414c8ee43.png'),
+    ('FRUIT', '바나나칩', 'BAG', 'PANTRY', 180, '습기를 피해 밀봉 보관하면 바삭함이 유지돼요.', 'https://cookeep-images.s3.ap-northeast-2.amazonaws.com/ingredients/바나나.png'),
+    ('FRUIT', '과일퓨레', 'PACK', 'FRIDGE', 7, '개봉 후엔 밀봉해 냉장 보관하고 빠르게 소비하세요.', 'https://cookeep-images.s3.ap-northeast-2.amazonaws.com/ingredients/37fc5978-9050-4225-b875-2e33d6855564.png'),
 
     -- 육류 (MEAT)
     ('MEAT', '삼겹살', 'PACK', 'FREEZER', 90, '1회분씩 소분해 냉동하면 해동이 편해요.','https://cookeep-images.s3.ap-northeast-2.amazonaws.com/ingredients/2faf5ece-076b-421a-8996-2a3dbb5e6448.png'),
@@ -156,12 +161,8 @@ VALUES
     ('MEAT', '비엔나소시지', 'PACK', 'FREEZER', 90, '한 번에 쓸 양으로 소분해 보관하세요.','https://cookeep-images.s3.ap-northeast-2.amazonaws.com/ingredients/a1228a68-8135-4a7a-a0c2-669c55c73a88.png'),
     ('MEAT', '스팸', 'PACK', 'FREEZER', 90, '개봉 후엔 밀봉해 냉장/냉동 보관하세요.','https://cookeep-images.s3.ap-northeast-2.amazonaws.com/ingredients/9029997b-a9be-400f-9529-dd35917304df.png'),
     ('MEAT', '미트볼', 'PACK', 'FREEZER', 90, '서로 붙지 않게 펼쳐 냉동하면 좋아요.','https://cookeep-images.s3.ap-northeast-2.amazonaws.com/ingredients/6677db52-5bf0-4d05-8822-6876c72ed9ed.png'),
-    ('MEAT', '함박스테이크', 'PACK', 'FREEZER', 90, '냉동 보관 시 공기 접촉을 줄여주세요.','https://cookeep-images.s3.ap-northeast-2.amazonaws.com/ingredients/5f595775-db01-439c-918c-75f1781c0a24.png'),
-    ('MEAT', '떡갈비', 'PACK', 'FREEZER', 90, '포장 상태를 유지하거나 밀봉해 보관하세요.','https://cookeep-images.s3.ap-northeast-2.amazonaws.com/ingredients/159f7785-5779-401e-8aae-3ca794000690.png'),
     ('MEAT', '족발', 'PACK', 'FREEZER', 90, '소분 후 냉동하면 먹을 만큼만 해동할 수 있어요.','https://cookeep-images.s3.ap-northeast-2.amazonaws.com/ingredients/28032ff4-5f4c-4d92-8432-02ad3457ca07.png'),
     ('MEAT', '보쌈', 'PACK', 'FREEZER', 90, '기름기 있는 부위는 이중 포장이 좋아요.','https://cookeep-images.s3.ap-northeast-2.amazonaws.com/ingredients/1d724150-fd4c-4d44-822a-bd75ed286dc4.png'),
-    ('MEAT', '치킨너겟', 'PACK', 'FREEZER', 90, '개봉 후엔 지퍼백 밀봉으로 성에를 줄이세요.','https://cookeep-images.s3.ap-northeast-2.amazonaws.com/ingredients/e20dc190-e0cf-4efa-bb89-73b20572f6b6.png'),
-    ('MEAT', '치킨스테이크', 'PACK', 'FREEZER', 90, '낱개 포장해 냉동하면 조리가 편해요.','https://cookeep-images.s3.ap-northeast-2.amazonaws.com/ingredients/1379afdb-8a42-4b80-8b15-01c423671691.png'),
     ('MEAT', '돈까스', 'PACK', 'FREEZER', 90, '튀김류는 공기 접촉을 줄이면 눅눅함이 덜해요.','https://cookeep-images.s3.ap-northeast-2.amazonaws.com/ingredients/aca22284-55cf-44db-8012-1f4dcd814436.png'),
     ('MEAT', '불닭', 'PACK', 'FREEZER', 90, '냉동 보관 시 라벨로 날짜를 관리하세요.','https://cookeep-images.s3.ap-northeast-2.amazonaws.com/ingredients/55ee8868-19a8-49e3-9ece-b7d9f0690239.png'),
     ('MEAT', '양념닭', 'PACK', 'FREEZER', 90, '양념 육류는 소분 후 냉동하면 활용이 좋아요.','https://cookeep-images.s3.ap-northeast-2.amazonaws.com/ingredients/88283010-94e4-4f7d-989f-763475c75bed.png'),
@@ -183,6 +184,9 @@ VALUES
     ('MEAT', '핫도그', 'PACK', 'FREEZER', 90, '개봉 후 지퍼백 밀봉이 좋아요.','https://cookeep-images.s3.ap-northeast-2.amazonaws.com/ingredients/d01fdb62-b633-4261-8a7b-b65223c37764.png'),
     ('MEAT', '콘비프', 'PACK', 'PANTRY', 365, '개봉 후엔 냉장 보관하고 빨리 소비하세요.','https://cookeep-images.s3.ap-northeast-2.amazonaws.com/ingredients/d8ec2c90-f815-4cb1-880d-e934a007530b.png'),
     ('MEAT', '양념갈비', 'PACK', 'FREEZER', 90, '양념 고기는 소분 냉동하면 해동이 쉬워요.','https://cookeep-images.s3.ap-northeast-2.amazonaws.com/ingredients/0bf70b03-cec9-4c7c-ab2b-10bfe3201930.png'),
+    ('MEAT', '카레용고기', 'PACK', 'FREEZER', 90, '먹기 좋은 크기로 썰어 소분 냉동하면 해동이 편해요.', 'https://cookeep-images.s3.ap-northeast-2.amazonaws.com/ingredients/03ce39ff-a604-4c42-ae1e-d2766eabb61f.png'),
+    ('MEAT', '볶음용고기', 'PACK', 'FREEZER', 90, '얇게 펼쳐 소분 냉동하면 빠르게 해동돼요.', 'https://cookeep-images.s3.ap-northeast-2.amazonaws.com/ingredients/c74d585d-c613-4210-864a-4331cd8da273.png'),
+    ('MEAT', '샤브샤브용고기', 'PACK', 'FREEZER', 90, '겹치지 않게 펼쳐 냉동하면 꺼내 쓰기 편해요.', 'https://cookeep-images.s3.ap-northeast-2.amazonaws.com/ingredients/1bfafa93-2c42-4825-af72-9eb312f962c9.png'),
 
     -- 해산물 (SEAFOOD)
     ('SEAFOOD', '고등어', 'PACK', 'FREEZER', 90, '구입 후 바로 소분 냉동하면 비린내가 줄어요.','https://cookeep-images.s3.ap-northeast-2.amazonaws.com/ingredients/d84f6e6c-e92d-49f7-afba-c673a8b44522.png'),
@@ -241,7 +245,6 @@ VALUES
     -- 유제품·계란 (DAIRY_EGG)
     ('DAIRY_EGG', '계란', 'PACK', 'FRIDGE', 14, '문 쪽보다 안쪽 칸에 보관하면 온도 변화가 적어요.','https://cookeep-images.s3.ap-northeast-2.amazonaws.com/ingredients/7700b81c-e330-4743-936a-84966ee5c2ed.png'),
     ('DAIRY_EGG', '우유', 'PACK', 'FRIDGE', 14, '개봉 후엔 뚜껑을 꼭 닫고 빨리 소비하세요.','https://cookeep-images.s3.ap-northeast-2.amazonaws.com/ingredients/0551d6e6-c434-42bd-ab06-c47b68223ade.png'),
-    ('DAIRY_EGG', '두유', 'PACK', 'FRIDGE', 14, '개봉 후엔 냉장 보관하고 빠르게 마셔주세요.','https://cookeep-images.s3.ap-northeast-2.amazonaws.com/ingredients/b4730755-254a-4997-866a-0d241d53d416.png'),
     ('DAIRY_EGG', '요거트', 'PACK', 'FRIDGE', 14, '개봉 후 깨끗한 스푼을 사용하면 오래가요.','https://cookeep-images.s3.ap-northeast-2.amazonaws.com/ingredients/d0a52c4a-07ef-4287-b0b7-fffd03e08e44.png'),
     ('DAIRY_EGG', '플레인요거트', 'PACK', 'FRIDGE', 14, '수분/이물 혼입을 피하면 품질이 오래가요.','https://cookeep-images.s3.ap-northeast-2.amazonaws.com/ingredients/f100d389-ab1f-472e-ba44-52c067eefbf3.png'),
     ('DAIRY_EGG', '딸기요거트', 'PACK', 'FRIDGE', 14, '개봉 후엔 가능한 빨리 섭취하세요.','https://cookeep-images.s3.ap-northeast-2.amazonaws.com/ingredients/546a5cde-1c92-4129-9b41-859d6ed865c8.png'),
@@ -275,6 +278,7 @@ VALUES
     ('GRAIN_RICE_NOODLE', '가래떡', 'BAG', 'FREEZER', 180, '1회분씩 잘라 소분 냉동하면 편해요.','https://cookeep-images.s3.ap-northeast-2.amazonaws.com/ingredients/ae8d19c8-06c7-4a48-9e50-159d1c8723fc.png'),
     ('GRAIN_RICE_NOODLE', '어묵떡', 'BAG', 'FREEZER', 180, '개봉 후 지퍼백 밀봉 보관이 좋아요.','https://cookeep-images.s3.ap-northeast-2.amazonaws.com/ingredients/881959d3-002f-4b0c-8669-464909e53a60.png'),
     ('GRAIN_RICE_NOODLE', '파스타면', 'BAG', 'PANTRY', 365, '직사광선을 피해 건조하고 서늘한 곳에 보관하세요.', 'https://cookeep-images.s3.ap-northeast-2.amazonaws.com/ingredients/3252f4c9-05a0-40cd-bb31-a8352e7737d6.png'),
+    ('GRAIN_RICE_NOODLE', '밀가루', 'BAG', 'PANTRY', 365, '습기와 벌레를 막기 위해 밀폐 용기에 보관하세요.', 'https://cookeep-images.s3.ap-northeast-2.amazonaws.com/ingredients/6fe58141-27a7-438e-81bd-bed97a1192a3.png'),
 
     -- 빵·베이커리 (BAKERY)
     ('BAKERY', '식빵', 'BAG', 'PANTRY', 5, '빵은 냉동 보관하면 곰팡이를 줄일 수 있어요.','https://cookeep-images.s3.ap-northeast-2.amazonaws.com/ingredients/9e2f9294-106f-4bb5-b6f3-e0f5d0ad19a5.png'),
@@ -326,6 +330,7 @@ VALUES
     ('SNACK_DESSERT', '파이', 'BAG', 'PANTRY', 180, '개봉 후엔 밀봉 보관이 좋아요.','https://cookeep-images.s3.ap-northeast-2.amazonaws.com/ingredients/c81d7b30-da77-4fb9-8d2d-c2a68f438c15.png'),
     ('SNACK_DESSERT', '웨하스', 'BAG', 'PANTRY', 180, '습기 차단을 위해 밀봉하세요.','https://cookeep-images.s3.ap-northeast-2.amazonaws.com/ingredients/4db88796-4843-4b52-a254-a03f8c5c8a2c.png'),
     ('SNACK_DESSERT', '초코바', 'BAG', 'PANTRY', 180, '더운 곳을 피하면 녹는 걸 막을 수 있어요.','https://cookeep-images.s3.ap-northeast-2.amazonaws.com/ingredients/0710add4-a6e4-4d68-854e-7de9cfa0d1c2.png'),
+    ('SNACK_DESSERT', '군밤', 'BAG', 'PANTRY', 3, '구입 후 빠르게 소비하고 남은 건 냉장 보관하세요.', 'https://cookeep-images.s3.ap-northeast-2.amazonaws.com/ingredients/207c2614-db28-40a6-bf6a-6bbd5aeaef68.png'),
 
     -- 음료 (BEVERAGE)
     ('BEVERAGE', '생수', 'BOTTLE', 'PANTRY', 180, '직사광선을 피하고 서늘한 곳에 보관하세요.','https://cookeep-images.s3.ap-northeast-2.amazonaws.com/ingredients/444dd13f-38bb-4411-9fdf-6f4a90ab91b4.png'),
@@ -336,6 +341,10 @@ VALUES
     ('BEVERAGE', '캔커피', 'BOTTLE', 'PANTRY', 180, '고온 보관은 피하는 게 좋아요.','https://cookeep-images.s3.ap-northeast-2.amazonaws.com/ingredients/10b2664b-8dc9-4a8f-be38-c5dfc43fa2a1.png'),
     ('BEVERAGE', '차음료', 'BOTTLE', 'PANTRY', 180, '개봉 후엔 냉장 보관이 좋아요.','https://cookeep-images.s3.ap-northeast-2.amazonaws.com/ingredients/b50d5db4-2b9c-4014-a729-d8bebcd713fb.png'),
     ('BEVERAGE', '밀크티', 'BOTTLE', 'PANTRY', 180, '개봉 후엔 냉장 보관하고 빠르게 소비하세요.','https://cookeep-images.s3.ap-northeast-2.amazonaws.com/ingredients/620e402f-9665-4be0-8f9c-e4f3570957ae.png'),
+    ('BEVERAGE', '토마토주스', 'BOTTLE', 'PANTRY', 180, '개봉 후엔 반드시 냉장 보관하고 빠르게 소비하세요.', 'https://cookeep-images.s3.ap-northeast-2.amazonaws.com/ingredients/611fd507-c689-4406-9d2e-8cef420a6fc6.png'),
+    ('BEVERAGE', '오렌지주스', 'BOTTLE', 'PANTRY', 180, '개봉 후엔 반드시 냉장 보관하고 빠르게 소비하세요.', 'https://cookeep-images.s3.ap-northeast-2.amazonaws.com/ingredients/c61c9b14-cc63-4d2b-9d3d-78f1702c62a6.png'),
+    ('BEVERAGE', '포도주스', 'BOTTLE', 'PANTRY', 180, '개봉 후엔 냉장 보관하고 빠르게 소비하세요.', 'https://cookeep-images.s3.ap-northeast-2.amazonaws.com/ingredients/ae67d31f-8d68-4eed-94db-89dc36e1db24.png'),
+    ('BEVERAGE', '사과주스', 'BOTTLE', 'PANTRY', 180, '개봉 후엔 냉장 보관하고 빠르게 소비하세요.', 'https://cookeep-images.s3.ap-northeast-2.amazonaws.com/ingredients/67ad1164-fe20-45e4-9daa-d376ae4b1517.png'),
 
     -- 절임·발효 (FERMENTED)
     ('FERMENTED', '김치', 'PACK', 'FRIDGE', 90, '김치는 보관 방법을 잘 지키면 더 오래 신선해요!','https://cookeep-images.s3.ap-northeast-2.amazonaws.com/ingredients/fdbb2831-f589-4a0f-bad5-7bc04308e1a8.png'),
@@ -353,5 +362,7 @@ VALUES
     ('BEAN', '두부면', 'PACK', 'FRIDGE', 5, '개봉 후 냉장 보관하며 물기를 제거하고 밀폐 용기에 보관하세요.', 'https://cookeep-images.s3.ap-northeast-2.amazonaws.com/ingredients/3d47bc7e-8b1f-4001-b127-49dc1e65e1f3.png'),
     ('BEAN', '병아리콩', 'PACK', 'FRIDGE', 30,'삶은 경우 냉장 보관하며 밀폐 용기에 넣어 보관하세요.', 'https://cookeep-images.s3.ap-northeast-2.amazonaws.com/ingredients/27c45ec1-095d-40ec-9013-b88428f91fd2.png'),
     ('BEAN', '렌틸콩', 'PACK', 'FRIDGE', 30, '삶은 경우 냉장 보관하며 밀폐 용기에 넣어 보관하세요.', 'https://cookeep-images.s3.ap-northeast-2.amazonaws.com/ingredients/ab6417aa-3107-4ce5-9b84-fab299129841.png'),
-    ('BEAN', '강낭콩', 'PACK', 'FRIDGE', 30, '삶은 경우 냉장 보관하며 밀폐 용기에 넣어 보관하세요.', 'https://cookeep-images.s3.ap-northeast-2.amazonaws.com/ingredients/a62b92c5-1d49-4813-8ea1-a6ded46b549a.png')
+    ('BEAN', '강낭콩', 'PACK', 'FRIDGE', 30, '삶은 경우 냉장 보관하며 밀폐 용기에 넣어 보관하세요.', 'https://cookeep-images.s3.ap-northeast-2.amazonaws.com/ingredients/a62b92c5-1d49-4813-8ea1-a6ded46b549a.png'),
+    ('BEAN', '두유', 'PACK', 'FRIDGE', 14, '개봉 후엔 냉장 보관하고 빠르게 마셔주세요.','https://cookeep-images.s3.ap-northeast-2.amazonaws.com/ingredients/b4730755-254a-4997-866a-0d241d53d416.png'),
+    ('BEAN', '은행', 'PIECE', 'FRIDGE', 7, '습기를 피해 밀봉 보관하세요.','https://cookeep-images.s3.ap-northeast-2.amazonaws.com/ingredients/39f036bb-8cd6-4161-ac49-8d03709f520d.png')
 ;
