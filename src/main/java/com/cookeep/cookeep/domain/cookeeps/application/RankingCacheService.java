@@ -25,7 +25,7 @@ public class RankingCacheService {
     private final WateringLogRepository wateringLogRepository;
     private final DailyRecipeRepository dailyRecipeRepository;
 
-    @Cacheable(cacheNames = "wateringRanking", key = "'current'")
+    @Cacheable(cacheNames = "wateringRanking", key = "#monthStart.toLocalDate().toString()")
     @Transactional(readOnly = true)
     public List<WateringRankDto> getWateringRanking(LocalDateTime monthStart, LocalDateTime monthEnd) {
         List<Object[]> results = wateringLogRepository.findTopWateringUsers(
@@ -49,7 +49,7 @@ public class RankingCacheService {
             .collect(Collectors.toList());
     }
 
-    @Cacheable(cacheNames = "recipeRanking", key = "'current'")
+    @Cacheable(cacheNames = "recipeRanking", key = "#weekStart.toLocalDate().toString()")
     @Transactional(readOnly = true)
     public List<RecipeRankDto> getRecipeRanking(LocalDateTime weekStart, LocalDateTime weekEnd) {
         List<DailyRecipe> results = dailyRecipeRepository.findTopRankedRecipes(
@@ -70,7 +70,11 @@ public class RankingCacheService {
             .collect(Collectors.toList());
     }
 
-    @CacheEvict(cacheNames = {"wateringRanking", "recipeRanking"}, allEntries = true)
-    public void evictAllRankingCaches() {
+    @CacheEvict(cacheNames = "wateringRanking", allEntries = true)
+    public void evictWateringRankingCache() {
+    }
+
+    @CacheEvict(cacheNames = "recipeRanking", allEntries = true)
+    public void evictRecipeRankingCache() {
     }
 }
