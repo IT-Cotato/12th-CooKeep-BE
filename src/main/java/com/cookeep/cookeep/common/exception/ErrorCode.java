@@ -222,6 +222,9 @@ public enum ErrorCode {
 
 	// NICKNAME
 	NICKNAME_GENERATION_UNAVAILABLE(HttpStatus.SERVICE_UNAVAILABLE,"닉네임을 생성할 수 없습니다. 잠시 후 다시 시도해주세요.", "NICKNAME-001"),
+
+	// RECIPE
+	AI_SERVER_FAILED(HttpStatus.SERVICE_UNAVAILABLE, "AI 서비스가 일시적으로 불안정합니다. 잠시 후 다시 시도해주세요.", "RECIPE-028"),
 	;
 
 	private final HttpStatus httpStatus;

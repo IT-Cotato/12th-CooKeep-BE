@@ -97,7 +97,7 @@ public class GeminiService {
                     .timeout(Duration.ofSeconds(120))
                     .retryWhen(
                             Retry.backoff(3, Duration.ofSeconds(2))
-                                    .maxBackoff(Duration.ofSeconds(10))
+                                    .maxBackoff(Duration.ofSeconds(5))
                                     .filter(this::isRetryableError)
                                     .doBeforeRetry(retrySignal ->
                                             log.warn("Gemini 재시도 중... attempt={}, cause={}",
@@ -120,11 +120,11 @@ public class GeminiService {
             }
 
             log.error("Gemini API 호출 실패 - status={}", e.getStatusCode(), e);
-            throw new AppException(ErrorCode.AI_SEARCH_FAILED);
+            throw new AppException(ErrorCode.AI_SERVER_FAILED);
 
         } catch (Exception e) {
             log.error("Gemini API 호출 실패", e);
-            throw new AppException(ErrorCode.AI_SEARCH_FAILED);
+            throw new AppException(ErrorCode.AI_SERVER_FAILED);
         }
     }
 

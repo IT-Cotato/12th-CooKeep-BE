@@ -66,6 +66,8 @@ public class AiRecipeService {
     private final UserRepository userRepository;
     private final AiRateLimitService rateLimitService;
     private final UserReader userReader;
+    private final AiRecipeCacheService aiRecipeCacheService;
+    private final GeminiQueueService geminiQueueService;
 
     // sessionId 유무에 따라 신규/재요청 로직 분기
     public AiRecipeResponseDto generateRecipe(Long userId, AiRecipeRequestDto request) {
@@ -115,7 +117,25 @@ public class AiRecipeService {
         boolean hasUrgent = userIngredients.stream()
                 .anyMatch(ui -> ui.getLeftDays() == 0);
 
-        // 4. 세션 생성
+        List<String> dislikedIngredients = getDislikedIngredients(userId);
+
+        // ── AI 호출을 세션 저장보다 먼저 ──
+        // 캐시 조회
+        String cacheKey = aiRecipeCacheService.buildCacheKey(
+                request.getIngredientIds(), request.getDifficulty(), dislikedIngredients);
+        GeminiRecipeResponseDto aiResponse = aiRecipeCacheService.get(cacheKey);
+
+        // 4. AI 레시피 생성 (이름 + 단위만 전달, AI가 quantity 생성)
+        if (aiResponse != null) {
+            // 신규 세션이므로 기존 제목 목록은 빈 리스트 → 캐시 제목 중복 없음
+            log.info("AI 레시피 캐시 히트. key={}", cacheKey);
+        } else {
+            aiResponse = geminiQueueService.generateRecipe(
+                    enrichedIngredients, request.getDifficulty(), dislikedIngredients);
+            aiRecipeCacheService.put(cacheKey, aiResponse);
+        }
+
+        // 5. 세션 생성
         AiSession session = AiSession.builder()
                 .userId(userId)
                 .difficulty(request.getDifficulty())
@@ -130,28 +150,17 @@ public class AiRecipeService {
 
         // 메시지 db에 저장
         saveInitialUserMessage(session, request);
-
-        List<String> dislikedIngredients = getDislikedIngredients(userId);
-
-        // 3. AI 레시피 생성 (이름 + 단위만 전달, AI가 quantity 생성)
-        GeminiRecipeResponseDto aiResponse = geminiService.generateRecipe(
-                enrichedIngredients,
-                request.getDifficulty(),
-                dislikedIngredients
-        );
-
-        // 4. 세션 제목 업데이트
+        // 세션 제목 업데이트
         updateSessionTitle(session, aiResponse);
 
-        // 5. 유튜브 검색어로 실제 영상 조회
+        // 6. 유튜브 검색어로 실제 영상 조회
         List<YoutubeReferenceDto> youtubeReferences =
                 youtubeSearchService.searchVideos(aiResponse.getYoutubeSearchQueries());
 
-        // 6. 레시피 저장
+        // 7. 레시피 저장
         saveAiMessageWithYoutubeReferences(session, aiResponse, youtubeReferences, MessageType.INITIAL_REQUEST, dislikedIngredients);
 
-
-        // 7. 응답 반환
+        // 8. 응답 반환
         return AiRecipeResponseDto.builder()
                 .sessionId(session.getId())
                 .changeCount(session.getAttemptNumber())
@@ -200,7 +209,7 @@ public class AiRecipeService {
         List<String> dislikedIngredients = getDislikedIngredients(userId);
 
         // 5. AI 호출 (제외 리스트 포함)
-        GeminiRecipeResponseDto aiResponse = geminiService.generateRecipeWithExclusion(
+        GeminiRecipeResponseDto aiResponse = geminiQueueService.generateRecipeWithExclusion(
                 ingredients,
                 session.getDifficulty(),
                 excludedTitles,
