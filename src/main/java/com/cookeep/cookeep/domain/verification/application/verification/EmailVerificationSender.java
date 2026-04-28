@@ -1,4 +1,4 @@
-package com.cookeep.cookeep.domain.verification.application.sms;
+package com.cookeep.cookeep.domain.verification.application.verification;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -39,7 +39,7 @@ public class EmailVerificationSender implements VerificationSender {
 			mailSender.send(message);
 			log.info("[EMAIL] send success. to={}", to);
 		} catch (Exception e) {
-			log.error("[EMAIL] CoolSMS send failed. to={}", to, e);
+			log.error("[EMAIL] email send failed. to={}", to, e);
 			throw new AppException(ErrorCode.EMAIL_PROVIDER_ERROR);
 		}
 	}

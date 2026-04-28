@@ -30,7 +30,7 @@ public class EmailConfig {
 		javaMailProperties.put("mail.transport.protocol", "smtp");
 		javaMailProperties.put("mail.smtp.auth", "true");
 		javaMailProperties.put("mail.smtp.starttls.enable", "true");
-		javaMailProperties.put("mail.debug", "true");
+		javaMailProperties.put("mail.debug", "false");
 		javaMailProperties.put("mail.smtp.ssl.trust", "smtp.gmail.com"); // gmail 인증서 신뢰
 		javaMailProperties.put("mail.smtp.ssl.protocols", "TLSv1.3"); // 최신 TLS 사용
 

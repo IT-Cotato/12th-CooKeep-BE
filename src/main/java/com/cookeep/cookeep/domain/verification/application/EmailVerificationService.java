@@ -10,7 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.cookeep.cookeep.common.exception.AppException;
 import com.cookeep.cookeep.common.exception.ErrorCode;
-import com.cookeep.cookeep.domain.verification.application.sms.VerificationSender;
+import com.cookeep.cookeep.domain.verification.application.verification.VerificationSender;
 import com.cookeep.cookeep.domain.verification.dao.EmailVerificationRepository;
 import com.cookeep.cookeep.domain.verification.entity.EmailVerification;
 import com.cookeep.cookeep.domain.verification.entity.VerificationPurpose;
@@ -41,12 +41,24 @@ public class EmailVerificationService {
 		return String.valueOf(random.nextInt(900_000) + 100_000);
 	}
 
+	// 실제 이메일은 대소문자 구분 X
+	// 사용자가 대소문자를 잘못 입력하는 경우를 방지해 소문자로 처리
+	// 여러 번 사용되므로 별도 메서드로 분리하였음
+	private String normalizeEmail(String email) {
+		if (email == null) {
+			throw new AppException(ErrorCode.INVALID_EMAIL);
+		}
+		return email.trim().toLowerCase();
+	}
+
 	@Transactional
 	public void sendCode(String email, VerificationPurpose purpose) {
 		LocalDateTime now = LocalDateTime.now();
 
+		String normalizedEmail = normalizeEmail(email);
+
 		// 재전송 쿨다운 체크
-		emailVerificationRepository.findTopByEmailAndPurposeOrderByCreatedAtDesc(email, purpose)
+		emailVerificationRepository.findTopByEmailAndPurposeOrderByCreatedAtDesc(normalizedEmail, purpose)
 			.ifPresent(latest -> {
 				if (latest.getCreatedAt().isAfter(now.minusSeconds(cooldownSeconds))) {
 					throw new AppException(ErrorCode.EMAIL_RESEND_TOO_FAST);
@@ -55,9 +67,6 @@ public class EmailVerificationService {
 
 		String code = generate6();
 
-		// 실제 이메일은 대소문자 구분 X
-		// 사용자가 대소문자를 잘못 입력하는 경우를 방지해 소문자로 처리
-		String normalizedEmail = email.trim().toLowerCase();
 
 		EmailVerification verification = EmailVerification.builder()
 			.email(normalizedEmail)
@@ -112,8 +121,10 @@ public class EmailVerificationService {
 	public void verifyCode(String email, VerificationPurpose purpose, String inputCode) {
 		LocalDateTime now = LocalDateTime.now();
 
+		String normalizedEmail = normalizeEmail(email);
+
 		EmailVerification verification = emailVerificationRepository
-			.findTopByEmailAndPurposeOrderByCreatedAtDesc(email, purpose)
+			.findTopByEmailAndPurposeOrderByCreatedAtDesc(normalizedEmail, purpose)
 			.orElseThrow(() -> new AppException(ErrorCode.VERIFICATION_NOT_FOUND));
 
 		// 이미 인증이 완료된 경우
@@ -146,9 +157,11 @@ public class EmailVerificationService {
 	@Transactional(readOnly = true)
 	public void assertVerified(String email, VerificationPurpose purpose) {
 
+		String normalizedEmail = normalizeEmail(email);
+
 		// 인증 요청 내역이 없는 경우
 		EmailVerification verification = emailVerificationRepository
-			.findTopByEmailAndPurposeOrderByCreatedAtDesc(email, purpose)
+			.findTopByEmailAndPurposeOrderByCreatedAtDesc(normalizedEmail, purpose)
 			.orElseThrow(() -> new AppException(ErrorCode.VERIFICATION_NOT_FOUND));
 
 		// 아직 인증이 완료되지 않은 경우
