@@ -12,6 +12,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.Email;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -23,22 +24,22 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Builder
-@Table(name = "sms_verifications")
-public class SmsVerification extends BaseEntity {
+@Table(name = "email_verifications")
+public class EmailVerification extends BaseEntity {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	private Long smsVerificationId;
+	private Long emailVerificationId;
 
-	@Column(nullable = false, length = 20)
-	// private String phoneE164;
-	private String phone;
+	@Email
+	@Column(length = 255, nullable = false)
+	private String email;
 
-	// SIGNUP / RESET_PASSWORD / CHANGE_PHONE
+	// SIGNUP / RESET_PASSWORD / CHANGE_EMAIL / PASSWORD_VERIFICATION
 	@Enumerated(EnumType.STRING)
 	@Column(nullable = false, length = 30)
 	private VerificationPurpose purpose;
 
-	@Column(nullable = false, length = 6)
+	@Column(nullable = false, length = 10)
 	private String code;
 
 	@Column(nullable = false)

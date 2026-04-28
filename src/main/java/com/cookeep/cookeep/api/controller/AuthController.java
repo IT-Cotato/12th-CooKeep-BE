@@ -72,7 +72,7 @@ public class AuthController {
 		return ResponseEntity.ok(DataResponse.from(authService.socialLogin(Provider.GOOGLE, code, redirectUri)));
 	}
 
-	@Operation(summary = "전화번호 회원가입 API")
+	@Operation(summary = "이메일 회원가입 API")
 	@ApiResponses(value = {
 		@ApiResponse(responseCode = "200", description = "회원가입 성공"),
 		@ApiResponse(responseCode = "400", description = "요청 파라미터 오류"),
@@ -83,7 +83,7 @@ public class AuthController {
 		return ResponseEntity.ok(DataResponse.from(authService.signUp(signupRequestDTO)));
 	}
 
-	@Operation(summary = "전화번호 로그인 API")
+	@Operation(summary = "이메일 로그인 API")
 	@PostMapping("/login")
 	@ApiResponses(value = {
 		@ApiResponse(responseCode = "200", description = "회원가입 성공"),
@@ -105,6 +105,7 @@ public class AuthController {
 		authService.resetPassword(resetPasswordRequestDTO);
 		return ResponseEntity.ok(DataResponse.ok());
 	}
+
 
 	@Operation(summary = "로그아웃 API")
 	@ApiResponses(value = {

@@ -28,12 +28,12 @@ public class VerificationController {
 	private final AuthService authService;
 	private final UserInfoService userInfoService;
 
-	// 회원가입 시 전화번호 인증 요청
-	@Operation(summary = "회원가입 시 SMS 인증 요청 API")
+	// 회원가입 시 이메일 인증 요청
+	@Operation(summary = "회원가입 시 이메일 인증 요청 API")
 	@ApiResponses(value = {
 		@ApiResponse(responseCode = "200", description = "요청 성공"),
 		@ApiResponse(responseCode = "400", description = "요청 파라미터 오류 (@Valid 검증 실패)"),
-		@ApiResponse(responseCode = "409", description = "이미 사용중인 전화번호"),
+		@ApiResponse(responseCode = "409", description = "이미 사용중인 이메일"),
 		@ApiResponse(responseCode = "429", description = "인증 재요청이 너무 빠름"),
 		@ApiResponse(responseCode = "500", description = "서버 오류")
 	})
@@ -45,8 +45,8 @@ public class VerificationController {
 		return ResponseEntity.ok(DataResponse.ok());
 	}
 
-	// 회원가입 전화번호 인증 확인
-	@Operation(summary = "회원가입 시 SMS 인증 확인 API")
+	// 회원가입 이메일 인증 확인
+	@Operation(summary = "회원가입 시 이메일 인증 확인 API")
 	@ApiResponses(value = {
 		@ApiResponse(responseCode = "200", description = "확인 성공"),
 		@ApiResponse(responseCode = "400", description = "요청 오류 (형식 오류 또는 인증 실패)"),
@@ -62,12 +62,12 @@ public class VerificationController {
 		return ResponseEntity.ok(DataResponse.ok());
 	}
 
-	// 비밀번호 찾기 시 전화번호 인증 요청
-	@Operation(summary = "비밀번호 찾기 시 SMS 인증 요청 API")
+	// 비밀번호 찾기 시 이메일 인증 요청
+	@Operation(summary = "비밀번호 찾기 시 이메일 인증 요청 API")
 	@ApiResponses(value = {
 		@ApiResponse(responseCode = "200", description = "요청 성공"),
 		@ApiResponse(responseCode = "400", description = "요청 파라미터 오류 (@Valid 검증 실패)"),
-		@ApiResponse(responseCode = "404", description = "가입된 번호가 없음"),
+		@ApiResponse(responseCode = "404", description = "가입된 이메일이 없음"),
 		@ApiResponse(responseCode = "429", description = "인증 재요청이 너무 빠름"),
 		@ApiResponse(responseCode = "500", description = "서버 오류")
 	})
@@ -79,8 +79,8 @@ public class VerificationController {
 		return ResponseEntity.ok(DataResponse.ok());
 	}
 
-	// 비밀번호 찾기 시 전화번호 인증 확인
-	@Operation(summary = "비밀번호 찾기 시 SMS 인증 확인 API")
+	// 비밀번호 찾기 시 이메일 인증 확인
+	@Operation(summary = "비밀번호 찾기 시 이메일 인증 확인 API")
 	@ApiResponses(value = {
 		@ApiResponse(responseCode = "200", description = "확인 성공"),
 		@ApiResponse(responseCode = "400", description = "요청 오류 (형식 오류 또는 인증 실패)"),
@@ -96,29 +96,29 @@ public class VerificationController {
 		return ResponseEntity.ok(DataResponse.ok());
 	}
 
-	// 전화번호 변경 시 전화번호 인증 요청
-	@Operation(summary = "전화번호 변경 시 SMS 인증 요청 API")
+	// 이메일 변경 시 이메일 인증 요청
+	@Operation(summary = "이메일 변경 시 이메일 인증 요청 API")
 	@ApiResponses(value = {
 		@ApiResponse(responseCode = "200", description = "요청 성공"),
 		@ApiResponse(responseCode = "400", description = "요청 오류 (@Valid 검증 실패)"),
 		@ApiResponse(responseCode = "401", description = "회원 인증 실패, AccessToken이 없거나 유효하지 않음"),
 		@ApiResponse(responseCode = "403", description = "접근 권한 없음"),
-		@ApiResponse(responseCode = "409", description = "이미 사용 중인 전화번호"),
+		@ApiResponse(responseCode = "409", description = "이미 사용 중인 이메일"),
 		@ApiResponse(responseCode = "429", description = "인증 재요청이 너무 빠름"),
 		@ApiResponse(responseCode = "500", description = "서버 오류")
 	})
-	@PostMapping("/users/me/phone/send-code")
-	public ResponseEntity<DataResponse<Void>> sendChangePhoneCode(
+	@PostMapping("/users/me/email/send-code")
+	public ResponseEntity<DataResponse<Void>> sendChangeEmailCode(
 		@AuthenticationPrincipal UserPrincipal principal,
 		@Valid @RequestBody SendCodeRequestDTO sendCodeRequestDTO
 	) {
 		Long userId = principal.userId();
-		userInfoService.sendChangePhoneCode(userId, sendCodeRequestDTO);
+		userInfoService.sendChangeEmailCode(userId, sendCodeRequestDTO);
 		return ResponseEntity.ok(DataResponse.ok());
 	}
 
-	// 전화번호 변경 시 전화번호 인증 확인
-	@Operation(summary = "전화번호 변경 시 SMS 인증 확인 API")
+	// 이메일 변경 시 이메일 인증 확인
+	@Operation(summary = "이메일 변경 시 이메일 인증 확인 API")
 	@ApiResponses(value = {
 		@ApiResponse(responseCode = "200", description = "확인 성공"),
 		@ApiResponse(responseCode = "400", description = "요청 오류 (형식 오류 또는 인증 실패)"),
@@ -128,21 +128,21 @@ public class VerificationController {
 		@ApiResponse(responseCode = "429", description = "인증 시도 횟수 초과"),
 		@ApiResponse(responseCode = "500", description = "서버 오류")
 	})
-	@PostMapping("/users/me/phone/verify-code")
-	public ResponseEntity<DataResponse<Void>> verifyChangePhoneCode(
+	@PostMapping("/users/me/email/verify-code")
+	public ResponseEntity<DataResponse<Void>> verifyChangeEmailCode(
 		@AuthenticationPrincipal UserPrincipal principal,
 		@Valid @RequestBody VerifyCodeRequestDTO verifyCodeRequestDTO
 	) {
 		Long userId = principal.userId();
-		userInfoService.verifyChangePhoneCode(userId, verifyCodeRequestDTO);
+		userInfoService.verifyChangeEmailCode(userId, verifyCodeRequestDTO);
 		return ResponseEntity.ok(DataResponse.ok());
 	}
 
-	// 비밀번호 검증 실패 시 전화번호 인증 요청
-	@Operation(summary = "비밀번호 검증 실패 시 전화번호 인증 요청 API")
+	// 비밀번호 검증 실패 시 이메일 인증 요청
+	@Operation(summary = "비밀번호 검증 실패 시 이메일 인증 요청 API")
 	@ApiResponses(value = {
 		@ApiResponse(responseCode = "200", description = "요청 성공"),
-		@ApiResponse(responseCode = "400", description = "요청 오류 (@Valid 검증 실패, 전화번호 불일치)"),
+		@ApiResponse(responseCode = "400", description = "요청 오류 (@Valid 검증 실패, 이메일 불일치)"),
 		@ApiResponse(responseCode = "401", description = "회원 인증 실패, AccessToken이 없거나 유효하지 않음"),
 		@ApiResponse(responseCode = "403", description = "접근 권한 없음"),
 		@ApiResponse(responseCode = "429", description = "인증 재요청이 너무 빠름"),
@@ -158,11 +158,11 @@ public class VerificationController {
 		return ResponseEntity.ok(DataResponse.ok());
 	}
 
-	// 비밀번호 검증 실패 시 전화번호 인증 확인
-	@Operation(summary = "비밀번호 검증 실패 시 전화번호 인증 확인 API")
+	// 비밀번호 검증 실패 시 이메일 인증 확인
+	@Operation(summary = "비밀번호 검증 실패 시 이메일 인증 확인 API")
 	@ApiResponses(value = {
 		@ApiResponse(responseCode = "200", description = "확인 성공"),
-		@ApiResponse(responseCode = "400", description = "요청 오류 (형식 오류 또는 인증 실패, 전화번호 불일치)"),
+		@ApiResponse(responseCode = "400", description = "요청 오류 (형식 오류 또는 인증 실패, 이메일 불일치)"),
 		@ApiResponse(responseCode = "401", description = "회원 인증 실패, AccessToken이 없거나 유효하지 않음"),
 		@ApiResponse(responseCode = "403", description = "접근 권한 없음"),
 		@ApiResponse(responseCode = "404", description = "인증 요청 내역이 없음"),

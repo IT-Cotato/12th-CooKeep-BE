@@ -8,13 +8,6 @@ import jakarta.validation.constraints.Pattern;
 
 @PasswordMatch // password와 passwordConfirm 일치 여부를 확인하는 커스텀 어노테이션
 public record SignupRequestDTO(
-	@NotBlank(message = "전화번호는 필수 입력 값입니다.")
-	@Pattern(
-		regexp = "^010\\d{8}$",
-		message = "휴대폰 번호를 다시 확인해주세요"
-	)
-	String phoneNumber,
-
 	@NotBlank(message = "이메일은 필수 입력 값입니다.")
 	@Email(message = "이메일 주소를 다시 확인해주세요")
 	String email,

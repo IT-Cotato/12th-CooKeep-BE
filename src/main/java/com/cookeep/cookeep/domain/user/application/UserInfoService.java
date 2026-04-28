@@ -17,7 +17,7 @@ import com.cookeep.cookeep.domain.user.dao.UserAuthRepository;
 import com.cookeep.cookeep.domain.user.dao.UserRepository;
 import com.cookeep.cookeep.domain.user.entity.Provider;
 import com.cookeep.cookeep.domain.user.entity.User;
-import com.cookeep.cookeep.domain.verification.application.SmsVerificationService;
+import com.cookeep.cookeep.domain.verification.application.EmailVerificationService;
 import com.cookeep.cookeep.domain.verification.entity.VerificationPurpose;
 
 import lombok.RequiredArgsConstructor;
@@ -35,7 +35,7 @@ public class UserInfoService {
 
     private final UserRepository userRepository;
     private final UserReader userReader;
-    private final SmsVerificationService smsVerificationService;
+    private final EmailVerificationService emailVerificationService;
     private final UserAuthRepository userAuthRepository;
     private final PasswordEncoder passwordEncoder;
 
@@ -69,7 +69,7 @@ public class UserInfoService {
         }
 
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+            .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
 
         String newNickname = request.getNickname();
 
@@ -86,41 +86,41 @@ public class UserInfoService {
         user.updateNickname(newNickname);
     }
 
-    // 전화번호 변경 시 전화번호 인증 요청
-    public void sendChangePhoneCode(Long userId, SendCodeRequestDTO sendCodeRequestDTO) {
+    // 이메일 변경 시 이메일 인증 요청
+    public void sendChangeEmailCode(Long userId, SendCodeRequestDTO sendCodeRequestDTO) {
         User user = userReader.readById(userId);
-        String newPhoneNumber = sendCodeRequestDTO.phoneNumber();
+        String newEmail = sendCodeRequestDTO.email();
 
-        String currentPhoneNumber = user.getPhoneNumber();
+        String currentEmail = user.getEmail();
 
-        // 현재 등록된 전화번호와 동일한 경우
-        if (newPhoneNumber.equals(currentPhoneNumber)) {
-            throw new AppException(ErrorCode.SAME_AS_CURRENT_PHONE_NUMBER);
+        // 현재 등록된 이메일과 동일한 경우
+        if (newEmail.equals(currentEmail)) {
+            throw new AppException(ErrorCode.SAME_AS_CURRENT_EMAIL);
         }
 
-        // 이미 등록된 번호인지 확인
-        if (userRepository.existsByPhoneNumber(newPhoneNumber)) {
-            throw new AppException(ErrorCode.USER_PHONE_ALREADY_EXISTS);
+        // 이미 등록된 이메일인지 확인
+        if (userRepository.existsByEmail(newEmail)) {
+            throw new AppException(ErrorCode.USER_EMAIL_ALREADY_EXISTS);
         }
 
-        smsVerificationService.sendCode(newPhoneNumber, VerificationPurpose.CHANGE_PHONE);
+        emailVerificationService.sendCode(newEmail, VerificationPurpose.CHANGE_EMAIL);
     }
 
-    // 전화번호 변경 시 전화번호 인증 확인
+    // 이메일 변경 시 이메일 인증 확인
     @Transactional
-    public void verifyChangePhoneCode(Long userId, VerifyCodeRequestDTO verifyCodeRequestDTO) {
+    public void verifyChangeEmailCode(Long userId, VerifyCodeRequestDTO verifyCodeRequestDTO) {
         User user = userReader.readById(userId);
-        String newPhoneNumber = verifyCodeRequestDTO.phoneNumber();
+        String newEmail = verifyCodeRequestDTO.email();
         String code = verifyCodeRequestDTO.code();
 
-        // 이미 등록된 번호인지 재확인
-        if (userRepository.existsByPhoneNumber(newPhoneNumber)) {
-            throw new AppException(ErrorCode.USER_PHONE_ALREADY_EXISTS);
+        // 이미 등록된 이메일인지 재확인
+        if (userRepository.existsByEmail(newEmail)) {
+            throw new AppException(ErrorCode.USER_EMAIL_ALREADY_EXISTS);
         }
 
-        smsVerificationService.verifyCode(newPhoneNumber, VerificationPurpose.CHANGE_PHONE, code);
+        emailVerificationService.verifyCode(newEmail, VerificationPurpose.CHANGE_EMAIL, code);
 
-        user.updatePhoneNumber(newPhoneNumber);
+        user.updateEmail(newEmail);
     }
 
     // 이메일 변경
@@ -193,32 +193,32 @@ public class UserInfoService {
         );
     }
 
-    // 비밀번호 검증 실패 시 전화번호 인증 요청
+    // 비밀번호 검증 실패 시 이메일 인증 요청
     public void sendPasswordVerificationCode(Long userId, SendCodeRequestDTO sendCodeRequestDTO) {
         User user = userReader.readById(userId);
-        String phoneNumber = sendCodeRequestDTO.phoneNumber();
+        String email = sendCodeRequestDTO.email();
 
         // 현재 등록된 전화번호와 동일하지 않은 경우
-        if (!phoneNumber.equals(user.getPhoneNumber())) {
-            throw new AppException(ErrorCode.REGISTERED_PHONE_NUMBER_MISMATCH);
+        if (!email.equals(user.getEmail())) {
+            throw new AppException(ErrorCode.REGISTERED_EMAIL_MISMATCH);
         }
 
-        smsVerificationService.sendCode(phoneNumber, VerificationPurpose.PASSWORD_VERIFICATION);
+        emailVerificationService.sendCode(email, VerificationPurpose.PASSWORD_VERIFICATION);
     }
 
-    // 비밀번호 검증 실패 시 전화번호 인증 확인
+    // 비밀번호 검증 실패 시 이메일 인증 확인
     @Transactional
     public void verifyPasswordVerificationCode(Long userId, VerifyCodeRequestDTO verifyCodeRequestDTO) {
         User user = userReader.readById(userId);
-        String phoneNumber = verifyCodeRequestDTO.phoneNumber();
+        String email = verifyCodeRequestDTO.email();
         String code = verifyCodeRequestDTO.code();
 
-        // 현재 등록된 전화번호와 동일하지 않은 경우
-        if (!phoneNumber.equals(user.getPhoneNumber())) {
-            throw new AppException(ErrorCode.REGISTERED_PHONE_NUMBER_MISMATCH);
+        // 현재 등록된 이메일과 동일하지 않은 경우
+        if (!email.equals(user.getEmail())) {
+            throw new AppException(ErrorCode.REGISTERED_EMAIL_MISMATCH);
         }
 
-        smsVerificationService.verifyCode(phoneNumber, VerificationPurpose.PASSWORD_VERIFICATION, code);
+        emailVerificationService.verifyCode(email, VerificationPurpose.PASSWORD_VERIFICATION, code);
 
         user.updatePasswordCnt(0);
     }
