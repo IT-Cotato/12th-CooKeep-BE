@@ -38,6 +38,13 @@ spring:
         jdbc:
           time_zone: Asia/Seoul
 
+  flyway:
+    enabled: true
+    baseline-on-migrate: true   # 기존 DB에 baseline 자동 적용
+    baseline-version: 1         # V1을 baseline으로 지정
+    locations: classpath:db/migration
+    out-of-order: false         # 버전 순서 강제
+
 kakao:
   auth:
     client: ${KAKAO_CLIENT_ID}
