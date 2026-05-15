@@ -39,7 +39,7 @@ public class CookieLog extends BaseEntity {
 
         BONUS_WEEKLY_GOAL_ACHIEVE(1),      // 주간 목표 달성
         BONUS_URGENT_INGREDIENT_USE(3),    // 유통기한 임박 재료 레시피 + 소비
-        BONUS_PLANT_HARVEST_REWARD(15),    // 식물 키우기 완료 보너스
+        BONUS_PLANT_HARVEST_REWARD(20),    // 식물 키우기 완료 보너스
         BONUS_RETENTION_REWARD(1),         // 14일 이상 미접속 후 복귀 보너스
 
         // --- 차감 ---
