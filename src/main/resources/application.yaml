@@ -38,16 +38,6 @@ spring:
         jdbc:
           time_zone: Asia/Seoul
 
-  flyway:
-    enabled: true
-    baseline-on-migrate: true   # 기존 DB에 baseline 자동 적용
-    baseline-version: 3         # V1을 baseline으로 지정
-    locations: classpath:db/migration
-    out-of-order: false         # 버전 순서 강제
-    url: ${spring.datasource.url}
-    user: ${spring.datasource.username}
-    password: ${spring.datasource.password}
-
 kakao:
   auth:
     client: ${KAKAO_CLIENT_ID}
@@ -85,7 +75,6 @@ aws:
 logging:
   level:
     org.springframework.security: DEBUG
-    org.flywaydb: DEBUG
 
 sms:
   api-key: ${SMS_KEY}
