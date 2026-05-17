@@ -4,8 +4,10 @@ import com.cookeep.cookeep.common.exception.AppException;
 import com.cookeep.cookeep.common.exception.ErrorCode;
 import com.cookeep.cookeep.domain.cookie.dao.CookieLogRepository;
 import com.cookeep.cookeep.domain.cookie.dao.DailyCookieGrantRepository;
+import com.cookeep.cookeep.domain.cookie.dao.PendingCookieRewardRepository;
 import com.cookeep.cookeep.domain.cookie.entity.CookieLog;
 import com.cookeep.cookeep.domain.cookie.entity.DailyCookieGrant;
+import com.cookeep.cookeep.domain.cookie.entity.PendingCookieReward;
 import com.cookeep.cookeep.domain.user.dao.UserRepository;
 import com.cookeep.cookeep.domain.user.entity.User;
 import lombok.RequiredArgsConstructor;
@@ -22,6 +24,7 @@ public class CookieService {
     private final UserRepository userRepository;
     private final CookieLogRepository cookieLogRepository;
     private final DailyCookieGrantRepository dailyCookieGrantRepository;
+    private final PendingCookieRewardRepository pendingCookieRewardRepository;
 
     // 현재 보유 쿠키 조회
     @Transactional(readOnly = true)
@@ -106,5 +109,23 @@ public class CookieService {
         return dailyCookieGrantRepository.existsByUser_UserIdAndGrantTypeAndGrantDate(
                 userId, type, LocalDate.now()
         );
+    }
+
+    // 대기 중인 보상 쿠키 수령 후 최종 쿠키 개수 반환
+    @Transactional
+    public int claimPendingReward(Long userId, Long pendingRewardId) {
+        PendingCookieReward pending = pendingCookieRewardRepository
+                .findByIdForUpdate(pendingRewardId)
+                .orElseThrow(() -> new AppException(ErrorCode.PENDING_REWARD_NOT_FOUND));
+
+        if (!pending.getUser().getUserId().equals(userId)) {
+            throw new AppException(ErrorCode.PENDING_REWARD_FORBIDDEN);
+        }
+
+        pending.claim(); // 엔티티에서 CLAIMED 상태 검증 및 플래그 변경
+
+        updateCookie(userId, pending.getRewardType()); // 실제 쿠키 지급
+
+        return getMyCookies(userId); // 지급 후 최종 쿠키 개수 반환
     }
 }
