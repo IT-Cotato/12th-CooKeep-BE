@@ -3,10 +3,13 @@ package com.cookeep.cookeep.domain.plant.application;
 import com.cookeep.cookeep.api.dto.response.GrowingPlantResponseDto;
 import com.cookeep.cookeep.api.dto.response.MyPlantResponseDto;
 import com.cookeep.cookeep.api.dto.response.RegisterPlantResponseDto;
+import com.cookeep.cookeep.api.dto.response.WaterResponseDto;
 import com.cookeep.cookeep.common.exception.AppException;
 import com.cookeep.cookeep.common.exception.ErrorCode;
 import com.cookeep.cookeep.domain.cookie.application.CookieService;
+import com.cookeep.cookeep.domain.cookie.dao.PendingCookieRewardRepository;
 import com.cookeep.cookeep.domain.cookie.entity.CookieLog;
+import com.cookeep.cookeep.domain.cookie.entity.PendingCookieReward;
 import com.cookeep.cookeep.domain.plant.dao.PlantRepository;
 import com.cookeep.cookeep.domain.plant.dao.UserPlantRepository;
 import com.cookeep.cookeep.domain.plant.dao.WateringLogRepository;
@@ -35,6 +38,7 @@ public class UserPlantService {
     private final PlantRepository plantRepository;
     private final CookieService cookieService;
     private final UserReader userReader;
+    private final PendingCookieRewardRepository pendingCookieRewardRepository;
 
     // 미접속 일수 기반 식물 상태 계산 및 성장 정지 처리 (스케줄러에서 호출)
     @Transactional
@@ -174,9 +178,9 @@ public class UserPlantService {
         userPlantRepository.delete(userPlant);
     }
 
-    // 식물에게 물 주기 (무료 물주기 여부 반환)
+    // 식물에게 물 주기
     @Transactional
-    public boolean giveWater(Long userId, Long userPlantId) {
+    public WaterResponseDto giveWater(Long userId, Long userPlantId) {
         // 1. 식물 조회
         UserPlant userPlant = userPlantRepository.findById(userPlantId)
                 .orElseThrow(() -> new AppException(ErrorCode.PLANT_NOT_FOUND)); // 404
@@ -205,12 +209,22 @@ public class UserPlantService {
                 .build();
         wateringLogRepository.save(log);
 
-        // 5. 수확 완료 체크 및 보상 지급
+        // 5. 수확 완료 시 즉시 지급 대신 Pending Reward 생성
+        Long pendingRewardId = null;
         if (userPlant.getIsHarvested()) {
-            cookieService.updateCookie(userId, CookieLog.CookieLogType.BONUS_PLANT_HARVEST_REWARD);
+            PendingCookieReward pending = PendingCookieReward.builder()
+                    .user(user)
+                    .rewardType(CookieLog.CookieLogType.BONUS_PLANT_HARVEST_REWARD)
+                    .status(PendingCookieReward.PendingRewardStatus.PENDING)
+                    .build();
+            pendingRewardId = pendingCookieRewardRepository.save(pending).getPendingRewardId();
         }
 
-        return isFirstWatering;
+        return WaterResponseDto.builder()
+                .isFreeWatering(isFirstWatering)
+                .isJustHarvested(userPlant.getIsHarvested())
+                .pendingRewardId(pendingRewardId)
+                .build();
     }
 
     // 식물 살리기
