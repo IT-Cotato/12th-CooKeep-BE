@@ -11,6 +11,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.cookeep.cookeep.domain.notification.dao.WebPushSubscriptionRepository;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -63,6 +64,7 @@ public class AuthService {
 	private final NicknameGenerator nicknameGenerator;
 	private final EmailVerificationService emailVerificationService;
 	private final CookieService cookieService;
+	private final WebPushSubscriptionRepository webPushSubscriptionRepository;
 
 	// 액세스 토큰이 만료되었을 경우 리프레쉬 토큰으로 액세스 토큰 갱신
 	@Transactional
@@ -132,6 +134,9 @@ public class AuthService {
 	}
 
 	private TokenPair issueTokensAndUpsertSession(User user) {
+		// 기존 구독 삭제 (새 기기로 갱신)
+		webPushSubscriptionRepository.deleteAllByUser_UserId(user.getUserId());
+
 		boolean isRewarded = issueComebackReward(user);
 		user.updateLastAccessAt(LocalDateTime.now());
 
@@ -437,6 +442,9 @@ public class AuthService {
 	public void logout(Long userId) {
 		// 로그아웃 시 refreshToken 저장된 userSession 폐기
 		userSessionRepository.deleteByUser_UserId(userId);
+
+		// 알림 구독 삭제
+		webPushSubscriptionRepository.deleteAllByUser_UserId(userId);
 	}
 
 	@Transactional
@@ -453,5 +461,7 @@ public class AuthService {
 
 		// 탈퇴 시 refreshToken도 함께 무효화
 		userSessionRepository.deleteByUser_UserId(userId);
+		// 알림 구독 삭제
+		webPushSubscriptionRepository.deleteAllByUser_UserId(userId);
 	}
 }
