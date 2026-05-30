@@ -224,6 +224,7 @@ public class UserPlantService {
                 .isFreeWatering(isFirstWatering)
                 .isJustHarvested(userPlant.getIsHarvested())
                 .pendingRewardId(pendingRewardId)
+                .cookieCnt(user.getCookieCnt())
                 .build();
     }
 
