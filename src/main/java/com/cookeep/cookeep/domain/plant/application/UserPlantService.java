@@ -185,11 +185,9 @@ public class UserPlantService {
         UserPlant userPlant = userPlantRepository.findById(userPlantId)
                 .orElseThrow(() -> new AppException(ErrorCode.PLANT_NOT_FOUND)); // 404
 
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND)); // 404
-
-        // 2. 권한 체크
-        if (!userPlant.getUser().getUserId().equals(userId)) {
+        // 2. 권한 체크 + user 참조 획득 (지연 로딩 1회)
+        User user = userPlant.getUser();
+        if (!user.getUserId().equals(userId)) {
             throw new AppException(ErrorCode.NOT_MY_PLANT); // 403
         }
 
@@ -212,11 +210,7 @@ public class UserPlantService {
         // 5. 수확 완료 시 즉시 지급 대신 Pending Reward 생성
         Long pendingRewardId = null;
         if (userPlant.getIsHarvested()) {
-            PendingCookieReward pending = PendingCookieReward.builder()
-                    .user(user)
-                    .rewardType(CookieLog.CookieLogType.BONUS_PLANT_HARVEST_REWARD)
-                    .status(PendingCookieReward.PendingRewardStatus.PENDING)
-                    .build();
+            PendingCookieReward pending = new PendingCookieReward(user, CookieLog.CookieLogType.BONUS_PLANT_HARVEST_REWARD);
             pendingRewardId = pendingCookieRewardRepository.save(pending).getPendingRewardId();
         }
 

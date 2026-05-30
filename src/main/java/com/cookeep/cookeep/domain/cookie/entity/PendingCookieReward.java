@@ -10,8 +10,6 @@ import lombok.*;
 @Entity
 @Table(name = "pending_cookie_rewards")
 @Getter
-@Builder
-@AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class PendingCookieReward extends BaseEntity {
 
@@ -30,6 +28,13 @@ public class PendingCookieReward extends BaseEntity {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private PendingRewardStatus status;
+
+    // status는 생성 시 항상 PENDING으로 고정
+    public PendingCookieReward(User user, CookieLog.CookieLogType rewardType) {
+        this.user = user;
+        this.rewardType = rewardType;
+        this.status = PendingRewardStatus.PENDING;
+    }
 
     public void claim() {
         if (status == PendingRewardStatus.CLAIMED) {
