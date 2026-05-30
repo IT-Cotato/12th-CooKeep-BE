@@ -3,6 +3,7 @@ package com.cookeep.cookeep.api.controller;
 import com.cookeep.cookeep.api.dto.response.GrowingPlantResponseDto;
 import com.cookeep.cookeep.api.dto.response.MyPlantResponseDto;
 import com.cookeep.cookeep.api.dto.response.RegisterPlantResponseDto;
+import com.cookeep.cookeep.api.dto.response.WaterResponseDto;
 import com.cookeep.cookeep.common.dto.DataResponse;
 import com.cookeep.cookeep.domain.plant.application.UserPlantService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -87,7 +88,7 @@ public class MyPlantController {
         return ResponseEntity.ok(DataResponse.from(null));
     }
 
-    @Operation(summary = "식물 물 주기", description = "보유한 식물에게 물을 줍니다.")
+    @Operation(summary = "식물 물 주기", description = "보유한 식물에게 물을 줍니다. 수확 완료 시 pendingRewardId가 반환되며, 프론트는 애니메이션 후 /api/cookies/pending/{pendingRewardId}/claim을 호출해야 합니다.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "물 주기 성공"),
             @ApiResponse(responseCode = "400", description = "이미 수확했거나 얼어있는 상태"),
@@ -95,12 +96,11 @@ public class MyPlantController {
             @ApiResponse(responseCode = "404", description = "식물을 찾을 수 없음")
     })
     @PostMapping("/{userPlantId}/water")
-    public ResponseEntity<DataResponse<String>> giveWater(
+    public ResponseEntity<DataResponse<WaterResponseDto>> giveWater(
             @AuthenticationPrincipal(expression = "userId") Long userId,
             @PathVariable Long userPlantId) {
-        boolean isFreeWatering = userPlantService.giveWater(userId, userPlantId);
-        String message = isFreeWatering ? "무료 물주기가 완료되었습니다." : "물주기가 완료되었습니다.";
-        return ResponseEntity.ok(DataResponse.from(message));
+        WaterResponseDto result = userPlantService.giveWater(userId, userPlantId);
+        return ResponseEntity.ok(DataResponse.from(result));
     }
 
     @Operation(summary = "식물 다시 살리기", description = "성장이 정지된(isFrozen=true) 식물을 쿠키를 사용하여 다시 살립니다.")

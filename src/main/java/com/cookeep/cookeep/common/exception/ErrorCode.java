@@ -35,6 +35,7 @@ public enum ErrorCode {
 
 	// COOKIE
 	NOT_ENOUGH_COOKIES(HttpStatus.BAD_REQUEST, "보유한 쿠키가 부족합니다.", "COOKIE-001"),
+	PENDING_REWARD_ALREADY_CLAIMED(HttpStatus.BAD_REQUEST, "이미 수령한 보상입니다.", "COOKIE-002"),
 
 	// RECIPE
 	INVALID_INGREDIENT_TYPE(HttpStatus.BAD_REQUEST, "유효하지 않은 재료 타입입니다.", "RECIPE-001"),
@@ -109,6 +110,9 @@ public enum ErrorCode {
 	// PLANT
 	NOT_MY_PLANT(HttpStatus.FORBIDDEN, "해당 식물에 대한 권한이 없습니다.", "PLANT-001"),
 
+	// COOKIE
+	PENDING_REWARD_FORBIDDEN(HttpStatus.FORBIDDEN, "해당 보상에 대한 권한이 없습니다.", "COOKIE-003"),
+
 	// RECIPE
 	AI_SESSION_FORBIDDEN(HttpStatus.FORBIDDEN, "본인의 대화 세션이 아닙니다.", "RECIPE-015"),
 
@@ -128,6 +132,9 @@ public enum ErrorCode {
 
 	// PLANT
 	PLANT_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 식물입니다.", "PLANT-002"),
+
+	// COOKIE
+	PENDING_REWARD_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 보상입니다.", "COOKIE-004"),
 
 	// INGREDIENT
 	INGREDIENT_REFERENCE_NOT_FOUND(HttpStatus.NOT_FOUND, "해당 식재료를 찾을 수 없습니다.", "INGREDIENT-006"),
