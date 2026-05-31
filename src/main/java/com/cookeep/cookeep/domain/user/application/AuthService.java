@@ -135,7 +135,7 @@ public class AuthService {
 
 	private TokenPair issueTokensAndUpsertSession(User user) {
 		// 기존 구독 삭제 (새 기기로 갱신)
-		webPushSubscriptionRepository.deleteAllByUser_UserId(user.getUserId());
+		//webPushSubscriptionRepository.deleteAllByUser_UserId(user.getUserId());
 
 		boolean isRewarded = issueComebackReward(user);
 		user.updateLastAccessAt(LocalDateTime.now());

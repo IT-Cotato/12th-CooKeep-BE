@@ -51,6 +51,9 @@ public class WebPushSubscriptionService {
             return WebPushSubscriptionResponseDto.subscribed();
         }
 
+        // 기존 구독 삭제 후 새 구독 등록 (유저 당 한 기기만 등록)
+        webPushSubscriptionRepository.deleteAllByUser_UserId(userId);
+
         WebPushSubscription subscription = WebPushSubscription.builder()
                 .user(user)
                 .endpoint(request.getEndpoint())
