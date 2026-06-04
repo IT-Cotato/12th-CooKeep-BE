@@ -115,7 +115,7 @@ public class GeminiService {
         } catch (WebClientResponseException e) {
 
             if (e.getStatusCode() == HttpStatus.TOO_MANY_REQUESTS) {
-                log.error("Gemini 429 Rate Limit 발생");
+                log.error("Gemini 429 Rate Limit 발생 - 응답 바디: {}", e.getResponseBodyAsString());
                 throw new AppException(ErrorCode.AI_RATE_LIMIT_EXCEEDED);
             }
 
