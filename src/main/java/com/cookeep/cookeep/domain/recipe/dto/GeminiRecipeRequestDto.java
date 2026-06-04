@@ -99,7 +99,11 @@ public class GeminiRecipeRequestDto {
                 "required", List.of("title", "ingredients", "steps", "youtube_search_queries")
         );
 
-        return new GenerationConfig("application/json", schema);
+        return new GenerationConfig(
+                "application/json",
+                schema,
+                Map.of("thinkingBudget", 0)  // Thinking 비활성화
+        );
     }
 
     // 내부 메서드
@@ -128,6 +132,7 @@ public class GeminiRecipeRequestDto {
     static class GenerationConfig {
         private String responseMimeType;
         private Map<String, Object> responseSchema;
+        private Map<String, Object> thinkingConfig;
     }
 
 }
