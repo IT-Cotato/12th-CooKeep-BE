@@ -1,6 +1,7 @@
 package com.cookeep.cookeep.api.dto.request;
 
 import com.cookeep.cookeep.domain.recipe.entity.Difficulty;
+import com.cookeep.cookeep.domain.recipe.entity.Feature;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -22,13 +23,19 @@ public class AiRecipeRequestDto {
     )
     private Long sessionId;
 
+//    @Schema(
+//            description = "레시피 난이도 (신규 요청 시 필수)",
+//            example = "EASY",
+//            allowableValues = {"EASY", "NORMAL", "HARD"},
+//            requiredMode = Schema.RequiredMode.NOT_REQUIRED
+//    )
+//    private Difficulty difficulty;
+
     @Schema(
-            description = "레시피 난이도 (신규 요청 시 필수)",
-            example = "EASY",
-            allowableValues = {"EASY", "NORMAL", "HARD"},
-            requiredMode = Schema.RequiredMode.NOT_REQUIRED
+            description = "요리 종류 (신규 요청 시 필수)",
+            example = "RICE_BOWL"
     )
-    private Difficulty difficulty;
+    private Feature feature;
 
     @Schema(
             description = "레시피 생성을 위한 유저 식재료 ID 목록 (신규 요청 시 필수)",

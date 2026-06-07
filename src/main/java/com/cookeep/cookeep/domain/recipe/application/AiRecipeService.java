@@ -90,8 +90,12 @@ public class AiRecipeService {
             throw new AppException(ErrorCode.RECIPE_INGREDIENTS_REQUIRED);
         }
 
-        if (request.getDifficulty() == null) {
-            throw new AppException(ErrorCode.INVALID_DIFFICULTY);
+//        if (request.getDifficulty() == null) {
+//            throw new AppException(ErrorCode.INVALID_DIFFICULTY);
+//        }
+
+        if (request.getFeature() == null) {
+            throw new AppException(ErrorCode.INVALID_FEATURE);
         }
 
         // RateLimit 검증
@@ -122,7 +126,7 @@ public class AiRecipeService {
         // ── AI 호출을 세션 저장보다 먼저 ──
         // 캐시 조회
         String cacheKey = aiRecipeCacheService.buildCacheKey(
-                request.getIngredientIds(), request.getDifficulty(), dislikedIngredients);
+                request.getIngredientIds(), request.getFeature(), dislikedIngredients);
         GeminiRecipeResponseDto aiResponse = aiRecipeCacheService.get(cacheKey);
 
         // 4. AI 레시피 생성 (이름 + 단위만 전달, AI가 quantity 생성)
@@ -131,14 +135,15 @@ public class AiRecipeService {
             log.info("AI 레시피 캐시 히트. key={}", cacheKey);
         } else {
             aiResponse = geminiQueueService.generateRecipe(
-                    enrichedIngredients, request.getDifficulty(), dislikedIngredients);
+                    enrichedIngredients, request.getFeature(), dislikedIngredients);
             aiRecipeCacheService.put(cacheKey, aiResponse);
         }
 
         // 5. 세션 생성
         AiSession session = AiSession.builder()
                 .userId(userId)
-                .difficulty(request.getDifficulty())
+                //.difficulty(request.getDifficulty())
+                .feature(request.getFeature())
                 .attemptNumber(1)
                 .isCompleted(false)
                 .userIngredientIds(writeEnrichedIngredientsAsJson(enrichedIngredients))
@@ -164,6 +169,7 @@ public class AiRecipeService {
         return AiRecipeResponseDto.builder()
                 .sessionId(session.getId())
                 .changeCount(session.getAttemptNumber())
+                .feature(request.getFeature())
                 .recipe(aiResponse)
                 .youtubeReferences(youtubeReferences)
                 .build();
@@ -187,8 +193,12 @@ public class AiRecipeService {
             throw new AppException(ErrorCode.AI_RECIPE_CHANGE_LIMIT_EXCEEDED);
         }
 
-        if (session.getDifficulty() == null) {
-            throw new AppException(ErrorCode.SESSION_DIFFICULTY_NOT_FOUND);
+//        if (session.getDifficulty() == null) {
+//            throw new AppException(ErrorCode.SESSION_DIFFICULTY_NOT_FOUND);
+//        }
+
+        if (session.getFeature() == null) {
+            throw new AppException(ErrorCode.SESSION_FEATURE_NOT_FOUND);
         }
 
         // RateLimit 검증
@@ -211,7 +221,8 @@ public class AiRecipeService {
         // 5. AI 호출 (제외 리스트 포함)
         GeminiRecipeResponseDto aiResponse = geminiQueueService.generateRecipeWithExclusion(
                 ingredients,
-                session.getDifficulty(),
+                //session.getDifficulty(),
+                session.getFeature(),
                 excludedTitles,
                 dislikedIngredients
         );
@@ -235,6 +246,7 @@ public class AiRecipeService {
         return AiRecipeResponseDto.builder()
                 .sessionId(session.getId())
                 .changeCount(session.getAttemptNumber())
+                .feature(session.getFeature())
                 .recipe(aiResponse)
                 .youtubeReferences(youtubeReferences)
                 .build();
@@ -442,7 +454,7 @@ public class AiRecipeService {
             if (request.getIngredientIds() == null || request.getIngredientIds().isEmpty()) {
                 throw new AppException(ErrorCode.RECIPE_INGREDIENTS_REQUIRED);
             }
-            if (request.getDifficulty() == null) {
+            if (request.getFeature() == null) {
                 throw new AppException(ErrorCode.INVALID_DIFFICULTY);
             }
         }

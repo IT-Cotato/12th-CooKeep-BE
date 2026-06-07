@@ -6,6 +6,7 @@ import com.cookeep.cookeep.domain.recipe.dto.GeminiRecipeRequestDto;
 import com.cookeep.cookeep.domain.recipe.dto.GeminiRecipeResponseDto;
 import com.cookeep.cookeep.domain.recipe.dto.IngredientDetailDto;
 import com.cookeep.cookeep.domain.recipe.entity.Difficulty;
+import com.cookeep.cookeep.domain.recipe.entity.Feature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -41,18 +42,20 @@ public class GeminiService {
 
     public GeminiRecipeResponseDto generateRecipe(
             List<IngredientDetailDto> ingredients,
-            Difficulty difficulty,
+            //Difficulty difficulty,
+            Feature feature,
             List<String> dislikedIngredients) {
-        return generateRecipeByPrompt(buildPrompt(ingredients, difficulty, List.of(), dislikedIngredients));
+        return generateRecipeByPrompt(buildPrompt(ingredients, feature, List.of(), dislikedIngredients));
     }
 
     public GeminiRecipeResponseDto generateRecipeWithExclusion(
             List<IngredientDetailDto> ingredients,
-            Difficulty difficulty,
+            //Difficulty difficulty,
+            Feature feature,
             List<String> excludedTitles,
             List<String> dislikedIngredients
     ) {
-        return generateRecipeByPrompt(buildPrompt(ingredients, difficulty, excludedTitles, dislikedIngredients));
+        return generateRecipeByPrompt(buildPrompt(ingredients, feature, excludedTitles, dislikedIngredients));
     }
 
     // 레시피 생성
@@ -183,7 +186,8 @@ public class GeminiService {
     // 프롬프트 생성
     private String buildPrompt(
             List<IngredientDetailDto> ingredients,
-            Difficulty difficulty,
+            //Difficulty difficulty,
+            Feature feature,
             List<String> excludedTitles,
             List<String> dislikedIngredients) {
 
@@ -206,8 +210,13 @@ public class GeminiService {
                         dislikedIngredients.stream().map(t -> "- " + t).collect(Collectors.joining("\n")) +
                         "\n위 재료는 additional_ingredients, optional_ingredients 어디에도 절대 포함하지 마세요.\n";
 
+        // feature가 ANY(아무거나)이면 종류 제한 없음, 그 외엔 해당 종류로 제한
+        String featureBlock = (feature == null || feature == Feature.ANY)
+                ? "\n[요리 종류] 제한 없음 (어떤 종류의 요리도 추천 가능)\n"
+                : "\n[요리 종류] " + feature.getDisplayName() + " 종류의 레시피를 추천하세요.\n";
+
         return "당신은 요리 레시피 전문가입니다.\n\n" +
-                "[난이도] " + difficulty.name() + "\n" +
+                featureBlock +
                 exclusionBlock + dislikedBlock +
                 "\n[재료 구성 규칙]\n" +
                 // 규칙 1: user_ingredients — 원본 데이터 그대로 사용
