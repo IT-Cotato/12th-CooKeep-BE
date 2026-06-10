@@ -90,10 +90,6 @@ public class AiRecipeService {
             throw new AppException(ErrorCode.RECIPE_INGREDIENTS_REQUIRED);
         }
 
-//        if (request.getDifficulty() == null) {
-//            throw new AppException(ErrorCode.INVALID_DIFFICULTY);
-//        }
-
         if (request.getFeature() == null) {
             throw new AppException(ErrorCode.INVALID_FEATURE);
         }
