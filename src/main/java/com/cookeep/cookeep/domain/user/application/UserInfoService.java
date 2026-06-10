@@ -3,13 +3,8 @@ package com.cookeep.cookeep.domain.user.application;
 import java.util.Map;
 import java.util.Optional;
 
-import com.cookeep.cookeep.api.dto.request.NicknameUpdateRequestDto;
-import com.cookeep.cookeep.api.dto.request.SendCodeRequestDTO;
-import com.cookeep.cookeep.api.dto.request.UpdateEmailRequestDTO;
-import com.cookeep.cookeep.api.dto.request.UpdateMarketingPushDTO;
-import com.cookeep.cookeep.api.dto.request.UpdatePasswordRequestDTO;
-import com.cookeep.cookeep.api.dto.request.VerifyCodeRequestDTO;
-import com.cookeep.cookeep.api.dto.request.VerifyPasswordRequestDTO;
+import com.cookeep.cookeep.api.dto.request.*;
+import com.cookeep.cookeep.api.dto.response.DislikeIngredientResponseDto;
 import com.cookeep.cookeep.api.dto.response.UserProfileResponseDTO;
 import com.cookeep.cookeep.common.exception.AppException;
 import com.cookeep.cookeep.common.exception.ErrorCode;
@@ -249,4 +244,21 @@ public class UserInfoService {
 
         user.updateMarketingPush(newMarketingPush);
     }
+
+    // 유저의 비선호식재료 목록 조회
+    @Transactional(readOnly = true)
+    public DislikeIngredientResponseDto getDislikedIngredients(Long userId) {
+        User user = userReader.readById(userId);
+        return DislikeIngredientResponseDto.builder()
+                .dislikedIngredients(user.getDislikedIngredients()) // 없으면 빈 리스트 반환
+                .build();
+    }
+
+    // 유저의 비선호식재료 목록 수정
+    @Transactional
+    public void updateDislikedIngredients(Long userId, DislikeIngredientRequestDto requestDto) {
+        User user = userReader.readById(userId);
+        user.updateDislikedIngredients(requestDto.dislikedIngredients());
+    }
+
 }
