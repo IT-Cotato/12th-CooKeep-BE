@@ -1,6 +1,5 @@
 package com.cookeep.cookeep.api.dto.request;
 
-import com.cookeep.cookeep.domain.recipe.entity.Difficulty;
 import com.cookeep.cookeep.domain.recipe.entity.Feature;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
