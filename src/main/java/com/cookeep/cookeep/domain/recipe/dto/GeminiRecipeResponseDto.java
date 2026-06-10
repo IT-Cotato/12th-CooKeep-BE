@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.util.List;
 
@@ -14,6 +15,7 @@ import java.util.List;
 )
 @Getter
 @NoArgsConstructor
+@Setter
 @JsonIgnoreProperties(ignoreUnknown = true) //AI 에러 방지
 public class GeminiRecipeResponseDto {
 

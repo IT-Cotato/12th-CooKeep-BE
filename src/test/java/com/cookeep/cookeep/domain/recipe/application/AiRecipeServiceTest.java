@@ -23,6 +23,8 @@ import com.cookeep.cookeep.domain.recipe.entity.*;
 import com.cookeep.cookeep.domain.user.application.UserReader;
 import com.cookeep.cookeep.domain.user.dao.UserRepository;
 import com.cookeep.cookeep.domain.user.entity.User;
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.PropertyAccessor;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -66,6 +68,8 @@ public class AiRecipeServiceTest {
     @Mock private AiRateLimitService rateLimitService;
     @Mock private UserRepository userRepository;
     @Mock private UserReader userReader;
+    @Mock private GeminiQueueService geminiQueueService;
+    @Mock private AiRecipeCacheService aiRecipeCacheService;
 
     @Spy
     private ObjectMapper objectMapper = new ObjectMapper();
@@ -94,6 +98,9 @@ public class AiRecipeServiceTest {
 
     @BeforeEach
     void setUp() throws Exception {
+
+        objectMapper.setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
+
         user = User.builder().nickname("테스터").build();
 
         given(userReader.readById(anyLong()))
@@ -104,7 +111,7 @@ public class AiRecipeServiceTest {
 
         session = AiSession.builder()
                 .userId(1L)
-                .difficulty(Difficulty.EASY)
+                .feature(Feature.RICE_BOWL)
                 .attemptNumber(1)
                 .isCompleted(false)
                 .userIngredientIds("[]")
@@ -359,7 +366,7 @@ public class AiRecipeServiceTest {
                     """;
             session = AiSession.builder()
                     .userId(1L)
-                    .difficulty(Difficulty.EASY)
+                    .feature(Feature.RICE_BOWL)
                     .attemptNumber(1)
                     .isCompleted(false)
                     .userIngredientIds(ingredientsJson)
@@ -379,9 +386,9 @@ public class AiRecipeServiceTest {
             com.cookeep.cookeep.domain.recipe.dto.GeminiRecipeResponseDto response =
                     buildValidGeminiResponse();
 
-            given(geminiService.generateRecipeWithExclusion(
+            given(geminiQueueService.generateRecipeWithExclusion(
                     anyList(),
-                    any(Difficulty.class),
+                    any(Feature.class),
                     anyList(),
                     anyList()
             )).willReturn(response);
@@ -436,7 +443,7 @@ public class AiRecipeServiceTest {
             // Rate Limit에 걸렸으므로 Gemini는 절대 호출되면 안 됨
             verify(geminiService, never()).generateRecipeWithExclusion(
                     anyList(),
-                    any(Difficulty.class),
+                    any(Feature.class),
                     anyList(),
                     anyList()
             );
@@ -481,7 +488,7 @@ public class AiRecipeServiceTest {
             // attemptNumber를 MAX_RETRY_COUNT(5) 이상으로 설정
             session = AiSession.builder()
                     .userId(1L)
-                    .difficulty(Difficulty.EASY)
+                    .feature(Feature.RICE_BOWL)
                     .attemptNumber(5) // MAX_RETRY_COUNT = 5
                     .isCompleted(false)
                     .userIngredientIds("[{\"ingredientId\":1,\"name\":\"양파\",\"quantity\":null,\"unit\":\"개\"}]")
@@ -506,7 +513,7 @@ public class AiRecipeServiceTest {
             // 유저2 세션 추가 세팅
             AiSession session2 = AiSession.builder()
                     .userId(2L)
-                    .difficulty(Difficulty.EASY)
+                    .feature(Feature.RICE_BOWL)
                     .attemptNumber(1)
                     .isCompleted(false)
                     .userIngredientIds("[{\"ingredientId\":1,\"name\":\"양파\",\"quantity\":null,\"unit\":\"개\"}]")

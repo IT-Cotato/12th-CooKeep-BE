@@ -39,8 +39,8 @@ public class AiSession {
     private LocalDateTime updatedAt;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "difficulty")
-    private Difficulty difficulty;
+    @Column(name = "feature")
+    private Feature feature;
 
     @Column(name = "is_pinned")
     private Boolean isPinned;
