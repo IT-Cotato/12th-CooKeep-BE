@@ -24,7 +24,7 @@ public class AiRecipeRequestDto {
 
     @Schema(
             description = "요리 종류 (신규 요청 시 필수)",
-            example = "RICE_BOWL"
+            example = "RICE_BOWL",
             requiredMode = Schema.RequiredMode.NOT_REQUIRED,
             allowableValues = {"SOUP_STEW", "RICE_BOWL", "NOODLE", "STIR_FRY_GRILL", "SALAD_HEALTHY", "SNACK_DESSERT", "ANY"}
     )
