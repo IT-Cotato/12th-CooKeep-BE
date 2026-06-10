@@ -447,7 +447,7 @@ public class AiRecipeService {
                 throw new AppException(ErrorCode.RECIPE_INGREDIENTS_REQUIRED);
             }
             if (request.getFeature() == null) {
-                throw new AppException(ErrorCode.INVALID_DIFFICULTY);
+                throw new AppException(ErrorCode.INVALID_FEATURE);
             }
         }
         // 재요청은 기존 세션에서 정보 가져옴
