@@ -22,14 +22,6 @@ public class AiRecipeRequestDto {
     )
     private Long sessionId;
 
-//    @Schema(
-//            description = "레시피 난이도 (신규 요청 시 필수)",
-//            example = "EASY",
-//            allowableValues = {"EASY", "NORMAL", "HARD"},
-//            requiredMode = Schema.RequiredMode.NOT_REQUIRED
-//    )
-//    private Difficulty difficulty;
-
     @Schema(
             description = "요리 종류 (신규 요청 시 필수)",
             example = "RICE_BOWL"
