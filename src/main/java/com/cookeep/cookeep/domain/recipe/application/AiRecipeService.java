@@ -138,7 +138,6 @@ public class AiRecipeService {
         // 5. 세션 생성
         AiSession session = AiSession.builder()
                 .userId(userId)
-                //.difficulty(request.getDifficulty())
                 .feature(request.getFeature())
                 .attemptNumber(1)
                 .isCompleted(false)
@@ -189,9 +188,6 @@ public class AiRecipeService {
             throw new AppException(ErrorCode.AI_RECIPE_CHANGE_LIMIT_EXCEEDED);
         }
 
-//        if (session.getDifficulty() == null) {
-//            throw new AppException(ErrorCode.SESSION_DIFFICULTY_NOT_FOUND);
-//        }
 
         if (session.getFeature() == null) {
             throw new AppException(ErrorCode.SESSION_FEATURE_NOT_FOUND);
