@@ -2,6 +2,7 @@ package com.cookeep.cookeep.domain.recipe.application;
 
 import com.cookeep.cookeep.domain.recipe.dto.GeminiRecipeResponseDto;
 import com.cookeep.cookeep.domain.recipe.entity.Difficulty;
+import com.cookeep.cookeep.domain.recipe.entity.Feature;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -23,7 +24,7 @@ public class AiRecipeCacheService {
     private static final Duration TTL = Duration.ofHours(24);
     private static final String KEY_PREFIX = "recipe:cache:";
 
-    public String buildCacheKey(List<Long> ingredientIds, Difficulty difficulty, List<String> dislikedIngredients) {
+    public String buildCacheKey(List<Long> ingredientIds, Feature feature, List<String> dislikedIngredients) {
         String sortedIds = ingredientIds.stream()
                 .sorted()
                 .map(String::valueOf)
@@ -36,7 +37,7 @@ public class AiRecipeCacheService {
                 .sorted()
                 .collect(Collectors.joining("_"));
 
-        return KEY_PREFIX + sortedIds + ":" + difficulty.name();
+        return KEY_PREFIX + sortedIds + ":" + feature.name() + ":" + dislikedPart;
     }
 
     public GeminiRecipeResponseDto get(String cacheKey) {

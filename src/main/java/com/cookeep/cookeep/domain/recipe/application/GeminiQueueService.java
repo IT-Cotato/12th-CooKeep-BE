@@ -5,6 +5,7 @@ import com.cookeep.cookeep.common.exception.ErrorCode;
 import com.cookeep.cookeep.domain.recipe.dto.GeminiRecipeResponseDto;
 import com.cookeep.cookeep.domain.recipe.dto.IngredientDetailDto;
 import com.cookeep.cookeep.domain.recipe.entity.Difficulty;
+import com.cookeep.cookeep.domain.recipe.entity.Feature;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -32,7 +33,8 @@ public class GeminiQueueService {
      */
     public GeminiRecipeResponseDto generateRecipe(
             List<IngredientDetailDto> ingredients,
-            Difficulty difficulty,
+            //Difficulty difficulty,
+            Feature feature,
             List<String> dislikedIngredients) {
 
         boolean acquired = false;
@@ -43,7 +45,7 @@ public class GeminiQueueService {
                 throw new AppException(ErrorCode.AI_SEARCH_FAILED);
             }
             log.info("Gemini 슬롯 획득. 남은 슬롯={}", semaphore.availablePermits());
-            return geminiService.generateRecipe(ingredients, difficulty, dislikedIngredients);
+            return geminiService.generateRecipe(ingredients, feature, dislikedIngredients);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw new AppException(ErrorCode.AI_SEARCH_FAILED);
@@ -57,7 +59,8 @@ public class GeminiQueueService {
 
     public GeminiRecipeResponseDto generateRecipeWithExclusion(
             List<IngredientDetailDto> ingredients,
-            Difficulty difficulty,
+            //Difficulty difficulty,
+            Feature feature,
             List<String> excludedTitles,
             List<String> dislikedIngredients) {
 
@@ -69,7 +72,7 @@ public class GeminiQueueService {
                 throw new AppException(ErrorCode.AI_SEARCH_FAILED);
             }
             return geminiService.generateRecipeWithExclusion(
-                    ingredients, difficulty, excludedTitles, dislikedIngredients);
+                    ingredients, feature, excludedTitles, dislikedIngredients);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw new AppException(ErrorCode.AI_SEARCH_FAILED);

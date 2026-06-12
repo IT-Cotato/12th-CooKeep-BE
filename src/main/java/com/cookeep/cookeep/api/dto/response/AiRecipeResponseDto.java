@@ -2,6 +2,7 @@ package com.cookeep.cookeep.api.dto.response;
 
 import com.cookeep.cookeep.domain.recipe.dto.GeminiRecipeResponseDto;
 import com.cookeep.cookeep.domain.recipe.dto.YoutubeReferenceDto;
+import com.cookeep.cookeep.domain.recipe.entity.Feature;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 import lombok.Getter;
@@ -42,4 +43,7 @@ public class AiRecipeResponseDto {
             requiredMode = Schema.RequiredMode.NOT_REQUIRED
     )
     private List<YoutubeReferenceDto> youtubeReferences;
+
+    @Schema(description = "요리 종류", example = "RICE_BOWL")
+    private Feature feature;
 }
