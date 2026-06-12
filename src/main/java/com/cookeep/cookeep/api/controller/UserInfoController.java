@@ -157,7 +157,7 @@ public class UserInfoController {
     }
 
 
-    @Operation(summary = "비선호 식재료 목록 조회", description = "현재 유저의 비선호 식재료명 목록을 조회합니다.")
+    @Operation(summary = "비선호 식재료 목록 조회", description = "현재 유저의 비선호 식재료명 목록을 조회.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "조회 성공"),
             @ApiResponse(responseCode = "401", description = "회원 인증 실패, AccessToken이 없거나 유효하지 않음"),
@@ -171,7 +171,7 @@ public class UserInfoController {
         return ResponseEntity.ok(DataResponse.from(userInfoService.getDislikedIngredients(userId)));
     }
 
-    @Operation(summary = "비선호 식재료 수정", description = "현재 유저의 비선호 식재료 전체 목록을 교체합니다. 빈 배열 전달 시 전체 삭제됩니다.")
+    @Operation(summary = "비선호 식재료 수정", description = "현재 유저의 비선호 식재료 전체 목록을 교체. 빈 배열 전달 시 전체 삭제.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "수정 성공"),
             @ApiResponse(responseCode = "400", description = "요청 파라미터 오류"),
