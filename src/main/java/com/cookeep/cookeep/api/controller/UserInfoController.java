@@ -178,7 +178,7 @@ public class UserInfoController {
             @ApiResponse(responseCode = "401", description = "회원 인증 실패, AccessToken이 없거나 유효하지 않음"),
             @ApiResponse(responseCode = "404", description = "사용자를 찾을 수 없음")
     })
-    @PatchMapping("/dislike-ingredients")
+    @PutMapping("/dislike-ingredients")
     public ResponseEntity<DataResponse<Void>> updateDislikedIngredients(
             @AuthenticationPrincipal UserPrincipal principal,
             @Valid @RequestBody DislikeIngredientRequestDto requestDto

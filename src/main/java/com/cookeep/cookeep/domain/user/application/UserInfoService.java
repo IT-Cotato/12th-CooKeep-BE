@@ -258,7 +258,7 @@ public class UserInfoService {
     @Transactional
     public void updateDislikedIngredients(Long userId, DislikeIngredientRequestDto requestDto) {
         User user = userReader.readById(userId);
-        user.updateDislikedIngredients(requestDto.dislikedIngredients());
+        user.updateDislikedIngredients(requestDto.getDislikedIngredients());
     }
 
 }
