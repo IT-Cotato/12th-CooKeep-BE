@@ -106,6 +106,9 @@ public class User extends BaseEntity {
 	@Column(nullable = false)
 	private boolean isCookeepsOnboarded = false; // 쿠킵스 온보딩 모달 확인 여부
 
+	private static final com.fasterxml.jackson.databind.ObjectMapper OBJECT_MAPPER
+			= new com.fasterxml.jackson.databind.ObjectMapper();
+
 	@Column(name = "disliked_ingredients", columnDefinition = "JSON")
 	private String dislikedIngredientsJson; // 못먹는 재료 목록 (JSON 배열로 저장)
 
@@ -190,7 +193,7 @@ public class User extends BaseEntity {
 			return Collections.emptyList();
 		}
 		try {
-			return new com.fasterxml.jackson.databind.ObjectMapper()
+			return OBJECT_MAPPER
 					.readValue(dislikedIngredientsJson, new com.fasterxml.jackson.core.type.TypeReference<List<String>>() {});
 		} catch (Exception e) {
 			return Collections.emptyList();
@@ -202,7 +205,7 @@ public class User extends BaseEntity {
 		try {
 			this.dislikedIngredientsJson = ingredients == null || ingredients.isEmpty()
 					? null
-					: new com.fasterxml.jackson.databind.ObjectMapper().writeValueAsString(ingredients);
+					: OBJECT_MAPPER.writeValueAsString(ingredients);
 		} catch (Exception e) {
 			this.dislikedIngredientsJson = null;
 		}

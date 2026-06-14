@@ -1,10 +1,7 @@
 package com.cookeep.cookeep.api.controller;
 
-import com.cookeep.cookeep.api.dto.request.NicknameUpdateRequestDto;
-import com.cookeep.cookeep.api.dto.request.UpdateEmailRequestDTO;
-import com.cookeep.cookeep.api.dto.request.UpdateMarketingPushDTO;
-import com.cookeep.cookeep.api.dto.request.UpdatePasswordRequestDTO;
-import com.cookeep.cookeep.api.dto.request.VerifyPasswordRequestDTO;
+import com.cookeep.cookeep.api.dto.request.*;
+import com.cookeep.cookeep.api.dto.response.DislikeIngredientResponseDto;
 import com.cookeep.cookeep.api.dto.response.UserProfileResponseDTO;
 import com.cookeep.cookeep.common.dto.DataResponse;
 import com.cookeep.cookeep.common.exception.ErrorCode;
@@ -156,6 +153,38 @@ public class UserInfoController {
     ) {
         Long userId = principal.userId();
         userInfoService.updateMarketingPush(userId, updateMarketingPushDTO);
+        return ResponseEntity.ok(DataResponse.ok());
+    }
+
+
+    @Operation(summary = "비선호 식재료 목록 조회", description = "현재 유저의 비선호 식재료명 목록을 조회.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "조회 성공"),
+            @ApiResponse(responseCode = "401", description = "회원 인증 실패, AccessToken이 없거나 유효하지 않음"),
+            @ApiResponse(responseCode = "404", description = "사용자를 찾을 수 없음")
+    })
+    @GetMapping("/dislike-ingredients")
+    public ResponseEntity<DataResponse<DislikeIngredientResponseDto>> getDislikedIngredients(
+            @AuthenticationPrincipal UserPrincipal principal
+    ) {
+        Long userId = principal.userId();
+        return ResponseEntity.ok(DataResponse.from(userInfoService.getDislikedIngredients(userId)));
+    }
+
+    @Operation(summary = "비선호 식재료 수정", description = "현재 유저의 비선호 식재료 전체 목록을 교체. 빈 배열 전달 시 전체 삭제.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "수정 성공"),
+            @ApiResponse(responseCode = "400", description = "요청 파라미터 오류"),
+            @ApiResponse(responseCode = "401", description = "회원 인증 실패, AccessToken이 없거나 유효하지 않음"),
+            @ApiResponse(responseCode = "404", description = "사용자를 찾을 수 없음")
+    })
+    @PutMapping("/dislike-ingredients")
+    public ResponseEntity<DataResponse<Void>> updateDislikedIngredients(
+            @AuthenticationPrincipal UserPrincipal principal,
+            @Valid @RequestBody DislikeIngredientRequestDto requestDto
+    ) {
+        Long userId = principal.userId();
+        userInfoService.updateDislikedIngredients(userId, requestDto);
         return ResponseEntity.ok(DataResponse.ok());
     }
 }
