@@ -1,6 +1,8 @@
 package com.cookeep.cookeep.domain.dailyrecipe.application;
 
 import com.cookeep.cookeep.api.dto.response.CookeepsFeedResponseDto;
+import com.cookeep.cookeep.domain.cookie.application.CookieService;
+import com.cookeep.cookeep.domain.cookie.entity.CookieLog;
 import com.cookeep.cookeep.common.exception.AppException;
 import com.cookeep.cookeep.common.exception.ErrorCode;
 import com.cookeep.cookeep.domain.dailyrecipe.dao.DailyRecipeRepository;
@@ -52,6 +54,9 @@ class RecipeLikeServiceTest {
 
     @Mock
     private WeeklyGoalService weeklyGoalService;
+
+    @Mock
+    private CookieService cookieService;
 
     @InjectMocks
     private RecipeLikeService recipeLikeService;
@@ -109,23 +114,24 @@ class RecipeLikeServiceTest {
         }
 
         @Test
-        @DisplayName("좋아요 추가 시 목표 달성이면 weeklyGoalAchieved=true를 반환한다")
+        @DisplayName("좋아요 추가 시 목표 달성이면 reward.types에 BONUS_WEEKLY_GOAL_ACHIEVE가 포함된다")
         void 좋아요추가_목표달성_true반환() {
             given(weeklyGoalService.handleGoalProgress(1L, GoalActionType.RECIPE_LIKE)).willReturn(true);
 
             RecipeLikeService.ToggleLikeResult result = recipeLikeService.toggleLike(1L, 100L);
 
-            assertThat(result.weeklyGoalAchieved()).isTrue();
+            assertThat(result.reward().getTypes())
+                    .contains(CookieLog.CookieLogType.BONUS_WEEKLY_GOAL_ACHIEVE);
         }
 
         @Test
-        @DisplayName("좋아요 추가 시 목표 미달성이면 weeklyGoalAchieved=false를 반환한다")
+        @DisplayName("좋아요 추가 시 목표 미달성이면 reward.types가 비어있다")
         void 좋아요추가_목표미달성_false반환() {
             given(weeklyGoalService.handleGoalProgress(1L, GoalActionType.RECIPE_LIKE)).willReturn(false);
 
             RecipeLikeService.ToggleLikeResult result = recipeLikeService.toggleLike(1L, 100L);
 
-            assertThat(result.weeklyGoalAchieved()).isFalse();
+            assertThat(result.reward().getTypes()).isEmpty();
         }
     }
 
@@ -162,11 +168,11 @@ class RecipeLikeServiceTest {
         }
 
         @Test
-        @DisplayName("좋아요 취소 시 weeklyGoalAchieved=false를 반환한다")
-        void 좋아요취소_weeklyGoalAchieved_false() {
+        @DisplayName("좋아요 취소 시 reward는 null이다")
+        void 좋아요취소_reward_null() {
             RecipeLikeService.ToggleLikeResult result = recipeLikeService.toggleLike(1L, 100L);
 
-            assertThat(result.weeklyGoalAchieved()).isFalse();
+            assertThat(result.reward()).isNull();
         }
 
         @Test

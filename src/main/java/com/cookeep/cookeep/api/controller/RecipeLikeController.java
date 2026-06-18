@@ -56,7 +56,7 @@ public class RecipeLikeController {
 			dailyRecipeId,
 			result.isLiked(),
 			(int) likeCount,
-			result.weeklyGoalAchieved()
+			result.reward()
 		);
 
 		return ResponseEntity.ok(DataResponse.from(response));

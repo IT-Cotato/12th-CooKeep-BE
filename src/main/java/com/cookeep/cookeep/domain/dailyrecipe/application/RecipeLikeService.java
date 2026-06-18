@@ -1,8 +1,11 @@
 package com.cookeep.cookeep.domain.dailyrecipe.application;
 
 import com.cookeep.cookeep.api.dto.response.CookeepsFeedResponseDto;
+import com.cookeep.cookeep.api.dto.response.CookieRewardDto;
 import com.cookeep.cookeep.common.exception.AppException;
 import com.cookeep.cookeep.common.exception.ErrorCode;
+import com.cookeep.cookeep.domain.cookie.application.CookieService;
+import com.cookeep.cookeep.domain.cookie.entity.CookieLog;
 import com.cookeep.cookeep.domain.dailyrecipe.dao.DailyRecipeRepository;
 import com.cookeep.cookeep.domain.dailyrecipe.dao.RecipeLikeRepository;
 import com.cookeep.cookeep.domain.dailyrecipe.entity.DailyRecipe;
@@ -11,6 +14,8 @@ import com.cookeep.cookeep.domain.onboarding.application.WeeklyGoalService;
 import com.cookeep.cookeep.domain.onboarding.entity.GoalActionType;
 import com.cookeep.cookeep.domain.user.application.UserReader;
 import com.cookeep.cookeep.domain.user.entity.User;
+
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
@@ -26,8 +31,9 @@ public class RecipeLikeService {
 	private final DailyRecipeRepository dailyRecipeRepository;
 	private final UserReader userReader;
 	private final WeeklyGoalService weeklyGoalService;
+	private final CookieService cookieService;
 
-	public record ToggleLikeResult(boolean isLiked, boolean weeklyGoalAchieved) {}
+	public record ToggleLikeResult(boolean isLiked, CookieRewardDto reward) {}
 
 	// 좋아요 추가/삭제 토글
 	public ToggleLikeResult toggleLike(Long userId, Long dailyRecipeId) {
@@ -47,7 +53,7 @@ public class RecipeLikeService {
 			recipeLikeRepository.delete(existingLike.get());
 			dailyRecipe.decrementLikeCount();
 			weeklyGoalService.handleGoalUndo(userId, GoalActionType.RECIPE_LIKE);
-			return new ToggleLikeResult(false, false); // 좋아요 취소
+			return new ToggleLikeResult(false, null);
 		}
 
 		// 좋아요 추가
@@ -58,7 +64,14 @@ public class RecipeLikeService {
 		recipeLikeRepository.save(recipeLike);
 		dailyRecipe.incrementLikeCount();
 		boolean goalAchieved = weeklyGoalService.handleGoalProgress(userId, GoalActionType.RECIPE_LIKE);
-		return new ToggleLikeResult(true, goalAchieved); // 좋아요 추가
+		List<CookieLog.CookieLogType> types = goalAchieved
+				? List.of(CookieLog.CookieLogType.BONUS_WEEKLY_GOAL_ACHIEVE) : List.of();
+		int points = goalAchieved ? CookieLog.CookieLogType.BONUS_WEEKLY_GOAL_ACHIEVE.getDefaultAmount() : 0;
+		CookieRewardDto reward = CookieRewardDto.builder()
+				.granted(goalAchieved).points(points).types(types)
+				.currentCookieCount(cookieService.getMyCookies(userId))
+				.build();
+		return new ToggleLikeResult(true, reward);
 	}
 
 	// 특정 레시피의 좋아요 수 조회
