@@ -2,6 +2,8 @@ package com.cookeep.cookeep.domain.dailyrecipe.application;
 
 import com.cookeep.cookeep.domain.cookie.application.CookieService;
 import com.cookeep.cookeep.domain.cookie.entity.CookieLog;
+
+import static org.mockito.ArgumentMatchers.anyLong;
 import com.cookeep.cookeep.domain.dailyrecipe.dao.DailyRecipeRepository;
 import com.cookeep.cookeep.domain.dailyrecipe.entity.DailyRecipe;
 import com.cookeep.cookeep.domain.onboarding.application.WeeklyGoalService;
@@ -90,41 +92,45 @@ class DailyRecipeServiceTest {
         }
 
         @Test
-        @DisplayName("사진 포함 등록 시 목표 달성이면 weeklyGoalAchieved=true를 반환한다")
+        @DisplayName("사진 포함 등록 시 목표 달성이면 reward.types에 BONUS_WEEKLY_GOAL_ACHIEVE가 포함된다")
         void 사진포함_등록_목표달성_true반환() {
             given(weeklyGoalService.handleGoalProgress(1L, GoalActionType.PHOTO_RECORD)).willReturn(true);
 
             DailyRecipeService.DailyRecipeResult result =
                     dailyRecipeService.createDailyRecipe(1L, 10L, null, null, "https://s3.example.com/photo.jpg", false);
 
-            assertThat(result.weeklyGoalAchieved()).isTrue();
+            assertThat(result.reward().getTypes())
+                    .contains(CookieLog.CookieLogType.BONUS_WEEKLY_GOAL_ACHIEVE);
         }
 
         @Test
-        @DisplayName("사진 없이 등록 시 weeklyGoalAchieved=false를 반환한다")
+        @DisplayName("사진 없이 등록 시 reward.types에 BONUS_WEEKLY_GOAL_ACHIEVE가 없다")
         void 사진없음_등록_weeklyGoalAchieved_false() {
             DailyRecipeService.DailyRecipeResult result =
                     dailyRecipeService.createDailyRecipe(1L, 10L, null, null, null, false);
 
-            assertThat(result.weeklyGoalAchieved()).isFalse();
+            assertThat(result.reward().getTypes())
+                    .doesNotContain(CookieLog.CookieLogType.BONUS_WEEKLY_GOAL_ACHIEVE);
         }
 
         @Test
-        @DisplayName("사진 포함 등록 시 photoCookieAwarded=true를 반환한다")
+        @DisplayName("사진 포함 등록 시 reward.types에 BASIC_FOOD_PHOTO_REG가 포함된다")
         void 사진포함_등록_photoCookieAwarded_true() {
             DailyRecipeService.DailyRecipeResult result =
                     dailyRecipeService.createDailyRecipe(1L, 10L, null, null, "https://s3.example.com/photo.jpg", false);
 
-            assertThat(result.photoCookieAwarded()).isTrue();
+            assertThat(result.reward().getTypes())
+                    .contains(CookieLog.CookieLogType.BASIC_FOOD_PHOTO_REG);
         }
 
         @Test
-        @DisplayName("사진 없이 등록 시 photoCookieAwarded=false를 반환한다")
+        @DisplayName("사진 없이 등록 시 reward.types에 BASIC_FOOD_PHOTO_REG가 없다")
         void 사진없음_등록_photoCookieAwarded_false() {
             DailyRecipeService.DailyRecipeResult result =
                     dailyRecipeService.createDailyRecipe(1L, 10L, null, null, null, false);
 
-            assertThat(result.photoCookieAwarded()).isFalse();
+            assertThat(result.reward().getTypes())
+                    .doesNotContain(CookieLog.CookieLogType.BASIC_FOOD_PHOTO_REG);
         }
 
         @Test
@@ -194,7 +200,7 @@ class DailyRecipeServiceTest {
         }
 
         @Test
-        @DisplayName("보상 미완료 레시피에 처음 사진 추가 시 photoCookieAwarded=true를 반환한다")
+        @DisplayName("보상 미완료 레시피에 처음 사진 추가 시 reward.types에 BASIC_FOOD_PHOTO_REG가 포함된다")
         void 신규사진_추가_photoCookieAwarded_true() {
             given(dailyRecipeRepository.findByIdAndUser(100L, user))
                     .willReturn(Optional.of(rewardPendingRecipe));
@@ -202,11 +208,12 @@ class DailyRecipeServiceTest {
             DailyRecipeService.DailyRecipeResult result =
                     dailyRecipeService.updateDailyRecipe(1L, 100L, null, null, "https://s3.example.com/new.jpg", false);
 
-            assertThat(result.photoCookieAwarded()).isTrue();
+            assertThat(result.reward().getTypes())
+                    .contains(CookieLog.CookieLogType.BASIC_FOOD_PHOTO_REG);
         }
 
         @Test
-        @DisplayName("보상 완료된 레시피에 사진 교체 시 photoCookieAwarded=false를 반환한다")
+        @DisplayName("보상 완료된 레시피에 사진 교체 시 reward.types에 BASIC_FOOD_PHOTO_REG가 없다")
         void 보상완료_사진교체_photoCookieAwarded_false() {
             given(dailyRecipeRepository.findByIdAndUser(100L, user))
                     .willReturn(Optional.of(rewardCompletedRecipe));
@@ -214,7 +221,8 @@ class DailyRecipeServiceTest {
             DailyRecipeService.DailyRecipeResult result =
                     dailyRecipeService.updateDailyRecipe(1L, 100L, null, null, "https://s3.example.com/replaced.jpg", false);
 
-            assertThat(result.photoCookieAwarded()).isFalse();
+            assertThat(result.reward().getTypes())
+                    .doesNotContain(CookieLog.CookieLogType.BASIC_FOOD_PHOTO_REG);
         }
 
         @Test
@@ -240,7 +248,7 @@ class DailyRecipeServiceTest {
         }
 
         @Test
-        @DisplayName("신규 사진 추가 시 목표 달성이면 weeklyGoalAchieved=true를 반환한다")
+        @DisplayName("신규 사진 추가 시 목표 달성이면 reward.types에 BONUS_WEEKLY_GOAL_ACHIEVE가 포함된다")
         void 신규사진_추가_목표달성_true반환() {
             given(dailyRecipeRepository.findByIdAndUser(100L, user))
                     .willReturn(Optional.of(rewardPendingRecipe));
@@ -249,7 +257,8 @@ class DailyRecipeServiceTest {
             DailyRecipeService.DailyRecipeResult result =
                     dailyRecipeService.updateDailyRecipe(1L, 100L, null, null, "https://s3.example.com/new.jpg", false);
 
-            assertThat(result.weeklyGoalAchieved()).isTrue();
+            assertThat(result.reward().getTypes())
+                    .contains(CookieLog.CookieLogType.BONUS_WEEKLY_GOAL_ACHIEVE);
         }
 
         @Test

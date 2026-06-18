@@ -1,5 +1,6 @@
 package com.cookeep.cookeep.domain.dailyrecipe.application;
 
+import com.cookeep.cookeep.api.dto.response.CookieRewardDto;
 import com.cookeep.cookeep.api.dto.response.DailyRecipeCalendarResponseDto;
 import com.cookeep.cookeep.common.exception.AppException;
 import com.cookeep.cookeep.common.exception.ErrorCode;
@@ -26,6 +27,7 @@ import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.TemporalAdjusters;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -44,7 +46,7 @@ public class DailyRecipeService {
     private final ObjectMapper objectMapper;
     private final S3Service s3Service;
 
-    public record DailyRecipeResult(DailyRecipe dailyRecipe, boolean weeklyGoalAchieved, boolean photoCookieAwarded) {}
+    public record DailyRecipeResult(DailyRecipe dailyRecipe, CookieRewardDto reward) {}
 
     // 채택된 AI 레시피 목록 조회
     @Transactional(readOnly = true)
@@ -103,7 +105,19 @@ public class DailyRecipeService {
             goalAchieved = weeklyGoalService.handleGoalProgress(userId, GoalActionType.PHOTO_RECORD);
         }
 
-        return new DailyRecipeResult(dailyRecipe, goalAchieved, hasPhoto);
+        List<CookieLog.CookieLogType> rewardTypes = new ArrayList<>();
+        rewardTypes.add(CookieLog.CookieLogType.BASIC_LOAD_RECIPE);
+        if (hasPhoto) rewardTypes.add(CookieLog.CookieLogType.BASIC_FOOD_PHOTO_REG);
+        if (goalAchieved) rewardTypes.add(CookieLog.CookieLogType.BONUS_WEEKLY_GOAL_ACHIEVE);
+        int totalPoints = rewardTypes.stream().mapToInt(CookieLog.CookieLogType::getDefaultAmount).sum();
+        CookieRewardDto reward = CookieRewardDto.builder()
+                .granted(true)
+                .points(totalPoints)
+                .types(rewardTypes)
+                .currentCookieCount(cookieService.getMyCookies(userId))
+                .build();
+
+        return new DailyRecipeResult(dailyRecipe, reward);
     }
 
     // 데일리 레시피 상세 조회
@@ -165,7 +179,18 @@ public class DailyRecipeService {
             }
         }
 
-        return new DailyRecipeResult(dailyRecipe, goalAchieved, photoCookieAwarded);
+        List<CookieLog.CookieLogType> rewardTypes = new ArrayList<>();
+        if (photoCookieAwarded) rewardTypes.add(CookieLog.CookieLogType.BASIC_FOOD_PHOTO_REG);
+        if (goalAchieved) rewardTypes.add(CookieLog.CookieLogType.BONUS_WEEKLY_GOAL_ACHIEVE);
+        int totalPoints = rewardTypes.stream().mapToInt(CookieLog.CookieLogType::getDefaultAmount).sum();
+        CookieRewardDto reward = CookieRewardDto.builder()
+                .granted(!rewardTypes.isEmpty())
+                .points(totalPoints)
+                .types(rewardTypes)
+                .currentCookieCount(cookieService.getMyCookies(userId))
+                .build();
+
+        return new DailyRecipeResult(dailyRecipe, reward);
     }
 
     // 데일리 레시피 공개 범위 수정

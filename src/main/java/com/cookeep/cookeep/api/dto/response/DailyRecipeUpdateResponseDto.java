@@ -41,13 +41,10 @@ public class DailyRecipeUpdateResponseDto {
     @Schema(description = "등록 시각", example = "2026-02-07T14:30:00")
     private LocalDateTime createdAt;
 
-    @Schema(description = "이번 수정으로 주간 목표 달성 여부", example = "false")
-    private boolean weeklyGoalAchieved;
+    @Schema(description = "이번 수정으로 지급된 리워드 정보")
+    private CookieRewardDto reward;
 
-    @Schema(description = "이번 수정으로 사진 업로드 보상 쿠키 지급 여부", example = "true")
-    private boolean photoCookieAwarded;
-
-    public static DailyRecipeUpdateResponseDto from(DailyRecipe dailyRecipe, boolean weeklyGoalAchieved, boolean photoCookieAwarded) {
+    public static DailyRecipeUpdateResponseDto from(DailyRecipe dailyRecipe, CookieRewardDto reward) {
         return DailyRecipeUpdateResponseDto.builder()
                 .dailyRecipeId(dailyRecipe.getId())
                 .title(dailyRecipe.getTitle())
@@ -57,8 +54,7 @@ public class DailyRecipeUpdateResponseDto {
                 .isPublic(dailyRecipe.getIsPublic())
                 .aiRecipeId(dailyRecipe.getAiRecipe() != null ? dailyRecipe.getAiRecipe().getId() : null)
                 .createdAt(dailyRecipe.getCreatedAt())
-                .weeklyGoalAchieved(weeklyGoalAchieved)
-                .photoCookieAwarded(photoCookieAwarded)
+                .reward(reward)
                 .build();
     }
 }
