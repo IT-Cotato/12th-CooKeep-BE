@@ -1,5 +1,6 @@
 package com.cookeep.cookeep.domain.cookie.application;
 
+import com.cookeep.cookeep.api.dto.response.CookieRewardDto;
 import com.cookeep.cookeep.common.exception.AppException;
 import com.cookeep.cookeep.common.exception.ErrorCode;
 import com.cookeep.cookeep.domain.cookie.dao.CookieLogRepository;
@@ -16,6 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @Slf4j
 @Service
@@ -111,9 +113,9 @@ public class CookieService {
         );
     }
 
-    // 대기 중인 보상 쿠키 수령 후 최종 쿠키 개수 반환
+    // 대기 중인 보상 쿠키 수령
     @Transactional
-    public int claimPendingReward(Long userId, Long pendingRewardId) {
+    public CookieRewardDto claimPendingReward(Long userId, Long pendingRewardId) {
         PendingCookieReward pending = pendingCookieRewardRepository
                 .findByIdForUpdate(pendingRewardId)
                 .orElseThrow(() -> new AppException(ErrorCode.PENDING_REWARD_NOT_FOUND));
@@ -122,10 +124,15 @@ public class CookieService {
             throw new AppException(ErrorCode.PENDING_REWARD_FORBIDDEN);
         }
 
-        pending.claim(); // 엔티티에서 CLAIMED 상태 검증 및 플래그 변경
+        CookieLog.CookieLogType rewardType = pending.getRewardType();
+        pending.claim();
+        updateCookie(userId, rewardType);
 
-        updateCookie(userId, pending.getRewardType()); // 실제 쿠키 지급
-
-        return getMyCookies(userId); // 지급 후 최종 쿠키 개수 반환
+        return CookieRewardDto.builder()
+                .granted(true)
+                .points(rewardType.getDefaultAmount())
+                .types(List.of(rewardType))
+                .currentCookieCount(getMyCookies(userId))
+                .build();
     }
 }

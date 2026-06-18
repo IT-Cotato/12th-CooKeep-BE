@@ -1,5 +1,7 @@
 package com.cookeep.cookeep.api.controller;
 
+import com.cookeep.cookeep.api.dto.response.ClaimPendingRewardResponseDto;
+import com.cookeep.cookeep.api.dto.response.CookieRewardDto;
 import com.cookeep.cookeep.common.dto.DataResponse;
 import com.cookeep.cookeep.domain.cookie.application.CookieService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -30,10 +32,10 @@ public class PendingCookieRewardController {
             @ApiResponse(responseCode = "404", description = "존재하지 않는 보상")
     })
     @PostMapping("/pending/{pendingRewardId}/claim")
-    public ResponseEntity<DataResponse<Integer>> claimPendingReward(
+    public ResponseEntity<DataResponse<ClaimPendingRewardResponseDto>> claimPendingReward(
             @AuthenticationPrincipal(expression = "userId") Long userId,
             @PathVariable Long pendingRewardId) {
-        int cookieCnt = cookieService.claimPendingReward(userId, pendingRewardId);
-        return ResponseEntity.ok(DataResponse.from(cookieCnt));
+        CookieRewardDto reward = cookieService.claimPendingReward(userId, pendingRewardId);
+        return ResponseEntity.ok(DataResponse.from(ClaimPendingRewardResponseDto.from(reward)));
     }
 }
