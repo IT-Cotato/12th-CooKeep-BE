@@ -164,7 +164,8 @@ public class ConsumeIngredientServiceTest {
             ConsumeIngredientsResponseDto result =
                     consumeIngredientService.consumeIngredients(1L, buildRequest(List.of(1L)));
 
-            assertThat(result.isWeeklyGoalAchieved()).isTrue();
+            assertThat(result.getReward().getTypes())
+                    .contains(CookieLog.CookieLogType.BONUS_WEEKLY_GOAL_ACHIEVE);
         }
 
         @Test
@@ -178,7 +179,8 @@ public class ConsumeIngredientServiceTest {
             ConsumeIngredientsResponseDto result =
                     consumeIngredientService.consumeIngredients(1L, buildRequest(List.of(1L)));
 
-            assertThat(result.isWeeklyGoalAchieved()).isFalse();
+            assertThat(result.getReward().getTypes())
+                    .doesNotContain(CookieLog.CookieLogType.BONUS_WEEKLY_GOAL_ACHIEVE);
         }
 
         @Test
@@ -190,7 +192,8 @@ public class ConsumeIngredientServiceTest {
             ConsumeIngredientsResponseDto result =
                     consumeIngredientService.consumeIngredients(1L, buildRequest(List.of(1L)));
 
-            assertThat(result.isWeeklyGoalAchieved()).isFalse();
+            assertThat(result.getReward().getTypes())
+                    .doesNotContain(CookieLog.CookieLogType.BONUS_WEEKLY_GOAL_ACHIEVE);
         }
 
         @Test
@@ -204,7 +207,8 @@ public class ConsumeIngredientServiceTest {
             ConsumeIngredientsResponseDto result =
                     consumeIngredientService.consumeIngredients(1L, buildRequest(List.of(1L, 2L, 3L)));
 
-            assertThat(result.isWeeklyGoalAchieved()).isTrue();
+            assertThat(result.getReward().getTypes())
+                    .contains(CookieLog.CookieLogType.BONUS_WEEKLY_GOAL_ACHIEVE);
         }
     }
 
@@ -238,7 +242,8 @@ public class ConsumeIngredientServiceTest {
             ConsumeIngredientsResponseDto result =
                     consumeIngredientService.consumeIngredients(1L, buildRequest(List.of(1L)));
 
-            assertThat(result.isDailyFirstConsumeAchieved()).isTrue();
+            assertThat(result.getReward().getTypes())
+                    .contains(CookieLog.CookieLogType.BASIC_DAILY_FIRST_CONSUME);
         }
 
         @Test
@@ -267,7 +272,8 @@ public class ConsumeIngredientServiceTest {
             ConsumeIngredientsResponseDto result =
                     consumeIngredientService.consumeIngredients(1L, buildRequest(List.of(1L)));
 
-            assertThat(result.isDailyFirstConsumeAchieved()).isFalse();
+            assertThat(result.getReward().getTypes())
+                    .doesNotContain(CookieLog.CookieLogType.BASIC_DAILY_FIRST_CONSUME);
         }
 
         @Test
@@ -282,7 +288,8 @@ public class ConsumeIngredientServiceTest {
                     consumeIngredientService.consumeIngredients(1L, buildRequest(List.of(1L)));
 
             assertThat(result.getReward().getGranted()).isTrue();
-            assertThat(result.isWeeklyGoalAchieved()).isFalse();
+            assertThat(result.getReward().getTypes())
+                    .doesNotContain(CookieLog.CookieLogType.BONUS_WEEKLY_GOAL_ACHIEVE);
         }
     }
 
@@ -329,7 +336,7 @@ public class ConsumeIngredientServiceTest {
             ConsumeIngredientsResponseDto result =
                     consumeIngredientService.consumeIngredients(1L, buildRequest(List.of(1L)));
 
-            assertThat(result.getReward().getGrantedTypes())
+            assertThat(result.getReward().getTypes())
                     .containsExactly(CookieLog.CookieLogType.BASIC_DAILY_FIRST_CONSUME);
         }
 
@@ -345,7 +352,7 @@ public class ConsumeIngredientServiceTest {
                     consumeIngredientService.consumeIngredients(1L, buildRequest(List.of(1L)));
 
             assertThat(result.getReward().getGranted()).isFalse();
-            assertThat(result.getReward().getGrantedTypes()).isEmpty();
+            assertThat(result.getReward().getTypes()).isEmpty();
             assertThat(result.getReward().getPoints()).isZero();
         }
 
@@ -360,8 +367,26 @@ public class ConsumeIngredientServiceTest {
             ConsumeIngredientsResponseDto result =
                     consumeIngredientService.consumeIngredients(1L, buildRequest(List.of(1L)));
 
-            assertThat(result.getReward().getGrantedTypes())
+            assertThat(result.getReward().getTypes())
                     .contains(CookieLog.CookieLogType.BONUS_WEEKLY_GOAL_ACHIEVE);
+        }
+
+        @Test
+        @DisplayName("임박 재료 소비 + 하루 첫 소비가 동시 성립할 때 두 타입이 모두 포함된다")
+        void 임박재료_첫소비_동시성립_두타입_모두포함() {
+            given(userIngredientRepository.findAllByIngredientIdInAndUser_UserId(anyList(), anyLong()))
+                    .willReturn(List.of(buildUrgentIngredient()));
+            given(cookieService.grantDailyCookie(1L, CookieLog.CookieLogType.BASIC_DAILY_FIRST_CONSUME))
+                    .willReturn(true);
+            given(weeklyGoalService.handleGoalProgress(1L, GoalActionType.USE_EXPIRING_INGREDIENT))
+                    .willReturn(true);
+
+            ConsumeIngredientsResponseDto result =
+                    consumeIngredientService.consumeIngredients(1L, buildRequest(List.of(1L)));
+
+            assertThat(result.getReward().getTypes())
+                    .contains(CookieLog.CookieLogType.BASIC_DAILY_FIRST_CONSUME,
+                              CookieLog.CookieLogType.BONUS_WEEKLY_GOAL_ACHIEVE);
         }
 
         @Test
@@ -373,7 +398,7 @@ public class ConsumeIngredientServiceTest {
             ConsumeIngredientsResponseDto result =
                     consumeIngredientService.consumeIngredients(1L, buildRequest(List.of(1L)));
 
-            assertThat(result.getReward().getGrantedTypes())
+            assertThat(result.getReward().getTypes())
                     .doesNotContain(CookieLog.CookieLogType.BONUS_URGENT_INGREDIENT_USE);
             verify(cookieService, never())
                     .grantDailyCookie(anyLong(), eq(CookieLog.CookieLogType.BONUS_URGENT_INGREDIENT_USE));

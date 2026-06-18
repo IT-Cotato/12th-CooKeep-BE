@@ -97,8 +97,8 @@ public class ConsumeIngredientService {
         log.info("User {} consumed {} ingredients. dailyGranted: {}, urgentCount: {}, weeklyGoalAchieved: {}",
                 userId, userIngredients.size(), dailyGranted, urgentCount, weeklyGoalAchieved);
 
-        return ConsumeIngredientsResponseDto.of(
-                !grantedTypes.isEmpty(), points, grantedTypes, dailyGranted, weeklyGoalAchieved);
+        int currentCookieCount = cookieService.getMyCookies(userId);
+        return ConsumeIngredientsResponseDto.of(!grantedTypes.isEmpty(), points, grantedTypes, currentCookieCount);
 
     }
 

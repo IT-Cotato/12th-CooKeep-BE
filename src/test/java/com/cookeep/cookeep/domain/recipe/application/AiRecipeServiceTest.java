@@ -193,7 +193,7 @@ public class AiRecipeServiceTest {
         }
 
         @Test
-        @DisplayName("COOKING 목표 달성 시 weeklyGoalAchieved=true를 반환한다")
+        @DisplayName("COOKING 목표 달성 시 reward.types에 BONUS_WEEKLY_GOAL_ACHIEVE가 포함된다")
         void COOKING_달성_true() {
             given(userIngredientRepository.findAllByIngredientIdInAndUser_UserId(anyList(), eq(1L)))
                     .willReturn(List.of(buildNormalIngredient()));
@@ -201,19 +201,20 @@ public class AiRecipeServiceTest {
 
             AiRecipeAdoptResponseDto result = aiRecipeService.adoptRecipe(1L, 10L);
 
-            assertThat(result.isWeeklyGoalAchieved()).isTrue();
+            assertThat(result.getReward().getTypes())
+                    .contains(CookieLog.CookieLogType.BONUS_WEEKLY_GOAL_ACHIEVE);
         }
 
         @Test
-        @DisplayName("COOKING 미달성 + 임박 재료 없으면 weeklyGoalAchieved=false를 반환한다")
+        @DisplayName("COOKING 미달성 + 임박 재료 없으면 reward.types에 BONUS_WEEKLY_GOAL_ACHIEVE가 없다")
         void COOKING_미달성_임박없음_false() {
             given(userIngredientRepository.findAllByIngredientIdInAndUser_UserId(anyList(), eq(1L)))
                     .willReturn(List.of(buildNormalIngredient()));
-            // weeklyGoalService 기본값이 false이므로 별도 stubbing 불필요
 
             AiRecipeAdoptResponseDto result = aiRecipeService.adoptRecipe(1L, 10L);
 
-            assertThat(result.isWeeklyGoalAchieved()).isFalse();
+            assertThat(result.getReward().getTypes())
+                    .doesNotContain(CookieLog.CookieLogType.BONUS_WEEKLY_GOAL_ACHIEVE);
         }
 
         @Test
@@ -258,7 +259,7 @@ public class AiRecipeServiceTest {
         }
 
         @Test
-        @DisplayName("임박 재료 포함 채택으로 USE_EXPIRING 달성 시 weeklyGoalAchieved=true를 반환한다")
+        @DisplayName("임박 재료 포함 채택으로 USE_EXPIRING 달성 시 reward.types에 BONUS_WEEKLY_GOAL_ACHIEVE가 포함된다")
         void 임박재료_USE_EXPIRING_달성_true() {
             given(userIngredientRepository.findAllByIngredientIdInAndUser_UserId(anyList(), eq(1L)))
                     .willReturn(List.of(buildUrgentIngredient()));
@@ -267,19 +268,20 @@ public class AiRecipeServiceTest {
 
             AiRecipeAdoptResponseDto result = aiRecipeService.adoptRecipe(1L, 10L);
 
-            assertThat(result.isWeeklyGoalAchieved()).isTrue();
+            assertThat(result.getReward().getTypes())
+                    .contains(CookieLog.CookieLogType.BONUS_WEEKLY_GOAL_ACHIEVE);
         }
 
         @Test
-        @DisplayName("임박 재료 있지만 USE_EXPIRING 미달성 + COOKING 미달성이면 weeklyGoalAchieved=false를 반환한다")
+        @DisplayName("임박 재료 있지만 USE_EXPIRING 미달성 + COOKING 미달성이면 reward.types에 BONUS_WEEKLY_GOAL_ACHIEVE가 없다")
         void 임박재료_USE_EXPIRING_미달성_COOKING_미달성_false() {
             given(userIngredientRepository.findAllByIngredientIdInAndUser_UserId(anyList(), eq(1L)))
                     .willReturn(List.of(buildUrgentIngredient()));
 
-            // 기본값이 false이므로 별도 stubbing 불필요
             AiRecipeAdoptResponseDto result = aiRecipeService.adoptRecipe(1L, 10L);
 
-            assertThat(result.isWeeklyGoalAchieved()).isFalse();
+            assertThat(result.getReward().getTypes())
+                    .doesNotContain(CookieLog.CookieLogType.BONUS_WEEKLY_GOAL_ACHIEVE);
         }
     }
 
@@ -298,9 +300,8 @@ public class AiRecipeServiceTest {
             AiRecipeAdoptResponseDto result = aiRecipeService.adoptRecipe(1L, 10L);
 
             assertThat(result.getReward()).isNotNull();
-            assertThat(result.getReward().getGrantedTypes())
+            assertThat(result.getReward().getTypes())
                     .contains(CookieLog.CookieLogType.ONBOARDING_RECIPE);
-            assertThat(result.isRecipeRewardGranted()).isTrue();
         }
 
         @Test
@@ -313,9 +314,8 @@ public class AiRecipeServiceTest {
 
             AiRecipeAdoptResponseDto result = aiRecipeService.adoptRecipe(1L, 10L);
 
-            assertThat(result.getReward().getGrantedTypes())
+            assertThat(result.getReward().getTypes())
                     .contains(CookieLog.CookieLogType.BONUS_URGENT_INGREDIENT_USE);
-            assertThat(result.isUrgentIngredientRewardGranted()).isTrue();
         }
 
         @Test
@@ -334,7 +334,7 @@ public class AiRecipeServiceTest {
             AiRecipeAdoptResponseDto result = aiRecipeService.adoptRecipe(1L, 10L);
 
             assertThat(result.getReward().getGranted()).isFalse();
-            assertThat(result.getReward().getGrantedTypes()).isEmpty();
+            assertThat(result.getReward().getTypes()).isEmpty();
             assertThat(result.getReward().getPoints()).isZero();
         }
 
