@@ -335,4 +335,17 @@ public class AiRecipeController {
 
         return ResponseEntity.ok(DataResponse.ok());
     }
+
+    @PostMapping("/random")
+    public ResponseEntity<AiRecipeResponseDto> generateRandomRecipe(
+            @AuthenticationPrincipal(expression = "userId") Long userId) {
+        return ResponseEntity.ok(aiRecipeService.generateRandomRecipe(userId));
+    }
+
+    @PostMapping("/random/retry")
+    public ResponseEntity<AiRecipeResponseDto> regenerateRandomRecipe(
+            @AuthenticationPrincipal(expression = "userId") Long userId,
+            @Valid @RequestBody AiRecipeRetryDto request) {
+        return ResponseEntity.ok(aiRecipeService.regenerateRandomRecipe(userId, request.getSessionId()));
+    }
 }

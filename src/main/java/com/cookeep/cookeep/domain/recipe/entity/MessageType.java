@@ -4,7 +4,9 @@ public enum MessageType {
 
     INITIAL_REQUEST("첫 레시피 요청"),
     RETRY_REQUEST("다른 레시피를 받을래요"),
-    ADOPT_RECIPE("이 레시피대로 요리할래요");
+    ADOPT_RECIPE("이 레시피대로 요리할래요"),
+    RANDOM_INITIAL_REQUEST("랜덤 레시피 추천 받기"),
+    RANDOM_RETRY_REQUEST("다른 랜덤 레시피를 받을래요");
 
     private final String description;
 
