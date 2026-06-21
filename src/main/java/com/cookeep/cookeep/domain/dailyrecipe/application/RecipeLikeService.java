@@ -41,37 +41,42 @@ public class RecipeLikeService {
 		DailyRecipe dailyRecipe = dailyRecipeRepository.findById(dailyRecipeId)
 			.orElseThrow(() -> new AppException(ErrorCode.DAILY_RECIPE_NOT_FOUND));
 
-		// 자신의 글에 좋아요 불가
 		if (dailyRecipe.getUser().getUserId().equals(userId)) {
 			throw new AppException(ErrorCode.CANNOT_LIKE_OWN_RECIPE);
 		}
 
 		var existingLike = recipeLikeRepository.findByDailyRecipeAndUser(dailyRecipe, user);
 
-		// 이미 좋아요를 눌렀으면 삭제
-		if (existingLike.isPresent()) {
-			recipeLikeRepository.delete(existingLike.get());
-			dailyRecipe.decrementLikeCount();
-			weeklyGoalService.handleGoalUndo(userId, GoalActionType.RECIPE_LIKE);
-			return new ToggleLikeResult(false, null);
-		}
+		return existingLike.isPresent()
+			? cancelLike(existingLike.get(), dailyRecipe, userId)
+			: addLike(user, dailyRecipe, userId);
+	}
 
-		// 좋아요 추가
-		RecipeLike recipeLike = RecipeLike.builder()
-			.dailyRecipe(dailyRecipe)
-			.user(user)
-			.build();
-		recipeLikeRepository.save(recipeLike);
+	private ToggleLikeResult cancelLike(RecipeLike existingLike, DailyRecipe dailyRecipe, Long userId) {
+		recipeLikeRepository.delete(existingLike);
+		dailyRecipe.decrementLikeCount();
+		weeklyGoalService.handleGoalUndo(userId, GoalActionType.RECIPE_LIKE);
+		return new ToggleLikeResult(false, null);
+	}
+
+	private ToggleLikeResult addLike(User user, DailyRecipe dailyRecipe, Long userId) {
+		recipeLikeRepository.save(RecipeLike.builder().dailyRecipe(dailyRecipe).user(user).build());
 		dailyRecipe.incrementLikeCount();
 		boolean goalAchieved = weeklyGoalService.handleGoalProgress(userId, GoalActionType.RECIPE_LIKE);
+		return new ToggleLikeResult(true, createWeeklyGoalReward(goalAchieved, userId));
+	}
+
+	private CookieRewardDto createWeeklyGoalReward(boolean goalAchieved, Long userId) {
 		List<CookieLog.CookieLogType> types = goalAchieved
 				? List.of(CookieLog.CookieLogType.BONUS_WEEKLY_GOAL_ACHIEVE) : List.of();
-		int points = goalAchieved ? CookieLog.CookieLogType.BONUS_WEEKLY_GOAL_ACHIEVE.getDefaultAmount() : 0;
-		CookieRewardDto reward = CookieRewardDto.builder()
-				.granted(goalAchieved).points(points).types(types)
+		int points = goalAchieved
+				? CookieLog.CookieLogType.BONUS_WEEKLY_GOAL_ACHIEVE.getDefaultAmount() : 0;
+		return CookieRewardDto.builder()
+				.granted(goalAchieved)
+				.points(points)
+				.types(types)
 				.currentCookieCount(cookieService.getMyCookies(userId))
 				.build();
-		return new ToggleLikeResult(true, reward);
 	}
 
 	// 특정 레시피의 좋아요 수 조회
