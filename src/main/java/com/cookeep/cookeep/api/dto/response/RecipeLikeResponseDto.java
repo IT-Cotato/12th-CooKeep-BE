@@ -1,26 +1,36 @@
 package com.cookeep.cookeep.api.dto.response;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 import lombok.Getter;
 
+@Schema(name = "RecipeLikeResponse", description = "레시피 좋아요 토글 응답 DTO")
 @Getter
 @Builder
 public class RecipeLikeResponseDto {
+	@Schema(description = "데일리 레시피 ID")
 	private Long dailyRecipeId;
-	private boolean isLiked; // true: 좋아요 추가, false: 좋아요 취소
-	private Integer likeCount; // 현재 좋아요 수
-	private boolean weeklyGoalAchieved; // 이번 액션으로 주간 목표 달성 여부
+	@Schema(description = "좋아요 여부")
+	private boolean isLiked;
+	@Schema(description = "현재 좋아요 수")
+	private Integer likeCount;
+	@Schema(description = "쿠키 리워드 정보 (좋아요 취소 시 null)")
+	private CookieRewardDto reward;
 
 	public static RecipeLikeResponseDto from(Long dailyRecipeId, boolean isLiked, Integer likeCount) {
-		return from(dailyRecipeId, isLiked, likeCount, false);
-	}
-
-	public static RecipeLikeResponseDto from(Long dailyRecipeId, boolean isLiked, Integer likeCount, boolean weeklyGoalAchieved) {
 		return RecipeLikeResponseDto.builder()
 			.dailyRecipeId(dailyRecipeId)
 			.isLiked(isLiked)
 			.likeCount(likeCount)
-			.weeklyGoalAchieved(weeklyGoalAchieved)
+			.build();
+	}
+
+	public static RecipeLikeResponseDto from(Long dailyRecipeId, boolean isLiked, Integer likeCount, CookieRewardDto reward) {
+		return RecipeLikeResponseDto.builder()
+			.dailyRecipeId(dailyRecipeId)
+			.isLiked(isLiked)
+			.likeCount(likeCount)
+			.reward(reward)
 			.build();
 	}
 }

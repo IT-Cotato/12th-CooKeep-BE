@@ -21,54 +21,20 @@ public class ConsumeIngredientsResponseDto {
             description = "리워드 정보",
             requiredMode = Schema.RequiredMode.REQUIRED
     )
-    private RewardInfo reward;
-
-    @Schema(description = "오늘 첫 소비 쿠키(BASIC_DAILY_FIRST_CONSUME) 지급 여부", example = "true")
-    private boolean dailyFirstConsumeAchieved;
-
-    @Schema(description = "이번 소비로 주간 목표(COOKING) 달성 여부", example = "false")
-    private boolean weeklyGoalAchieved;
-
-    @Getter
-    @Builder
-    @AllArgsConstructor
-    public static class RewardInfo {
-        @Schema(
-                description = "리워드 지급 여부",
-                example = "true",
-                requiredMode = Schema.RequiredMode.REQUIRED
-        )
-        private Boolean granted;
-
-        @Schema(
-                description = "지급된 리워드 포인트",
-                example = "3",
-                requiredMode = Schema.RequiredMode.REQUIRED
-        )
-        private Integer points;
-
-        @Schema(
-                description = "지급된 쿠키 로그 타입 목록",
-                example = "[\"BASIC_DAILY_FIRST_CONSUME\", \"BONUS_URGENT_INGREDIENT_USE\"]",
-                requiredMode = Schema.RequiredMode.NOT_REQUIRED
-        )
-        private List<CookieLog.CookieLogType> grantedTypes;
-    }
+    private CookieRewardDto reward;
 
     public static ConsumeIngredientsResponseDto of(
             boolean granted,
             int points,
-            List<CookieLog.CookieLogType> grantedTypes,
-            boolean dailyFirstConsumeAchieved,
-            boolean weeklyGoalAchieved) {
+            List<CookieLog.CookieLogType> types,
+            int currentCookieCount) {
         return ConsumeIngredientsResponseDto.builder()
-                .reward(RewardInfo.builder()
+                .reward(CookieRewardDto.builder()
                         .granted(granted)
                         .points(points)
-                        .grantedTypes(grantedTypes)
+                        .types(types)
+                        .currentCookieCount(currentCookieCount)
                         .build())
-                .dailyFirstConsumeAchieved(dailyFirstConsumeAchieved)
-                .weeklyGoalAchieved(weeklyGoalAchieved)
                 .build();
     }
 }

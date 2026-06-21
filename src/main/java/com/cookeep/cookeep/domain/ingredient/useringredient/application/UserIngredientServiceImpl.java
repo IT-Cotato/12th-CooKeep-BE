@@ -97,8 +97,9 @@ public class UserIngredientServiceImpl implements UserIngredientService {
 
         // 최초 재료 등록 온보딩 쿠키 지급 (일회성)
         boolean rewardGranted = grantFirstIngredientRewardIfEligible(user);
+        int currentCookieCount = cookieService.getMyCookies(userId);
 
-        return UserIngredientListCreateResponseDto.of(results, rewardGranted);
+        return UserIngredientListCreateResponseDto.of(results, rewardGranted, currentCookieCount);
     }
 
     private UserIngredientCreateResponseDto createOne(

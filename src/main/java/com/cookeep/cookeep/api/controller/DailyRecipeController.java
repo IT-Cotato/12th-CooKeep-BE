@@ -124,7 +124,7 @@ public class DailyRecipeController {
         );
 
         return ResponseEntity.status(201)
-                .body(DataResponse.created(DailyRecipeCreateResponseDto.from(result.dailyRecipe(), result.weeklyGoalAchieved(), result.photoCookieAwarded())));
+                .body(DataResponse.created(DailyRecipeCreateResponseDto.from(result.dailyRecipe(), result.reward())));
     }
 
     @Operation(
@@ -178,7 +178,7 @@ public class DailyRecipeController {
                 request.getRecipeImageUrl(), request.getDeleteRecipeImage()
         );
 
-        return ResponseEntity.ok(DataResponse.from(DailyRecipeUpdateResponseDto.from(result.dailyRecipe(), result.weeklyGoalAchieved(), result.photoCookieAwarded())));
+        return ResponseEntity.ok(DataResponse.from(DailyRecipeUpdateResponseDto.from(result.dailyRecipe(), result.reward())));
     }
 
     @Operation(
