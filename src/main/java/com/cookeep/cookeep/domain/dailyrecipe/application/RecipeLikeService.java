@@ -67,10 +67,11 @@ public class RecipeLikeService {
 	}
 
 	private CookieRewardDto createWeeklyGoalReward(boolean goalAchieved, Long userId) {
-		List<CookieLog.CookieLogType> types = goalAchieved
-				? List.of(CookieLog.CookieLogType.BONUS_WEEKLY_GOAL_ACHIEVE) : List.of();
-		int points = goalAchieved
-				? CookieLog.CookieLogType.BONUS_WEEKLY_GOAL_ACHIEVE.getDefaultAmount() : 0;
+		var weeklyGoalType = CookieLog.CookieLogType.BONUS_WEEKLY_GOAL_ACHIEVE;
+
+		List<CookieLog.CookieLogType> types = goalAchieved ? List.of(weeklyGoalType) : List.of();
+		int points = goalAchieved ? weeklyGoalType.getDefaultAmount() : 0;
+
 		return CookieRewardDto.builder()
 				.granted(goalAchieved)
 				.points(points)
