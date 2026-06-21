@@ -51,6 +51,7 @@ public class AiRecipeService {
     private static final int MAX_RETRY_COUNT = 5;
     private static final int URGENT = 0;
     private static final int RANDOM_MIN_SELECT_COUNT = 3;
+    private static final int RANDOM_SELECTION_MAX_ATTEMPTS = 3;
 
     private final GeminiService geminiService;
     private final AiSessionRepository aiSessionRepository;
@@ -458,12 +459,13 @@ public class AiRecipeService {
 
         List<String> dislikedIngredients = getDislikedIngredients(userId);
 
-        // 4. AI 호출 (캐시 미적용)
-        GeminiRecipeResponseDto aiResponse =
-                geminiQueueService.generateRandomRecipe(enrichedAll, dislikedIngredients);
-
-        // 5. AI가 실제 선택한 ingredientId만 추출
-        List<Long> selectedIds = extractAndValidateSelectedIngredientIds(aiResponse, allUserIngredients);
+        // 4~5. AI 호출 + 검증 (개수 부족 시 자동 재시도)
+        RandomRecipeResult result = generateAndValidateRandomRecipe(
+                () -> geminiQueueService.generateRandomRecipe(enrichedAll, dislikedIngredients),
+                allUserIngredients
+        );
+        GeminiRecipeResponseDto aiResponse = result.aiResponse();
+        List<Long> selectedIds = result.selectedIds();
 
         // 6. 세션 생성 (feature=ANY 고정)
         AiSession session = AiSession.builder()
@@ -537,11 +539,12 @@ public class AiRecipeService {
 
         List<String> dislikedIngredients = getDislikedIngredients(userId);
 
-        GeminiRecipeResponseDto aiResponse = geminiQueueService.generateRandomRecipeWithExclusion(
-                enrichedAll, dislikedIngredients, excludedTitles);
-
-        // 세션 생성 전에 검증부터
-        List<Long> selectedIds = extractAndValidateSelectedIngredientIds(aiResponse, allUserIngredients);
+        RandomRecipeResult result = generateAndValidateRandomRecipe(
+                () -> geminiQueueService.generateRandomRecipeWithExclusion(enrichedAll, dislikedIngredients, excludedTitles),
+                allUserIngredients
+        );
+        GeminiRecipeResponseDto aiResponse = result.aiResponse();
+        List<Long> selectedIds = result.selectedIds();
 
         session.increaseAttempt();
         session.setUserIngredientIds(writeEnrichedIngredientsAsJson(enrichedAll));
@@ -1017,16 +1020,6 @@ public class AiRecipeService {
         return false;
     }
 
-    // AI 응답의 user_ingredients에서 ingredientId 목록 추출
-    private List<Long> extractSelectedIngredientIds(GeminiRecipeResponseDto aiResponse) {
-        if (aiResponse.getIngredients() == null || aiResponse.getIngredients().getUserIngredients() == null) {
-            throw new AppException(ErrorCode.AI_RESPONSE_INVALID_FORMAT);
-        }
-        return aiResponse.getIngredients().getUserIngredients().stream()
-                .map(GeminiRecipeResponseDto.UserIngredient::getIngredientId)
-                .collect(Collectors.toList());
-    }
-
     // 유저 메시지 저장 (랜덤 생성/재요청 공용)
     private void saveRandomUserMessage(AiSession session, MessageType type, List<Long> allIngredientIds) {
         try {
@@ -1083,6 +1076,70 @@ public class AiRecipeService {
         }
 
         return selectedIds;
+    }
+
+    // AI 호출 + 검증 결과를 함께 반환하기 위한 record
+    private record RandomRecipeResult(GeminiRecipeResponseDto aiResponse, List<Long> selectedIds) {}
+
+    // AI 응답의 user_ingredients에서 ingredientId 목록만 추출 (형식 검증만 수행, 개수/존재 여부는 검증하지 않음)
+    private List<Long> extractSelectedIngredientIds(GeminiRecipeResponseDto aiResponse) {
+        if (aiResponse.getIngredients() == null
+                || aiResponse.getIngredients().getUserIngredients() == null) {
+            log.error("❌ AI 응답에 user_ingredients가 없습니다.");
+            throw new AppException(ErrorCode.AI_RESPONSE_INVALID_FORMAT);
+        }
+        return aiResponse.getIngredients().getUserIngredients().stream()
+                .map(GeminiRecipeResponseDto.UserIngredient::getIngredientId)
+                .filter(java.util.Objects::nonNull)
+                .distinct()
+                .collect(Collectors.toList());
+    }
+
+    // AI가 선택한 ingredientId가 실제 보유 재료의 부분집합인지 검증 (할루시네이션 방지) — 재시도 대상 아님
+    private void validateSelectedIngredientsExist(
+            List<Long> selectedIds,
+            List<UserIngredient> allUserIngredients) {
+
+        java.util.Set<Long> validIds = allUserIngredients.stream()
+                .map(UserIngredient::getIngredientId)
+                .collect(Collectors.toSet());
+
+        List<Long> invalidIds = selectedIds.stream()
+                .filter(id -> !validIds.contains(id))
+                .collect(Collectors.toList());
+
+        if (!invalidIds.isEmpty()) {
+            log.error("❌ AI가 존재하지 않는 ingredientId 선택. invalidIds={}, validIds={}",
+                    invalidIds, validIds);
+            throw new AppException(ErrorCode.AI_RANDOM_INGREDIENT_MISMATCH);
+        }
+    }
+
+    // AI 호출 + 검증 오케스트레이션 — 선택 개수가 부족하면 자동 재시도, 최대 시도 후에도 부족하면 에러
+    private RandomRecipeResult generateAndValidateRandomRecipe(
+            java.util.function.Supplier<GeminiRecipeResponseDto> aiCallSupplier,
+            List<UserIngredient> allUserIngredients) {
+
+        for (int attempt = 1; attempt <= RANDOM_SELECTION_MAX_ATTEMPTS; attempt++) {
+
+            GeminiRecipeResponseDto aiResponse = aiCallSupplier.get();
+            List<Long> selectedIds = extractSelectedIngredientIds(aiResponse);
+
+            if (selectedIds.size() < RANDOM_MIN_SELECT_COUNT) {
+                log.warn("⚠️ AI 선택 재료 개수 부족({}/{}). 재시도 {}/{}",
+                        selectedIds.size(), RANDOM_MIN_SELECT_COUNT, attempt, RANDOM_SELECTION_MAX_ATTEMPTS);
+                continue; // 개수 부족 → 다음 시도로 재호출
+            }
+
+            // 개수는 충족 → 할루시네이션 여부 검증 (실패 시 즉시 에러, 재시도 없음)
+            validateSelectedIngredientsExist(selectedIds, allUserIngredients);
+
+            return new RandomRecipeResult(aiResponse, selectedIds);
+        }
+
+        log.error("❌ AI가 {}회 시도 후에도 재료를 {}개 이상 선택하지 못했습니다.",
+                RANDOM_SELECTION_MAX_ATTEMPTS, RANDOM_MIN_SELECT_COUNT);
+        throw new AppException(ErrorCode.AI_RANDOM_SELECTION_INSUFFICIENT);
     }
 
 }
