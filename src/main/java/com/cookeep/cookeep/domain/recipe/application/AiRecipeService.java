@@ -50,8 +50,8 @@ public class AiRecipeService {
 
     private static final int MAX_RETRY_COUNT = 5;
     private static final int URGENT = 0;
-    private static final int RANDOM_MIN_SELECT_COUNT = 3;
-    private static final int RANDOM_SELECTION_MAX_ATTEMPTS = 3;
+    private static final int RANDOM_MIN_SELECT_COUNT = RandomRecipePolicy.RANDOM_MIN_SELECT_COUNT;
+    private static final int RANDOM_SELECTION_MAX_ATTEMPTS = RandomRecipePolicy.RANDOM_SELECTION_MAX_ATTEMPTS;
 
     private final GeminiService geminiService;
     private final AiSessionRepository aiSessionRepository;
@@ -449,8 +449,8 @@ public class AiRecipeService {
         // 2. 전체 냉장고 재료 조회 (Storage 구분 없이)
         List<UserIngredient> allUserIngredients =
                 userIngredientRepository.findAllByUser_UserId(userId);
-        if (allUserIngredients.isEmpty()) {
-            throw new AppException(ErrorCode.RANDOM_RECIPE_REFRIGERATOR_EMPTY);
+        if (allUserIngredients.size() < RANDOM_MIN_SELECT_COUNT) {
+            throw new AppException(ErrorCode.RANDOM_RECIPE_INGREDIENT_NOT_ENOUGH);
         }
 
         // 3. 변환 (기존 enrichIngredientsFromUserIngredients 재사용)
@@ -525,8 +525,8 @@ public class AiRecipeService {
         // 매번 전체 냉장고 재조회 (캐시 미적용이므로 매번 최신 상태 반영)
         List<UserIngredient> allUserIngredients =
                 userIngredientRepository.findAllByUser_UserId(userId);
-        if (allUserIngredients.isEmpty()) {
-            throw new AppException(ErrorCode.RANDOM_RECIPE_REFRIGERATOR_EMPTY);
+        if (allUserIngredients.size() < RANDOM_MIN_SELECT_COUNT) {
+            throw new AppException(ErrorCode.RANDOM_RECIPE_INGREDIENT_NOT_ENOUGH);
         }
         List<IngredientDetailDto> enrichedAll =
                 enrichIngredientsFromUserIngredients(allUserIngredients);
@@ -1073,7 +1073,11 @@ public class AiRecipeService {
         }
     }
 
-    // AI 호출 + 검증 오케스트레이션 — 선택 개수가 부족하면 자동 재시도, 최대 시도 후에도 부족하면 에러
+    /*
+    AI 호출 + 검증 오케스트레이션 — 선택 개수가 부족하면 자동 재시도, 최대 시도 후에도 부족하면 에러
+    재료 3개 미만이 나오는 경우가 흔치 않다는 전제하에 현재 구조가 전체 처리량 관점에서 더 안전하다고 판단
+    실제 모니터링 기준 검토 필요
+     */
     private RandomRecipeResult generateAndValidateRandomRecipe(
             java.util.function.Supplier<GeminiRecipeResponseDto> aiCallSupplier,
             List<UserIngredient> allUserIngredients) {

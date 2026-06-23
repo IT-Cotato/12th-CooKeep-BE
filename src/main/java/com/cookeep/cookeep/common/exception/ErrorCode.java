@@ -56,7 +56,7 @@ public enum ErrorCode {
 	DISLIKED_INGREDIENT_INCLUDED(HttpStatus.BAD_REQUEST, "제외 재료가 포함된 레시피입니다.", "RECIPE-025"),
 	INVALID_FEATURE(HttpStatus.BAD_REQUEST, "유효하지 않은 요리 종류입니다.", "RECIPE-029"),
 	SESSION_FEATURE_NOT_FOUND(HttpStatus.BAD_REQUEST, "세션의 요리 종류 정보를 찾을 수 없습니다.", "RECIPE-030"),
-	RANDOM_RECIPE_REFRIGERATOR_EMPTY(HttpStatus.BAD_REQUEST, "냉장고에 재료가 없습니다.", "RECIPE-031"),
+	RANDOM_RECIPE_INGREDIENT_NOT_ENOUGH(HttpStatus.BAD_REQUEST, "랜덤 레시피 생성을 위해 재료가 최소 3개 이상 필요합니다.", "RECIPE-031"),
 
 	// ONBOARDING
 	INVALID_FOOD_TYPE_COUNT(HttpStatus.BAD_REQUEST, "선호하는 음식 종류는 3개까지만 선택 가능합니다.", "ONBOARDING-001"),

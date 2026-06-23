@@ -341,7 +341,7 @@ public class AiRecipeController {
             description = "유저의 냉장고에 있는 전체 식재료를 기반으로 AI가 재료를 직접 선택하여 레시피를 생성합니다. (feature는 ANY로 고정)"
     )
     @ApiErrorCodeExamples({
-            ErrorCode.RANDOM_RECIPE_REFRIGERATOR_EMPTY,
+            ErrorCode.RANDOM_RECIPE_INGREDIENT_NOT_ENOUGH,
             ErrorCode.INVALID_INGREDIENT_TYPE,
             ErrorCode.INGREDIENT_NOT_FOUND,
             ErrorCode.AI_RANDOM_SELECTION_INSUFFICIENT,
@@ -360,7 +360,7 @@ public class AiRecipeController {
             @ApiResponse(responseCode = "200", description = "AI 랜덤 레시피 생성 성공"),
             @ApiResponse(responseCode = "400", description = """
                 잘못된 요청입니다. 다음 오류가 발생할 수 있습니다:
-                - RANDOM_RECIPE_REFRIGERATOR_EMPTY: 냉장고에 보유한 재료가 없어 레시피를 생성할 수 없습니다.
+                - RANDOM_RECIPE_INGREDIENT_NOT_ENOUGH: 랜덤 레시피 생성을 위해 재료가 최소 3개 이상 필요합니다.
                 - INVALID_INGREDIENT_TYPE: 유효하지 않은 재료 타입입니다.
                 - DISLIKED_INGREDIENT_INCLUDED: AI가 생성한 재료에 비선호 재료가 포함되었습니다.
                 """, content = @Content),
@@ -403,7 +403,7 @@ public class AiRecipeController {
             ErrorCode.AI_SESSION_NOT_FOUND,
             ErrorCode.SESSION_ALREADY_COMPLETED,
             ErrorCode.AI_RECIPE_CHANGE_LIMIT_EXCEEDED,
-            ErrorCode.RANDOM_RECIPE_REFRIGERATOR_EMPTY,
+            ErrorCode.RANDOM_RECIPE_INGREDIENT_NOT_ENOUGH,
             ErrorCode.INVALID_INGREDIENT_TYPE,
             ErrorCode.INGREDIENT_NOT_FOUND,
             ErrorCode.RECIPE_TITLE_PARSE_FAILED,
@@ -426,7 +426,7 @@ public class AiRecipeController {
                 - RECIPE_SESSIONID_REQUIRED: 레시피 요청에 필요한 값이 누락되었습니다.
                 - SESSION_ALREADY_COMPLETED: 이미 완료된 세션입니다.
                 - AI_RECIPE_CHANGE_LIMIT_EXCEEDED: 레시피 변경 횟수를 초과했습니다. (5/5)
-                - RANDOM_RECIPE_REFRIGERATOR_EMPTY: 냉장고에 보유한 재료가 없어 레시피를 재생성할 수 없습니다.
+                - RANDOM_RECIPE_INGREDIENT_NOT_ENOUGH: 랜덤 레시피 생성을 위해 재료가 최소 3개 이상 필요합니다.
                 - INVALID_INGREDIENT_TYPE: 유효하지 않은 재료 타입입니다.
                 - DISLIKED_INGREDIENT_INCLUDED: AI가 생성한 재료에 비선호 재료가 포함되었습니다.
                 """, content = @Content),

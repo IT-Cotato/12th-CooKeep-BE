@@ -39,7 +39,7 @@ public class GeminiService {
 
     private final WebClient webClient;
     private final ObjectMapper objectMapper = new ObjectMapper();
-    private static final int RANDOM_MIN_SELECT_COUNT = 3;
+    private static final int RANDOM_MIN_SELECT_COUNT = RandomRecipePolicy.RANDOM_MIN_SELECT_COUNT;
 
     // 일반 신규
     public GeminiRecipeResponseDto generateRecipe(
