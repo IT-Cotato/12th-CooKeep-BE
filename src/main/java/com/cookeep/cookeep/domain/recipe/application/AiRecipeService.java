@@ -534,9 +534,6 @@ public class AiRecipeService {
         // 이전 추천 레시피 제목 제외 (기존 extractRecipeTitlesFromMessages 재사용)
         List<String> excludedTitles = extractRecipeTitlesFromMessages(sessionId);
 
-        saveRandomUserMessage(session, MessageType.RANDOM_RETRY_REQUEST,
-                allUserIngredients.stream().map(UserIngredient::getIngredientId).toList());
-
         List<String> dislikedIngredients = getDislikedIngredients(userId);
 
         RandomRecipeResult result = generateAndValidateRandomRecipe(
@@ -545,6 +542,9 @@ public class AiRecipeService {
         );
         GeminiRecipeResponseDto aiResponse = result.aiResponse();
         List<Long> selectedIds = result.selectedIds();
+
+        saveRandomUserMessage(session, MessageType.RANDOM_RETRY_REQUEST,
+                allUserIngredients.stream().map(UserIngredient::getIngredientId).toList());
 
         session.increaseAttempt();
         session.setUserIngredientIds(writeEnrichedIngredientsAsJson(enrichedAll));
