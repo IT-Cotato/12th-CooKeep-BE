@@ -1036,48 +1036,6 @@ public class AiRecipeService {
         }
     }
 
-    // AI가 선택한 재료 추출 + 검증 (개수 / 실제 보유 여부)
-    private List<Long> extractAndValidateSelectedIngredientIds(
-            GeminiRecipeResponseDto aiResponse,
-            List<UserIngredient> allUserIngredients) {
-
-        if (aiResponse.getIngredients() == null
-                || aiResponse.getIngredients().getUserIngredients() == null) {
-            log.error("❌ AI 응답에 user_ingredients가 없습니다.");
-            throw new AppException(ErrorCode.AI_RESPONSE_INVALID_FORMAT);
-        }
-
-        List<Long> selectedIds = aiResponse.getIngredients().getUserIngredients().stream()
-                .map(GeminiRecipeResponseDto.UserIngredient::getIngredientId)
-                .filter(java.util.Objects::nonNull)
-                .distinct()
-                .collect(Collectors.toList());
-
-        // 1. 최소 선택 개수 검증
-        if (selectedIds.size() < RANDOM_MIN_SELECT_COUNT) {
-            log.error("❌ AI 선택 재료 개수 부족. count={}, selectedIds={}",
-                    selectedIds.size(), selectedIds);
-            throw new AppException(ErrorCode.AI_RANDOM_SELECTION_INSUFFICIENT);
-        }
-
-        // 2. 실제 보유 재료의 부분집합인지 검증 (할루시네이션 방지)
-        java.util.Set<Long> validIds = allUserIngredients.stream()
-                .map(UserIngredient::getIngredientId)
-                .collect(Collectors.toSet());
-
-        List<Long> invalidIds = selectedIds.stream()
-                .filter(id -> !validIds.contains(id))
-                .collect(Collectors.toList());
-
-        if (!invalidIds.isEmpty()) {
-            log.error("❌ AI가 존재하지 않는 ingredientId 선택. invalidIds={}, validIds={}",
-                    invalidIds, validIds);
-            throw new AppException(ErrorCode.AI_RANDOM_INGREDIENT_MISMATCH);
-        }
-
-        return selectedIds;
-    }
-
     // AI 호출 + 검증 결과를 함께 반환하기 위한 record
     private record RandomRecipeResult(GeminiRecipeResponseDto aiResponse, List<Long> selectedIds) {}
 
