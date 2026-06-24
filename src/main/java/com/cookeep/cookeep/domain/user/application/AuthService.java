@@ -298,6 +298,8 @@ public class AuthService {
 		// 이메일 중복 검증 진행
 		checkEmail(email);
 
+		emailVerificationService.assertVerified(email, VerificationPurpose.SIGNUP);
+
 		String encodedPassword = passwordEncoder.encode(signupRequestDTO.password());
 
 		Boolean marketingConsent = signupRequestDTO.marketingConsent();
