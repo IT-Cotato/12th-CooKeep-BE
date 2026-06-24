@@ -39,35 +39,16 @@ public class GeminiService {
 
     private final WebClient webClient;
     private final ObjectMapper objectMapper = new ObjectMapper();
+    private static final int RANDOM_MIN_SELECT_COUNT = RandomRecipePolicy.RANDOM_MIN_SELECT_COUNT;
 
-    public GeminiRecipeResponseDto generateRecipe(
-            List<IngredientDetailDto> ingredients,
-            //Difficulty difficulty,
-            Feature feature,
-            List<String> dislikedIngredients) {
-        return generateRecipeByPrompt(buildPrompt(ingredients, feature, List.of(), dislikedIngredients));
-    }
-
-    public GeminiRecipeResponseDto generateRecipeWithExclusion(
-            List<IngredientDetailDto> ingredients,
-            //Difficulty difficulty,
-            Feature feature,
-            List<String> excludedTitles,
-            List<String> dislikedIngredients
-    ) {
-        return generateRecipeByPrompt(buildPrompt(ingredients, feature, excludedTitles, dislikedIngredients));
-    }
-
-    // 레시피 생성
-    public GeminiRecipeResponseDto generateRecipeByPrompt(String prompt) {
+    // 공통 WebClient 호출 로직
+    private GeminiRecipeResponseDto callGeminiApi(String prompt, GeminiRecipeRequestDto requestBody) {
         try {
 
             log.info("========== Gemini 요청 시작 ==========");
             log.info("Gemini model = {}", model);
             log.info("Prompt length = {}", prompt.length());
             log.debug("Prompt 내용 = \n{}", prompt);
-
-            GeminiRecipeRequestDto requestBody = GeminiRecipeRequestDto.from(prompt);
 
             log.info("Gemini requestBody 생성 완료");
             log.debug("Gemini requestBody JSON = {}", objectMapper.writeValueAsString(requestBody));
@@ -131,6 +112,52 @@ public class GeminiService {
         }
     }
 
+    // 일반 신규
+    public GeminiRecipeResponseDto generateRecipe(
+            List<IngredientDetailDto> ingredients,
+            Feature feature,
+            List<String> dislikedIngredients) {
+        return generateRecipeByPrompt(buildPrompt(ingredients, feature, List.of(), dislikedIngredients));
+    }
+
+    // 일반 재요청
+    public GeminiRecipeResponseDto generateRecipeWithExclusion(
+            List<IngredientDetailDto> ingredients,
+            Feature feature,
+            List<String> excludedTitles,
+            List<String> dislikedIngredients
+    ) {
+        return generateRecipeByPrompt(buildPrompt(ingredients, feature, excludedTitles, dislikedIngredients));
+    }
+
+    // 랜덤 신규
+    public GeminiRecipeResponseDto generateRandomRecipe(
+            List<IngredientDetailDto> allIngredients,
+            List<String> dislikedIngredients) {
+        String prompt = buildRandomPrompt(allIngredients, dislikedIngredients, List.of());
+        return generateRecipeByPrompt(prompt, RANDOM_MIN_SELECT_COUNT);
+    }
+
+    // 랜덤 재요청
+    public GeminiRecipeResponseDto generateRandomRecipeWithExclusion(
+            List<IngredientDetailDto> allIngredients,
+            List<String> dislikedIngredients,
+            List<String> excludedTitles) {
+        String prompt = buildRandomPrompt(allIngredients, dislikedIngredients, excludedTitles);
+        return generateRecipeByPrompt(prompt, RANDOM_MIN_SELECT_COUNT);
+    }
+
+    // 레시피 생성
+    public GeminiRecipeResponseDto generateRecipeByPrompt(String prompt) {
+        return callGeminiApi(prompt, GeminiRecipeRequestDto.from(prompt));
+    }
+
+    // 랜덤레시피 프롬프트
+    public GeminiRecipeResponseDto generateRecipeByPrompt(String prompt, Integer minUserIngredients) {
+
+        return callGeminiApi(prompt, GeminiRecipeRequestDto.from(prompt, minUserIngredients));
+    }
+
     // Gemini 응답 파싱 (DTO에 맞게)
     private GeminiRecipeResponseDto parseResponse(String responseBody) {
         try {
@@ -183,7 +210,7 @@ public class GeminiService {
         }
     }
 
-    // 프롬프트 생성
+    // 일반 프롬프트 생성
     private String buildPrompt(
             List<IngredientDetailDto> ingredients,
             //Difficulty difficulty,
@@ -231,6 +258,46 @@ public class GeminiService {
                 "5. steps는 단계별 조리 방법을 작성하세요.\n\n" +
                 "[user_ingredients]\n" +
                 ingredientsJson + "\n";
+    }
+
+    // 랜덤 프롬프트생성
+    private String buildRandomPrompt(
+            List<IngredientDetailDto> allIngredients,
+            List<String> dislikedIngredients,
+            List<String> excludedTitles) {
+
+        String ingredientsJson = allIngredients.stream()
+                .map(i -> String.format(
+                        "{\"ingredientId\":%d,\"name\":\"%s\",\"unit\":\"%s\"}",
+                        i.getIngredientId(), i.getName(), i.getUnit()))
+                .collect(Collectors.joining(",", "[", "]"));
+
+        String exclusionBlock = (excludedTitles == null || excludedTitles.isEmpty()) ? "" :
+                "\n[제외할 요리]\n" +
+                        excludedTitles.stream().map(t -> "- " + t).collect(Collectors.joining("\n")) +
+                        "\n위 요리와 겹치지 않는 새로운 레시피를 추천하세요.\n";
+
+        String dislikedBlock = (dislikedIngredients == null || dislikedIngredients.isEmpty()) ? "" :
+                "\n[절대 사용 금지 재료]\n" +
+                        dislikedIngredients.stream().map(t -> "- " + t).collect(Collectors.joining("\n")) +
+                        "\n위 재료는 additional_ingredients, optional_ingredients 어디에도 절대 포함하지 마세요.\n";
+
+        return "당신은 요리 레시피 전문가입니다.\n\n" +
+                "[요리 종류] 제한 없음 (어떤 종류의 요리도 추천 가능)\n" +
+                exclusionBlock + dislikedBlock +
+                "\n[재료 선택 규칙]\n" +
+                "1. 아래 전체 보유 재료 목록 중에서 서로 조합이 좋은 재료를 최소 " + RANDOM_MIN_SELECT_COUNT + "개 이상 선택하세요.\n" +
+                "2. 선택한 재료의 ingredientId, name, unit은 반드시 아래 데이터 값 그대로 사용하세요. 목록에 없는 재료를 만들어내지 마세요.\n" +
+                "3. additional_ingredients는 레시피에 필요한 추가 재료 목록입니다. 필수 재료뿐 아니라 없어도 되는 재료나 다른 재료로 대체 가능한 재료도 모두 이 목록에 먼저 추가하세요.\n" +
+                // 규칙 3: optional_ingredients — additional_ingredients에서만 선택
+                "4. optional_ingredients는 additional_ingredients에 이미 추가한 재료 중 일부를 선택해서 '생략 가능' 또는 '대체 가능' 여부를 표시하는 목록입니다. " +
+                "additional_ingredients에 없는 새로운 재료를 이 목록에 추가하는 것은 절대 금지합니다. " +
+                "description은 \"이 재료는 [대체재료]로 대체 가능합니다\" 또는 \"이 재료는 생략 가능합니다\" 중 하나로만 작성하세요.\n" +
+                "5. youtube_search_queries는 한국어 검색어 1~3개를 작성하세요.\n" +
+                "6. steps는 단계별 조리 방법을 작성하세요.\n\n" +
+                "[user_ingredients]\n" +
+                ingredientsJson + "\n";
+
     }
 
     private boolean isRetryableError(Throwable e) {
