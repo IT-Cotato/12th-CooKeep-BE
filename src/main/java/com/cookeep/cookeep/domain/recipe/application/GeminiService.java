@@ -41,6 +41,77 @@ public class GeminiService {
     private final ObjectMapper objectMapper = new ObjectMapper();
     private static final int RANDOM_MIN_SELECT_COUNT = RandomRecipePolicy.RANDOM_MIN_SELECT_COUNT;
 
+    // 공통 WebClient 호출 로직
+    private GeminiRecipeResponseDto callGeminiApi(String prompt, GeminiRecipeRequestDto requestBody) {
+        try {
+
+            log.info("========== Gemini 요청 시작 ==========");
+            log.info("Gemini model = {}", model);
+            log.info("Prompt length = {}", prompt.length());
+            log.debug("Prompt 내용 = \n{}", prompt);
+
+            log.info("Gemini requestBody 생성 완료");
+            log.debug("Gemini requestBody JSON = {}", objectMapper.writeValueAsString(requestBody));
+
+            log.info("Gemini API 호출 시작");
+
+            String response = webClient.post()
+                    .uri(uriBuilder -> uriBuilder
+                            .scheme("https")
+                            .host("generativelanguage.googleapis.com")
+                            .path("/v1beta/models/{model}:generateContent")
+                            .queryParam("key", apiKey)
+                            .build(model)
+                    )
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .bodyValue(requestBody)
+                    .retrieve()
+                    .onStatus(
+                            status -> status.is5xxServerError(),
+                            clientResponse -> clientResponse.bodyToMono(String.class)
+                                    .flatMap(body -> Mono.error(
+                                            new WebClientResponseException(
+                                                    clientResponse.statusCode().value(),
+                                                    "Gemini 5xx error: " + body,
+                                                    null, null, null
+                                            )
+                                    ))
+                    )
+                    .bodyToMono(String.class)
+                    .timeout(Duration.ofSeconds(120))
+                    .retryWhen(
+                            Retry.backoff(3, Duration.ofSeconds(2))
+                                    .maxBackoff(Duration.ofSeconds(5))
+                                    .filter(this::isRetryableError)
+                                    .doBeforeRetry(retrySignal ->
+                                            log.warn("Gemini 재시도 중... attempt={}, cause={}",
+                                                    retrySignal.totalRetries() + 1,
+                                                    retrySignal.failure().getMessage())
+                                    )
+                    )
+                    .block();
+
+            log.info("Gemini API 응답 수신 완료");
+            log.info("Gemini raw response = {}", response);
+
+            return parseResponse(response);
+
+        } catch (WebClientResponseException e) {
+
+            if (e.getStatusCode() == HttpStatus.TOO_MANY_REQUESTS) {
+                log.error("Gemini 429 Rate Limit 발생 - 응답 바디: {}", e.getResponseBodyAsString());
+                throw new AppException(ErrorCode.AI_RATE_LIMIT_EXCEEDED);
+            }
+
+            log.error("Gemini API 호출 실패 - status={}", e.getStatusCode(), e);
+            throw new AppException(ErrorCode.AI_SERVER_FAILED);
+
+        } catch (Exception e) {
+            log.error("Gemini API 호출 실패", e);
+            throw new AppException(ErrorCode.AI_SERVER_FAILED);
+        }
+    }
+
     // 일반 신규
     public GeminiRecipeResponseDto generateRecipe(
             List<IngredientDetailDto> ingredients,
@@ -78,150 +149,13 @@ public class GeminiService {
 
     // 레시피 생성
     public GeminiRecipeResponseDto generateRecipeByPrompt(String prompt) {
-        try {
-
-            log.info("========== Gemini 요청 시작 ==========");
-            log.info("Gemini model = {}", model);
-            log.info("Prompt length = {}", prompt.length());
-            log.debug("Prompt 내용 = \n{}", prompt);
-
-            GeminiRecipeRequestDto requestBody = GeminiRecipeRequestDto.from(prompt);
-
-            log.info("Gemini requestBody 생성 완료");
-            log.debug("Gemini requestBody JSON = {}", objectMapper.writeValueAsString(requestBody));
-
-            log.info("Gemini API 호출 시작");
-
-            String response = webClient.post()
-                    .uri(uriBuilder -> uriBuilder
-                            .scheme("https")
-                            .host("generativelanguage.googleapis.com")
-                            .path("/v1beta/models/{model}:generateContent")
-                            .queryParam("key", apiKey)
-                            .build(model)
-                    )
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .bodyValue(requestBody)
-                    .retrieve()
-                    .onStatus(
-                            status -> status.is5xxServerError(),
-                            clientResponse -> clientResponse.bodyToMono(String.class)
-                                    .flatMap(body -> Mono.error(
-                                            new WebClientResponseException(
-                                                    clientResponse.statusCode().value(),
-                                                    "Gemini 5xx error: " + body,
-                                                    null, null, null
-                                            )
-                                    ))
-                    )
-                    .bodyToMono(String.class)
-                    .timeout(Duration.ofSeconds(120))
-                    .retryWhen(
-                            Retry.backoff(3, Duration.ofSeconds(2))
-                                    .maxBackoff(Duration.ofSeconds(5))
-                                    .filter(this::isRetryableError)
-                                    .doBeforeRetry(retrySignal ->
-                                            log.warn("Gemini 재시도 중... attempt={}, cause={}",
-                                                    retrySignal.totalRetries() + 1,
-                                                    retrySignal.failure().getMessage())
-                                    )
-                    )
-                    .block();
-
-            log.info("Gemini API 응답 수신 완료");
-            log.info("Gemini raw response = {}", response);
-
-            return parseResponse(response);
-
-        } catch (WebClientResponseException e) {
-
-            if (e.getStatusCode() == HttpStatus.TOO_MANY_REQUESTS) {
-                log.error("Gemini 429 Rate Limit 발생 - 응답 바디: {}", e.getResponseBodyAsString());
-                throw new AppException(ErrorCode.AI_RATE_LIMIT_EXCEEDED);
-            }
-
-            log.error("Gemini API 호출 실패 - status={}", e.getStatusCode(), e);
-            throw new AppException(ErrorCode.AI_SERVER_FAILED);
-
-        } catch (Exception e) {
-            log.error("Gemini API 호출 실패", e);
-            throw new AppException(ErrorCode.AI_SERVER_FAILED);
-        }
+        return callGeminiApi(prompt, GeminiRecipeRequestDto.from(prompt));
     }
 
     // 랜덤레시피 프롬프트
     public GeminiRecipeResponseDto generateRecipeByPrompt(String prompt, Integer minUserIngredients) {
 
-        try {
-
-            log.info("========== Gemini 요청 시작 ==========");
-            log.info("Gemini model = {}", model);
-            log.info("Prompt length = {}", prompt.length());
-            log.debug("Prompt 내용 = \n{}", prompt);
-
-            GeminiRecipeRequestDto requestBody = GeminiRecipeRequestDto.from(prompt, minUserIngredients);
-
-            log.info("Gemini requestBody 생성 완료");
-            log.debug("Gemini requestBody JSON = {}", objectMapper.writeValueAsString(requestBody));
-
-            log.info("Gemini API 호출 시작");
-
-            String response = webClient.post()
-                    .uri(uriBuilder -> uriBuilder
-                            .scheme("https")
-                            .host("generativelanguage.googleapis.com")
-                            .path("/v1beta/models/{model}:generateContent")
-                            .queryParam("key", apiKey)
-                            .build(model)
-                    )
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .bodyValue(requestBody)
-                    .retrieve()
-                    .onStatus(
-                            status -> status.is5xxServerError(),
-                            clientResponse -> clientResponse.bodyToMono(String.class)
-                                    .flatMap(body -> Mono.error(
-                                            new WebClientResponseException(
-                                                    clientResponse.statusCode().value(),
-                                                    "Gemini 5xx error: " + body,
-                                                    null, null, null
-                                            )
-                                    ))
-                    )
-                    .bodyToMono(String.class)
-                    .timeout(Duration.ofSeconds(120))
-                    .retryWhen(
-                            Retry.backoff(3, Duration.ofSeconds(2))
-                                    .maxBackoff(Duration.ofSeconds(5))
-                                    .filter(this::isRetryableError)
-                                    .doBeforeRetry(retrySignal ->
-                                            log.warn("Gemini 재시도 중... attempt={}, cause={}",
-                                                    retrySignal.totalRetries() + 1,
-                                                    retrySignal.failure().getMessage())
-                                    )
-                    )
-                    .block();
-
-            log.info("Gemini API 응답 수신 완료");
-            log.info("Gemini raw response = {}", response);
-
-            return parseResponse(response);
-
-        } catch (WebClientResponseException e) {
-
-            if (e.getStatusCode() == HttpStatus.TOO_MANY_REQUESTS) {
-                log.error("Gemini 429 Rate Limit 발생 - 응답 바디: {}", e.getResponseBodyAsString());
-                throw new AppException(ErrorCode.AI_RATE_LIMIT_EXCEEDED);
-            }
-
-            log.error("Gemini API 호출 실패 - status={}", e.getStatusCode(), e);
-            throw new AppException(ErrorCode.AI_SERVER_FAILED);
-
-        } catch (Exception e) {
-            log.error("Gemini API 호출 실패", e);
-            throw new AppException(ErrorCode.AI_SERVER_FAILED);
-        }
-
+        return callGeminiApi(prompt, GeminiRecipeRequestDto.from(prompt, minUserIngredients));
     }
 
     // Gemini 응답 파싱 (DTO에 맞게)
