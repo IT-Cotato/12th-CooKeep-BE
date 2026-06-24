@@ -36,7 +36,7 @@ public class GeminiRecipeRequestDto {
     }
 
 
-    // 응답 스키마 정의
+    // 일반 응답 스키마 정의
     private static GenerationConfig buildGenerationConfig() {
 
         // unit enum (additional / optional 에만 적용)
@@ -116,6 +116,8 @@ public class GeminiRecipeRequestDto {
         );
     }
 
+
+    // 랜덤 생성 스키마 정의
     private static GenerationConfig buildGenerationConfig(Integer minUserIngredients) {
 
         // unit enum (additional / optional 에만 적용)
@@ -174,7 +176,7 @@ public class GeminiRecipeRequestDto {
         Map<String, Object> ingredients = Map.of(
                 "type", "object",
                 "properties", Map.of(
-                        "user_ingredients",      Map.of("type", "array", "items", userIngredient),
+                        "user_ingredients",      userIngredientsArrayProps,
                         "additional_ingredients", Map.of("type", "array", "items", additionalIngredient),
                         "optional_ingredients",   Map.of("type", "array", "items", optionalIngredient)
                 ),
