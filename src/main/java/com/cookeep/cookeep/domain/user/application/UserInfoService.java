@@ -104,24 +104,6 @@ public class UserInfoService {
     // 이메일 변경 시 이메일 인증 확인
     @Transactional
     public void verifyChangeEmailCode(Long userId, VerifyCodeRequestDTO verifyCodeRequestDTO) {
-        User user = userReader.readById(userId);
-        String newEmail = verifyCodeRequestDTO.email();
-        String code = verifyCodeRequestDTO.code();
-
-        // 이미 등록된 이메일인지 재확인
-        if (userRepository.existsByEmail(newEmail)) {
-            throw new AppException(ErrorCode.USER_EMAIL_ALREADY_EXISTS);
-        }
-
-        emailVerificationService.verifyCode(newEmail, VerificationPurpose.CHANGE_EMAIL, code);
-
-        user.updateEmail(newEmail);
-    }
-
-    // 이메일 변경
-    @Transactional
-    public void updateMyEmail(Long userId, UpdateEmailRequestDTO updateEmailRequestDTO) {
-
         Provider provider = userAuthRepository.findProviderByUserId(userId);
 
         // 소셜 로그인은 이메일을 변경할 수 없음
@@ -130,7 +112,8 @@ public class UserInfoService {
         }
 
         User user = userReader.readById(userId);
-        String newEmail = updateEmailRequestDTO.email();
+        String newEmail = verifyCodeRequestDTO.email();
+        String code = verifyCodeRequestDTO.code();
 
         String currentEmail = user.getEmail();
 
@@ -143,6 +126,8 @@ public class UserInfoService {
         if (userRepository.existsByEmail(newEmail)) {
             throw new AppException(ErrorCode.USER_EMAIL_ALREADY_EXISTS);
         }
+
+        emailVerificationService.verifyCode(newEmail, VerificationPurpose.CHANGE_EMAIL, code);
 
         user.updateEmail(newEmail);
     }
