@@ -100,14 +100,14 @@ public class UserIngredientServiceRewardTest {
     class OnboardingIngredientReward {
 
         @Test
-        @DisplayName("최초 식재료 등록 시 ingredientRewardGranted=true를 반환한다")
+        @DisplayName("최초 식재료 등록 시 reward.granted=true를 반환한다")
         void 최초등록_ingredientRewardGranted_true() {
             given(userRepository.findById(anyLong())).willReturn(Optional.of(firstTimeUser));
 
             UserIngredientListCreateResponseDto result =
                     userIngredientService.createAll(1L, List.of(buildRequest()));
 
-            assertThat(result.isIngredientRewardGranted()).isTrue();
+            assertThat(result.getReward().getGranted()).isTrue();
         }
 
         @Test
@@ -130,7 +130,7 @@ public class UserIngredientServiceRewardTest {
             UserIngredientListCreateResponseDto result =
                     userIngredientService.createAll(1L, List.of(buildRequest()));
 
-            assertThat(result.getReward().getGrantedTypes())
+            assertThat(result.getReward().getTypes())
                     .containsExactly(CookieLog.CookieLogType.ONBOARDING_INGREDIENT);
         }
 
@@ -146,14 +146,14 @@ public class UserIngredientServiceRewardTest {
         }
 
         @Test
-        @DisplayName("이미 보상을 받은 유저는 ingredientRewardGranted=false를 반환한다")
+        @DisplayName("이미 보상을 받은 유저는 reward.granted=false를 반환한다")
         void 기존유저_ingredientRewardGranted_false() {
             given(userRepository.findById(anyLong())).willReturn(Optional.of(rewardedUser));
 
             UserIngredientListCreateResponseDto result =
                     userIngredientService.createAll(1L, List.of(buildRequest()));
 
-            assertThat(result.isIngredientRewardGranted()).isFalse();
+            assertThat(result.getReward().getGranted()).isFalse();
         }
 
         @Test
@@ -175,7 +175,7 @@ public class UserIngredientServiceRewardTest {
             UserIngredientListCreateResponseDto result =
                     userIngredientService.createAll(1L, List.of(buildRequest()));
 
-            assertThat(result.getReward().getGrantedTypes()).isEmpty();
+            assertThat(result.getReward().getTypes()).isEmpty();
         }
 
         @Test

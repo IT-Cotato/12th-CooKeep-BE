@@ -294,7 +294,7 @@ public class AiRecipeService {
         // 10. COOKING / USE_EXPIRING_INGREDIENT 중 하나라도 달성되면 weeklyGoalAchieved = true
         boolean weeklyGoalAchieved = cookingGoalAchieved || expiringGoalAchieved;
 
-        // 11. RewardInfo 빌드
+        // 11. CookieRewardDto 빌드
         List<CookieLog.CookieLogType> grantedTypes = new java.util.ArrayList<>();
         int totalPoints = 0;
         if (rewardGranted) {
@@ -305,20 +305,23 @@ public class AiRecipeService {
             grantedTypes.add(CookieLog.CookieLogType.BONUS_URGENT_INGREDIENT_USE);
             totalPoints += CookieLog.CookieLogType.BONUS_URGENT_INGREDIENT_USE.getDefaultAmount();
         }
-        AiRecipeAdoptResponseDto.RewardInfo rewardInfo = AiRecipeAdoptResponseDto.RewardInfo.builder()
-                .granted(!grantedTypes.isEmpty())
-                .points(totalPoints)
-                .grantedTypes(grantedTypes)
-                .build();
+        if (weeklyGoalAchieved) {
+            grantedTypes.add(CookieLog.CookieLogType.BONUS_WEEKLY_GOAL_ACHIEVE);
+            totalPoints += CookieLog.CookieLogType.BONUS_WEEKLY_GOAL_ACHIEVE.getDefaultAmount();
+        }
+        com.cookeep.cookeep.api.dto.response.CookieRewardDto rewardInfo =
+                com.cookeep.cookeep.api.dto.response.CookieRewardDto.builder()
+                        .granted(!grantedTypes.isEmpty())
+                        .points(totalPoints)
+                        .types(grantedTypes)
+                        .currentCookieCount(cookieService.getMyCookies(userId))
+                        .build();
 
         return AiRecipeAdoptResponseDto.builder()
                 .sessionId(session.getId())
                 .recipeId(savedRecipe.getId())
                 .message("레시피가 성공적으로 채택되었습니다.")
                 .completedAt(session.getCompletedAt())
-                .weeklyGoalAchieved(weeklyGoalAchieved)
-                .recipeRewardGranted(rewardGranted)
-                .urgentIngredientRewardGranted(urgentRewardGranted)
                 .reward(rewardInfo)
                 .build();
     }

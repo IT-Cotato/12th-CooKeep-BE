@@ -81,24 +81,6 @@ public class UserInfoController {
         return ResponseEntity.ok(DataResponse.ok());
     }
 
-    // 이메일 변경
-    @Operation(summary = "이메일 변경 API")
-    @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "요청 성공"),
-        @ApiResponse(responseCode = "400", description = "요청 파라미터 오류(@Valid 검증 실패, 현재 이메일과 동일 등)"),
-        @ApiResponse(responseCode = "401", description = "회원 인증 실패, AccessToken이 없거나 유효하지 않음"),
-        @ApiResponse(responseCode = "403", description = "접근 권한 없음(소셜 로그인 유저는 이메일 변경 불가 등)"),
-        @ApiResponse(responseCode = "409", description = "요청 충돌(이미 사용 중인 이메일 등)")
-    })
-    @PatchMapping("/email")
-    public ResponseEntity<DataResponse<Void>> updateMyEmail(
-        @AuthenticationPrincipal UserPrincipal principal,
-        @Valid @RequestBody UpdateEmailRequestDTO updateEmailRequestDTO
-    ) {
-        Long userId = principal.userId();
-        userInfoService.updateMyEmail(userId, updateEmailRequestDTO);
-        return ResponseEntity.ok(DataResponse.ok());
-    }
 
     // 비밀번호 확인
     @Operation(summary =  "비밀번호 확인 API")
