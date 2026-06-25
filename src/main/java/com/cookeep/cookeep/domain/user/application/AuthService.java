@@ -55,14 +55,13 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class AuthService {
 
-	private static final int MAX_PASSWORD_ATTEMPTS = 5;
-
 	private final UserRepository userRepository;
 	private final UserAuthRepository userAuthRepository;
 	private final UserSessionRepository userSessionRepository;
 	private final JwtTokenProvider jwtTokenProvider;
 	private final UserReader userReader;
 	private final PasswordEncoder passwordEncoder;
+	private final LoginPasswordFailureService loginPasswordFailureService;
 	private final NicknameGenerator nicknameGenerator;
 	private final EmailVerificationService emailVerificationService;
 	private final CookieService cookieService;
@@ -453,8 +452,7 @@ public class AuthService {
 		}
 	}
 
-	// 로그인 실패 횟수는 예외가 발생해도 저장되어야 하므로 rollback 대상에서 제외하였음
-	@Transactional(noRollbackFor = AppException.class)
+	@Transactional
 	public LoginResponseDTO login(LoginRequestDTO loginRequestDTO) {
 		String email = loginRequestDTO.email();
 		String password = loginRequestDTO.password();
@@ -469,29 +467,25 @@ public class AuthService {
 
 		// 비밀번호가 틀렸을 경우
 		if (!passwordEncoder.matches(password, user.getPassword())) {
-			int passwordCnt = Optional.ofNullable(user.getPasswordCnt()).orElse(0) + 1;
+			int passwordCnt = loginPasswordFailureService.increasePasswordFailCount(user.getUserId());
 
 			// 지정된 최대 횟수를 초과한 경우
-			if (passwordCnt >= MAX_PASSWORD_ATTEMPTS) {
-				user.updatePasswordCnt(MAX_PASSWORD_ATTEMPTS);
-				user.updateUserStatus(UserStatus.LOCK);
-				log.warn("User account locked by login password failures. userId={}", user.getUserId());
+			if (passwordCnt >= LoginPasswordFailureService.MAX_PASSWORD_ATTEMPTS) {
 				throw new AppException(
 					ErrorCode.PASSWORD_VERIFICATION_LOCKED,
 					Map.of(
-						"failedCount", String.valueOf(MAX_PASSWORD_ATTEMPTS),
-						"maxCount", String.valueOf(MAX_PASSWORD_ATTEMPTS)
+						"failedCount", String.valueOf(LoginPasswordFailureService.MAX_PASSWORD_ATTEMPTS),
+						"maxCount", String.valueOf(LoginPasswordFailureService.MAX_PASSWORD_ATTEMPTS)
 					)
 				);
 			}
 
 			// 최대 횟수 미만일 경우 실패 횟수만 누적하고 AUTH_PASSWORD_MISMATCH로 응답
-			user.updatePasswordCnt(passwordCnt);
 			throw new AppException(
 				ErrorCode.AUTH_PASSWORD_MISMATCH,
 				Map.of(
 					"failedCount", String.valueOf(passwordCnt),
-					"maxCount", String.valueOf(MAX_PASSWORD_ATTEMPTS)
+					"maxCount", String.valueOf(LoginPasswordFailureService.MAX_PASSWORD_ATTEMPTS)
 				)
 			);
 		}
