@@ -84,6 +84,10 @@ public class AuthService {
 		}
 
 		User user = userReader.readById(userId);
+
+		// 사용자가 새로운 토큰을 발급 받을 수 있는 상태인지 검증
+		// LOCK, WITHDRAWN 상태일 경우 예외 발생
+		assertTokenIssuable(user);
 		boolean isRewarded = issueComebackReward(user);
 		user.updateLastAccessAt(LocalDateTime.now());
 
@@ -134,8 +138,9 @@ public class AuthService {
 	}
 
 	private TokenPair issueTokensAndUpsertSession(User user) {
-		// 기존 구독 삭제 (새 기기로 갱신)
-		//webPushSubscriptionRepository.deleteAllByUser_UserId(user.getUserId());
+		// 사용자가 새로운 토큰을 발급 받을 수 있는 상태인지 검증
+		// LOCK, WITHDRAWN 상태일 경우 예외 발생
+		assertTokenIssuable(user);
 
 		boolean isRewarded = issueComebackReward(user);
 		user.updateLastAccessAt(LocalDateTime.now());
@@ -155,6 +160,18 @@ public class AuthService {
 		userSessionRepository.save(userSession);
 
 		return new TokenPair(accessToken, refreshToken, isRewarded);
+	}
+
+	// 사용자가 새로운 토큰을 발급받을 수 있는 상태인지 검증
+	// LOCK, WITHDRAWN 상태일 경우 토큰 발급 제한
+	private void assertTokenIssuable(User user) {
+		if (user.getUserStatus() == UserStatus.LOCK) {
+			throw new AppException(ErrorCode.USER_ACCOUNT_LOCKED);
+		}
+
+		if (user.getUserStatus() == UserStatus.WITHDRAWN) {
+			throw new AppException(ErrorCode.USER_ACCOUNT_WITHDRAWN);
+		}
 	}
 
 	// 닉네임 제약 위반 시 재시도 횟수를 제한하기 위한 값 (무한 반복 방지)
@@ -190,7 +207,12 @@ public class AuthService {
 			.orElseGet(() -> {
 				// 동일한 이메일로 가입된 User가 존재하는지 확인
 				// 존재하지 않을 경우 새로운 유저 생성
+				// 기존 이메일 계정이 LOCK/WITHDRAWN일 경우 새로운 소셜 계정 연결이 생기는 걸 막음
 				User user = userRepository.findByEmail(email)
+					.map(existingUser -> {
+						assertTokenIssuable(existingUser);
+						return existingUser;
+					})
 					.orElseGet(() -> createSocialUser(email));
 
 				// 기존 유저든 신규 유저든 UserAuth가 추가됨
