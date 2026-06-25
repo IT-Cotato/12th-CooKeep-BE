@@ -65,6 +65,9 @@ class AuthServiceTest {
 	private PasswordEncoder passwordEncoder;
 
 	@Mock
+	private LoginPasswordFailureService loginPasswordFailureService;
+
+	@Mock
 	private NicknameGenerator nicknameGenerator;
 
 	@Mock
@@ -90,6 +93,7 @@ class AuthServiceTest {
 			jwtTokenProvider,
 			userReader,
 			passwordEncoder,
+			loginPasswordFailureService,
 			nicknameGenerator,
 			emailVerificationService,
 			cookieService,
@@ -192,17 +196,17 @@ class AuthServiceTest {
 	@DisplayName("login increments password count when password does not match")
 	void login_passwordMismatch_incrementsPasswordCount() {
 		User user = user("test@example.com", UserStatus.ACTIVE);
-		user.updatePasswordCnt(2);
 
 		given(userRepository.findByEmail(user.getEmail())).willReturn(Optional.of(user));
 		given(passwordEncoder.matches("wrong-password", user.getPassword())).willReturn(false);
+		given(loginPasswordFailureService.increasePasswordFailCount(user.getUserId())).willReturn(3);
 
 		assertThatThrownBy(() -> authService.login(new LoginRequestDTO(user.getEmail(), "wrong-password")))
 			.isInstanceOf(AppException.class)
 			.extracting("errorCode")
 			.isEqualTo(ErrorCode.AUTH_PASSWORD_MISMATCH);
 
-		assertThat(user.getPasswordCnt()).isEqualTo(3);
+		verify(loginPasswordFailureService).increasePasswordFailCount(user.getUserId());
 		verify(jwtTokenProvider, never()).createAccessToken(any());
 	}
 
@@ -210,18 +214,17 @@ class AuthServiceTest {
 	@DisplayName("login locks user when password mismatch reaches max attempts")
 	void login_maxPasswordMismatch_locksUser() {
 		User user = user("test@example.com", UserStatus.ACTIVE);
-		user.updatePasswordCnt(4);
 
 		given(userRepository.findByEmail(user.getEmail())).willReturn(Optional.of(user));
 		given(passwordEncoder.matches("wrong-password", user.getPassword())).willReturn(false);
+		given(loginPasswordFailureService.increasePasswordFailCount(user.getUserId())).willReturn(5);
 
 		assertThatThrownBy(() -> authService.login(new LoginRequestDTO(user.getEmail(), "wrong-password")))
 			.isInstanceOf(AppException.class)
 			.extracting("errorCode")
 			.isEqualTo(ErrorCode.PASSWORD_VERIFICATION_LOCKED);
 
-		assertThat(user.getPasswordCnt()).isEqualTo(5);
-		assertThat(user.getUserStatus()).isEqualTo(UserStatus.LOCK);
+		verify(loginPasswordFailureService).increasePasswordFailCount(user.getUserId());
 		verify(jwtTokenProvider, never()).createAccessToken(any());
 	}
 
@@ -243,6 +246,7 @@ class AuthServiceTest {
 		assertThat(user.getPasswordCnt()).isZero();
 		assertThat(response.accessToken()).isEqualTo("access-token");
 		assertThat(response.refreshToken()).isEqualTo("refresh-token");
+		verify(loginPasswordFailureService, never()).increasePasswordFailCount(any());
 	}
 
 	@Test
