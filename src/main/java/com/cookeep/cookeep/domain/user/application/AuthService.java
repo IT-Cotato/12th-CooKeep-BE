@@ -55,6 +55,8 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class AuthService {
 
+	private static final int MAX_PASSWORD_ATTEMPTS = 5;
+
 	private final UserRepository userRepository;
 	private final UserAuthRepository userAuthRepository;
 	private final UserSessionRepository userSessionRepository;
@@ -420,7 +422,8 @@ public class AuthService {
 		}
 	}
 
-	@Transactional
+	// 로그인 실패 횟수는 예외가 발생해도 저장되어야 하므로 rollback 대상에서 제외하였음
+	@Transactional(noRollbackFor = AppException.class)
 	public LoginResponseDTO login(LoginRequestDTO loginRequestDTO) {
 		String email = loginRequestDTO.email();
 		String password = loginRequestDTO.password();
@@ -429,11 +432,41 @@ public class AuthService {
 		User user = userRepository.findByEmail(email)
 			.orElseThrow(() -> new AppException(ErrorCode.EMAIL_NOT_REGISTERED));
 
+		// 사용자가 새로운 토큰을 발급 받을 수 있는 상태인지 검증
+		// LOCK, WITHDRAWN 상태일 경우 예외 발생
+		assertTokenIssuable(user);
+
 		// 비밀번호가 틀렸을 경우
 		if (!passwordEncoder.matches(password, user.getPassword())) {
-			throw new AppException(ErrorCode.AUTH_PASSWORD_MISMATCH);
+			int passwordCnt = Optional.ofNullable(user.getPasswordCnt()).orElse(0) + 1;
+
+			// 지정된 최대 횟수를 초과한 경우
+			if (passwordCnt >= MAX_PASSWORD_ATTEMPTS) {
+				user.updatePasswordCnt(MAX_PASSWORD_ATTEMPTS);
+				user.updateUserStatus(UserStatus.LOCK);
+				log.warn("User account locked by login password failures. userId={}", user.getUserId());
+				throw new AppException(
+					ErrorCode.PASSWORD_VERIFICATION_LOCKED,
+					Map.of(
+						"failedCount", String.valueOf(MAX_PASSWORD_ATTEMPTS),
+						"maxCount", String.valueOf(MAX_PASSWORD_ATTEMPTS)
+					)
+				);
+			}
+
+			// 최대 횟수 미만일 경우 실패 횟수만 누적하고 AUTH_PASSWORD_MISMATCH로 응답
+			user.updatePasswordCnt(passwordCnt);
+			throw new AppException(
+				ErrorCode.AUTH_PASSWORD_MISMATCH,
+				Map.of(
+					"failedCount", String.valueOf(passwordCnt),
+					"maxCount", String.valueOf(MAX_PASSWORD_ATTEMPTS)
+				)
+			);
 		}
 
+		// 로그인에 성공한 경우 비밀번호 검증 실패 횟수 초기화
+		user.updatePasswordCnt(0);
 		TokenPair tokenPair = issueTokensAndUpsertSession(user);
 
 		UserStatus userStatus = user.getUserStatus();
