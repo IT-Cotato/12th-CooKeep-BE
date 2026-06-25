@@ -315,6 +315,37 @@ public class AuthService {
 		emailVerificationService.verifyCode(email, VerificationPurpose.RESET_PASSWORD, code);
 	}
 
+	// 비밀번호 검증 실패로 인해 계정이 LOCK된 경우 이메일 인증 요청
+	@Transactional
+	public void sendAccountUnlockCode(SendCodeRequestDTO sendCodeRequestDTO) {
+		User user = userRepository.findByEmail(sendCodeRequestDTO.email())
+			.orElseThrow(() -> new AppException(ErrorCode.EMAIL_NOT_REGISTERED));
+
+		if (user.getUserStatus() == UserStatus.WITHDRAWN) {
+			throw new AppException(ErrorCode.USER_ACCOUNT_WITHDRAWN);
+		}
+
+		emailVerificationService.sendCode(user.getEmail(), VerificationPurpose.PASSWORD_VERIFICATION);
+	}
+
+	// 비밀번호 검증 실패로 인해 계정이 LOCK된 경우 이메일 인증 확인
+	@Transactional
+	public void verifyAccountUnlockCode(VerifyCodeRequestDTO verifyCodeRequestDTO) {
+		User user = userRepository.findByEmail(verifyCodeRequestDTO.email())
+			.orElseThrow(() -> new AppException(ErrorCode.EMAIL_NOT_REGISTERED));
+
+		if (user.getUserStatus() == UserStatus.WITHDRAWN) {
+			throw new AppException(ErrorCode.USER_ACCOUNT_WITHDRAWN);
+		}
+
+		emailVerificationService.verifyCode(
+			verifyCodeRequestDTO.email(), VerificationPurpose.PASSWORD_VERIFICATION, verifyCodeRequestDTO.code()
+		);
+
+		user.updatePasswordCnt(0);
+		user.updateUserStatus(UserStatus.ACTIVE);
+	}
+
 	@Transactional
 	public SignUpResponseDTO signUp(SignupRequestDTO signupRequestDTO) {
 		String email = signupRequestDTO.email();
