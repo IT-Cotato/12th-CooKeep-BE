@@ -122,6 +122,7 @@ public enum ErrorCode {
 	DAILY_RECIPE_FORBIDDEN(HttpStatus.FORBIDDEN, "본인의 레시피가 아닙니다.", "DAILY_RECIPE-001"),
 
 	// USER
+	USER_ACCOUNT_WITHDRAWN(HttpStatus.FORBIDDEN, "탈퇴한 회원입니다.", "USER-010"),
 	SOCIAL_USER_EMAIL_CHANGE_NOT_ALLOWED(HttpStatus.FORBIDDEN, "소셜 로그인 사용자는 이메일을 변경할 수 없습니다.", "USER-009"),
 
 	// ==============================
@@ -183,6 +184,7 @@ public enum ErrorCode {
 	// ==============================
 
 	// AUTH
+	USER_ACCOUNT_LOCKED(HttpStatus.LOCKED, "잠긴 회원입니다. 본인인증 후 다시 시도해주세요.", "AUTH-010"),
 	PASSWORD_VERIFICATION_LOCKED(HttpStatus.LOCKED, "비밀번호 입력 횟수를 초과했습니다. 본인인증 후 다시 시도해주세요.", "AUTH-007"),
 
 	// ==============================
