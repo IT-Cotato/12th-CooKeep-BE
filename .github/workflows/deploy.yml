@@ -139,7 +139,7 @@ jobs:
           username: ubuntu
           key: ${{ secrets.DEV_SERVER_SSH_KEY }}
           script: |
-            docker pull ${{ secrets.DOCKER_USERNAME }}/cookeep:dev
+            docker pull --platform linux/arm64 ${{ secrets.DOCKER_USERNAME }}/cookeep:dev
             docker network create cookeep-network 2>/dev/null || true
             docker run -d \
               --name cookeep-redis \
