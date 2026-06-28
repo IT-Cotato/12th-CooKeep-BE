@@ -112,24 +112,17 @@ jobs:
       - name: Build with Gradle
         run: ./gradlew bootJar
 
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
       - name: Login to Docker Hub
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Build and push Docker image (ARM64)
+      - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
           context: .
           push: true
-          platforms: linux/arm64
           tags: ${{ secrets.DOCKER_USERNAME }}/cookeep:dev
 
       - name: Deploy to Dev Server
@@ -139,26 +132,17 @@ jobs:
           username: ubuntu
           key: ${{ secrets.DEV_SERVER_SSH_KEY }}
           script: |
-            docker pull --platform linux/arm64 ${{ secrets.DOCKER_USERNAME }}/cookeep:dev
-            docker network create cookeep-network 2>/dev/null || true
-            docker run -d \
-              --name cookeep-redis \
-              --network cookeep-network \
-              --restart unless-stopped \
-              -v redis-data:/data \
-              redis:7.2-alpine \
-              redis-server --appendonly yes --requirepass ${{ secrets.REDIS_PASSWORD }} \
-              2>/dev/null || true
+            docker pull ${{ secrets.DOCKER_USERNAME }}/cookeep:dev
             docker stop cookeep || true
             docker rm cookeep || true
             docker run -d \
               --name cookeep \
-              --network cookeep-network \
               -p 8080:8080 \
               -e TZ=Asia/Seoul \
-              -e REDIS_HOST=cookeep-redis \
-              -e REDIS_PORT=6379 \
-              -e REDIS_PASSWORD=${{ secrets.REDIS_PASSWORD }} \
+              -e REDIS_HOST=${{ secrets.DEV_REDIS_HOST }} \
+              -e REDIS_PORT=${{ secrets.DEV_REDIS_PORT }} \
+              -e REDIS_PASSWORD=${{ secrets.DEV_REDIS_PASSWORD }} \
+              -e REDIS_SSL=true \
               -e DB_URL=${{ secrets.DEV_DB_URL }} \
               -e DB_USERNAME=${{ secrets.DEV_DB_USERNAME }} \
               -e DB_PASSWORD=${{ secrets.DEV_DB_PASSWORD }} \
