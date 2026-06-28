@@ -1,8 +1,13 @@
 package com.cookeep.cookeep.common.util;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Set;
 import java.util.UUID;
+
+import net.coobird.thumbnailator.Thumbnails;
+import net.coobird.thumbnailator.geometry.Positions;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -50,6 +55,40 @@ public class S3Service {
 			s3Client.putObject(request, RequestBody.fromBytes(file.getBytes()));
 		} catch (Exception e) {
 			log.error("S3 upload failed. bucket={}, folder={}", bucket, folder, e);
+			throw new AppException(ErrorCode.FILE_UPLOAD_ERROR);
+		}
+
+		return String.format("https://%s.s3.%s.amazonaws.com/%s", bucket, region, key);
+	}
+
+	public String uploadCropped(MultipartFile file, String folder, int x, int y, int width, int height) {
+		String originalFilename = file.getOriginalFilename();
+		String extension = extractExtension(originalFilename);
+		String outputFormat = "svg".equalsIgnoreCase(extension) ? "jpg" : extension;
+
+		String key = folder + "/" + UUID.randomUUID() + "-cropped." + outputFormat;
+
+		try {
+			ByteArrayOutputStream baos = new ByteArrayOutputStream();
+			Thumbnails.of(file.getInputStream())
+				.sourceRegion(x, y, width, height)
+				.size(width, height)
+				.keepAspectRatio(false)
+				.outputFormat(outputFormat)
+				.toOutputStream(baos);
+
+			PutObjectRequest request = PutObjectRequest.builder()
+				.bucket(bucket)
+				.key(key)
+				.contentType("image/" + outputFormat)
+				.build();
+
+			s3Client.putObject(request, RequestBody.fromBytes(baos.toByteArray()));
+		} catch (IOException e) {
+			log.error("이미지 크롭 실패. folder={}", folder, e);
+			throw new AppException(ErrorCode.FILE_UPLOAD_ERROR);
+		} catch (Exception e) {
+			log.error("S3 크롭 이미지 업로드 실패. bucket={}, folder={}", bucket, folder, e);
 			throw new AppException(ErrorCode.FILE_UPLOAD_ERROR);
 		}
 
