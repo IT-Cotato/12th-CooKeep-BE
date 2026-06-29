@@ -29,8 +29,11 @@ public class DailyRecipeDetailResponseDto {
     @JsonRawValue
     private String content;
 
-    @Schema(description = "요리 사진 URL")
+    @Schema(description = "요리 사진 URL (원본, 전체보기에 사용)")
     private String recipeImageUrl;
+
+    @Schema(description = "크롭된 미리보기 사진 URL")
+    private String croppedImageUrl;
 
     @Schema(description = "공개 여부", example = "false")
     private Boolean isPublic;
@@ -48,6 +51,7 @@ public class DailyRecipeDetailResponseDto {
                 .description(dailyRecipe.getDescription())
                 .content(dailyRecipe.getContent())
                 .recipeImageUrl(dailyRecipe.getRecipeImageUrl())
+                .croppedImageUrl(dailyRecipe.getCroppedImageUrl())
                 .isPublic(dailyRecipe.getIsPublic())
                 .aiRecipeId(dailyRecipe.getAiRecipe() != null ? dailyRecipe.getAiRecipe().getId() : null)
                 .createdAt(dailyRecipe.getCreatedAt())

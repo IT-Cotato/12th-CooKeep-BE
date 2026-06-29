@@ -120,6 +120,7 @@ public class DailyRecipeController {
                 request.getTitle(),
                 request.getDescription(),
                 request.getRecipeImageUrl(),
+                request.getCroppedImageUrl(),
                 request.getIsPublic()
         );
 
@@ -175,7 +176,7 @@ public class DailyRecipeController {
     ) {
         DailyRecipeService.DailyRecipeResult result = dailyRecipeService.updateDailyRecipe(
                 userId, dailyRecipeId, request.getTitle(), request.getDescription(),
-                request.getRecipeImageUrl(), request.getDeleteRecipeImage()
+                request.getRecipeImageUrl(), request.getCroppedImageUrl(), request.getDeleteRecipeImage()
         );
 
         return ResponseEntity.ok(DataResponse.from(DailyRecipeUpdateResponseDto.from(result.dailyRecipe(), result.reward())));

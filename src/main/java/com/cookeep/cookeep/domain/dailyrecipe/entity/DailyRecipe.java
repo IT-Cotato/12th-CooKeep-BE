@@ -36,6 +36,9 @@ public class DailyRecipe extends BaseEntity {
     @Column(name = "recipe_image_url", length = 512)
     private String recipeImageUrl;
 
+    @Column(name = "cropped_image_url", length = 512)
+    private String croppedImageUrl;
+
     @Builder.Default
     @Column(name = "is_public", nullable = false)
     private Boolean isPublic = false;
@@ -70,6 +73,10 @@ public class DailyRecipe extends BaseEntity {
 
     public void updateRecipeImageUrl(String recipeImageUrl) {
         this.recipeImageUrl = recipeImageUrl;
+    }
+
+    public void updateCroppedImageUrl(String croppedImageUrl) {
+        this.croppedImageUrl = croppedImageUrl;
     }
 
     public void markPhotoRewardCompleted() {

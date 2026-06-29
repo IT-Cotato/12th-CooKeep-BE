@@ -27,13 +27,28 @@ public class ImageController {
 
 	private final S3Service s3Service;
 
-	@Operation(summary = "이미지 업로드", description = "S3에 이미지를 업로드하고 URL을 반환합니다. folder: PLANTS, RECIPE_IMAGES")
+	@Operation(
+		summary = "이미지 업로드",
+		description = "S3에 이미지를 업로드하고 URL을 반환합니다. folder: PLANTS, RECIPE_IMAGES" +
+			"cropX, cropY, cropWidth, cropHeight를 모두 전달하면 크롭된 이미지도 함께 업로드하여 croppedImageUrl을 반환합니다."
+	)
 	@PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
 	public ResponseEntity<DataResponse<ImageUploadResponseDto>> uploadImage(
 		@RequestPart("image") MultipartFile image,
-		@RequestParam(value = "folder") ImageFolder folder
+		@RequestParam(value = "folder") ImageFolder folder,
+		@RequestParam(value = "cropX", required = false) Integer cropX,
+		@RequestParam(value = "cropY", required = false) Integer cropY,
+		@RequestParam(value = "cropWidth", required = false) Integer cropWidth,
+		@RequestParam(value = "cropHeight", required = false) Integer cropHeight
 	) {
 		String imageUrl = s3Service.upload(image, folder.getFolderName());
+
+		boolean hasCrop = cropX != null && cropY != null && cropWidth != null && cropHeight != null;
+		if (hasCrop) {
+			String croppedImageUrl = s3Service.uploadCropped(image, folder.getFolderName(), cropX, cropY, cropWidth, cropHeight);
+			return ResponseEntity.ok(DataResponse.from(ImageUploadResponseDto.of(imageUrl, croppedImageUrl)));
+		}
+
 		return ResponseEntity.ok(DataResponse.from(ImageUploadResponseDto.from(imageUrl)));
 	}
 

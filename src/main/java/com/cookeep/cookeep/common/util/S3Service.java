@@ -1,10 +1,5 @@
 package com.cookeep.cookeep.common.util;
 
-import java.nio.charset.StandardCharsets;
-import java.util.Set;
-import java.util.UUID;
-
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -13,63 +8,25 @@ import com.cookeep.cookeep.common.exception.ErrorCode;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import software.amazon.awssdk.core.sync.RequestBody;
-import software.amazon.awssdk.services.s3.S3Client;
-import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
-import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class S3Service {
 
-	private final S3Client s3Client;
-
-	@Value("${aws.s3.bucket}")
-	private String bucket;
-
-	@Value("${aws.s3.region}")
-	private String region;
+	private final S3Uploader s3Uploader;
+	private final ImageCropService imageCropService;
+	private final SvgValidator svgValidator;
 
 	public String upload(MultipartFile file, String folder) {
-		String originalFilename = file.getOriginalFilename();
-		String extension = extractExtension(originalFilename);
+		String extension = extractExtension(file.getOriginalFilename());
 
-		validateFile(file, extension, folder);
-
-		String key = folder + "/" + UUID.randomUUID() + "." + extension;
-		String contentType = resolveContentType(file, extension);
-
-		try {
-			PutObjectRequest request = PutObjectRequest.builder()
-				.bucket(bucket)
-				.key(key)
-				.contentType(contentType)
-				.build();
-
-			s3Client.putObject(request, RequestBody.fromBytes(file.getBytes()));
-		} catch (Exception e) {
-			log.error("S3 upload failed. bucket={}, folder={}", bucket, folder, e);
-			throw new AppException(ErrorCode.FILE_UPLOAD_ERROR);
+		if ("svg".equalsIgnoreCase(extension)) {
+			svgValidator.validate(file, folder);
+			return uploadBytes(file, folder, extension, "image/svg+xml");
 		}
 
-		return String.format("https://%s.s3.%s.amazonaws.com/%s", bucket, region, key);
-	}
-
-	public void delete(String imageUrl) {
-		String key = extractKeyFromUrl(imageUrl);
-
-		try {
-			DeleteObjectRequest request = DeleteObjectRequest.builder()
-				.bucket(bucket)
-				.key(key)
-				.build();
-
-			s3Client.deleteObject(request);
-		} catch (Exception e) {
-			log.error("S3 delete failed. bucket={}, key={}", bucket, key, e);
-			throw new AppException(ErrorCode.FILE_DELETE_ERROR);
-		}
+		return uploadBytes(file, folder, extension, file.getContentType());
 	}
 
 	private String extractExtension(String filename) {
@@ -79,57 +36,26 @@ public class S3Service {
 		return filename.substring(filename.lastIndexOf(".") + 1);
 	}
 
-	private String extractKeyFromUrl(String url) {
-		String prefix = String.format("https://%s.s3.%s.amazonaws.com/", bucket, region);
-		return url.replace(prefix, "");
-	}
-
-	// --- svg용 ---
-	// SVG 허용 폴더: INGREDIENTS (아이콘 전용)
-	private static final Set<String> SVG_ALLOWED_FOLDERS = Set.of(
-			ImageFolder.INGREDIENTS.getFolderName()
-	);
-
-	private void validateSvgContent(MultipartFile file) {
+	private String uploadBytes(MultipartFile file, String folder, String extension, String contentType) {
 		try {
-			String svg = new String(file.getBytes(), StandardCharsets.UTF_8).toLowerCase();
-
-			if (svg.contains("<script")
-					|| svg.contains("onload=")
-					|| svg.contains("onclick=")
-					|| svg.contains("<foreignobject")) {
-				throw new AppException(ErrorCode.FILE_UPLOAD_ERROR);
-			}
+			return s3Uploader.upload(file.getBytes(), folder, extension, contentType);
+		} catch (AppException e) {
+			throw e;
 		} catch (Exception e) {
+			log.error("파일 읽기 실패. folder={}", folder, e);
 			throw new AppException(ErrorCode.FILE_UPLOAD_ERROR);
 		}
 	}
 
-	private String resolveContentType(MultipartFile file, String extension) {
-		if ("svg".equalsIgnoreCase(extension)) {
-			return "image/svg+xml";
-		}
-		return file.getContentType();
+	public String uploadCropped(MultipartFile file, String folder, int x, int y, int width, int height) {
+		String extension = extractExtension(file.getOriginalFilename());
+		String outputFormat = "svg".equalsIgnoreCase(extension) ? "jpg" : extension;
+
+		byte[] cropped = imageCropService.crop(file, outputFormat, x, y, width, height);
+		return s3Uploader.uploadCropped(cropped, folder, outputFormat, "image/" + outputFormat);
 	}
 
-	private void validateFile(MultipartFile file, String extension, String folder) {
-		if ("svg".equalsIgnoreCase(extension)) {
-			validateSvgFolder(folder);
-			validateSvgContentType(file);
-			validateSvgContent(file);
-		}
+	public void delete(String imageUrl) {
+		s3Uploader.delete(imageUrl);
 	}
-
-	private void validateSvgFolder(String folder) {
-		if (!SVG_ALLOWED_FOLDERS.contains(folder)) {
-			throw new AppException(ErrorCode.FILE_UPLOAD_ERROR);
-		}
-	}
-
-	private void validateSvgContentType(MultipartFile file) {
-		if (!"image/svg+xml".equalsIgnoreCase(file.getContentType())) {
-			throw new AppException(ErrorCode.FILE_UPLOAD_ERROR);
-		}
-	}
-
 }

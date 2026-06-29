@@ -21,8 +21,11 @@ public class DailyRecipeListResponseDto {
     @Schema(description = "레시피 제목", example = "고추장 마요 달걀밥")
     private String title;
 
-    @Schema(description = "요리 사진 URL")
+    @Schema(description = "요리 사진 URL (원본, 전체보기에 사용)")
     private String recipeImageUrl;
+
+    @Schema(description = "크롭된 미리보기 사진 URL")
+    private String croppedImageUrl;
 
     @Schema(description = "공개 여부", example = "false")
     private Boolean isPublic;
@@ -35,6 +38,7 @@ public class DailyRecipeListResponseDto {
                 .dailyRecipeId(dailyRecipe.getId())
                 .title(dailyRecipe.getTitle())
                 .recipeImageUrl(dailyRecipe.getRecipeImageUrl())
+                .croppedImageUrl(dailyRecipe.getCroppedImageUrl())
                 .isPublic(dailyRecipe.getIsPublic())
                 .createdAt(dailyRecipe.getCreatedAt())
                 .build();
