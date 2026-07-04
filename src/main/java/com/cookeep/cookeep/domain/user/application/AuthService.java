@@ -193,7 +193,7 @@ public class AuthService {
 
 
 				if (existingUser.isPresent()) {
-					// 이미 다른 provider로 가입된 유저 → UserAuth 추가 없이 기존 유저로 로그인
+					// 해당 provider의 UserAuth가 없으면 기존 유저에 연결 생성
 					User user = existingUser.get();
 					return userAuthRepository.findByProviderAndUser(provider, user)
 							.orElseGet(() -> userAuthRepository.save(
