@@ -188,6 +188,32 @@ public class AuthService {
 		// 신규 유저일 경우 User, UserAuth값을 새롭게 생성함
 		UserAuth userAuth = existingUserAuth
 			.orElseGet(() -> {
+
+				Optional<User> existingUser = userRepository.findByEmail(email);
+
+
+				if (existingUser.isPresent()) {
+					// 이미 다른 provider로 가입된 유저 → UserAuth 추가 없이 기존 유저로 로그인
+					User user = existingUser.get();
+					return userAuthRepository.findByProviderAndUser(provider, user)
+							.orElseGet(() -> userAuthRepository.save(
+									UserAuth.builder()
+											.user(user)
+											.provider(provider)
+											.providerUserId(socialId)
+											.build()));
+				}
+
+				// 완전히 신규 유저만 user + userAuth 모두 생성
+				User newUser = createSocialUser(email);
+				return userAuthRepository.save(
+						UserAuth.builder()
+								.user(newUser)
+								.provider(provider)
+								.providerUserId(socialId)
+								.build());
+
+				/*
 				// 동일한 이메일로 가입된 User가 존재하는지 확인
 				// 존재하지 않을 경우 새로운 유저 생성
 				User user = userRepository.findByEmail(email)
@@ -200,6 +226,8 @@ public class AuthService {
 						.provider(provider)
 						.providerUserId(socialId)
 						.build());
+
+				 */
 			});
 
 		User user = userAuth.getUser();
