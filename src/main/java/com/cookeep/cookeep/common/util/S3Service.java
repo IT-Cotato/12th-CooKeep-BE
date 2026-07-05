@@ -51,8 +51,13 @@ public class S3Service {
 		String extension = extractExtension(file.getOriginalFilename());
 		String outputFormat = "svg".equalsIgnoreCase(extension) ? "jpg" : extension;
 
-		byte[] cropped = imageCropService.crop(file, outputFormat, x, y, width, height);
-		return s3Uploader.uploadCropped(cropped, folder, outputFormat, "image/" + outputFormat);
+		try {
+			byte[] cropped = imageCropService.crop(file, outputFormat, x, y, width, height);
+			return s3Uploader.uploadCropped(cropped, folder, outputFormat, "image/" + outputFormat);
+		} catch (Exception e) {
+			log.warn("크롭 이미지 생성 실패, 원본만 반환합니다. folder={}", folder, e);
+			return null;
+		}
 	}
 
 	public void delete(String imageUrl) {
