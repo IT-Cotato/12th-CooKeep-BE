@@ -57,8 +57,6 @@ dependencies {
 	// 이미지 크롭
 	implementation 'net.coobird:thumbnailator:0.4.20'
 
-	// SVG sanitizer
-	implementation 'com.googlecode.owasp-java-html-sanitizer:owasp-java-html-sanitizer:20240325.1'
 
 	// Web Push
 	implementation 'nl.martijndwars:web-push:5.1.1'
