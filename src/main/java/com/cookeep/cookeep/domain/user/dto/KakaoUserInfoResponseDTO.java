@@ -15,6 +15,12 @@ public record KakaoUserInfoResponseDTO(
 	@JsonIgnoreProperties(ignoreUnknown = true)
 	public record KakaoAccount(
 		@JsonProperty("email")
-		String email
+		String email,
+
+		@JsonProperty("is_email_verified")
+		Boolean isEmailVerified,
+
+		@JsonProperty("is_email_valid")
+		Boolean isEmailValid
 	) {}
 }
