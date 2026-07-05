@@ -80,6 +80,7 @@ public enum ErrorCode {
 	CANNOT_BOOKMARK_OWN_RECIPE(HttpStatus.BAD_REQUEST, "자신의 레시피에는 북마크를 누를 수 없습니다.", "DAILY_RECIPE-007"),
 	DAILY_RECIPE_TITLE_BLANK(HttpStatus.BAD_REQUEST, "레시피 제목은 빈 값으로 수정할 수 없습니다.", "DAILY_RECIPE-008"),
 	DAILY_RECIPE_IMAGE_SAME_URL(HttpStatus.BAD_REQUEST, "기존 사진과 동일한 URL로 변경할 수 없습니다.", "DAILY_RECIPE-009"),
+	FILE_CROP_INVALID_BOUNDS(HttpStatus.BAD_REQUEST, "크롭 영역이 이미지 범위를 벗어났습니다.", "FILE-003"),
 
 	// AUTH
 	SAME_AS_PREVIOUS_PASSWORD(HttpStatus.BAD_REQUEST, "기존 등록된 비밀번호와 동일한 비밀번호입니다.", "AUTH-005"),
