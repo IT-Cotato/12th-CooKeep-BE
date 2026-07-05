@@ -85,8 +85,9 @@ public class KakaoOAuthProvider implements OAuthProvider {
 
 		String email = kakaoUserInfo.kakaoAccount().email();
 		Boolean isEmailVerified = kakaoUserInfo.kakaoAccount().isEmailVerified();
+		Boolean isEmailValid = kakaoUserInfo.kakaoAccount().isEmailValid();
 
-		if (email == null || Boolean.FALSE.equals(isEmailVerified)) {
+		if (email == null || !Boolean.TRUE.equals(isEmailVerified) || !Boolean.TRUE.equals(isEmailValid)) {
 			throw new AppException(ErrorCode.SOCIAL_EMAIL_NOT_PROVIDED);
 		}
 

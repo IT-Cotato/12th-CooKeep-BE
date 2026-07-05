@@ -18,6 +18,9 @@ public record KakaoUserInfoResponseDTO(
 		String email,
 
 		@JsonProperty("is_email_verified")
-				Boolean isEmailVerified
+		Boolean isEmailVerified,
+
+		@JsonProperty("is_email_valid")
+		Boolean isEmailValid
 	) {}
 }
