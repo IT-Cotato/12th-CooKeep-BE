@@ -85,6 +85,7 @@ public enum ErrorCode {
 	SAME_AS_PREVIOUS_PASSWORD(HttpStatus.BAD_REQUEST, "기존 등록된 비밀번호와 동일한 비밀번호입니다.", "AUTH-005"),
 	PASSWORD_MISMATCH(HttpStatus.BAD_REQUEST, "현재 비밀번호가 일치하지 않습니다.", "AUTH-006"),
 	REGISTERED_EMAIL_MISMATCH(HttpStatus.BAD_REQUEST, "회원정보에 등록된 이메일과 일치하지 않습니다.", "AUTH-008"),
+	SOCIAL_EMAIL_NOT_PROVIDED(HttpStatus.BAD_REQUEST, "소셜 계정에서 이메일 정보를 가져올 수 없습니다.", "AUTH-010"),
 
 	// USER
 	SAME_AS_CURRENT_PHONE_NUMBER(HttpStatus.BAD_REQUEST, "기존 등록된 전화번호와 동일한 전화번호입니다.", "USER-007"),
