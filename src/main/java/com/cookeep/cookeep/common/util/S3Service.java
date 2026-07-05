@@ -54,6 +54,8 @@ public class S3Service {
 		try {
 			byte[] cropped = imageCropService.crop(file, outputFormat, x, y, width, height);
 			return s3Uploader.uploadCropped(cropped, folder, outputFormat, "image/" + outputFormat);
+		} catch (AppException e) {
+			throw e;
 		} catch (Exception e) {
 			log.warn("크롭 이미지 생성 실패, 원본만 반환합니다. folder={}", folder, e);
 			return null;
