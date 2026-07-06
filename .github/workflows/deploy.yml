@@ -138,6 +138,7 @@ jobs:
             docker run -d \
               --name cookeep \
               -p 8080:8080 \
+              -e "JAVA_TOOL_OPTIONS=-Xmx512m -Xms256m" \
               -e TZ=Asia/Seoul \
               -e "REDIS_HOST=${{ secrets.DEV_REDIS_HOST }}" \
               -e "REDIS_PORT=${{ secrets.DEV_REDIS_PORT }}" \
