@@ -8,7 +8,8 @@ import lombok.RequiredArgsConstructor;
 public enum ImageFolder {
 	PLANTS("plants"),
 	RECIPE_IMAGES("recipeImages"),
-	INGREDIENTS("ingredients");
+	INGREDIENTS("ingredients"),
+	PROFILE_IMAGES("profileImages");
 
 	private final String folderName;
 
