@@ -63,7 +63,7 @@ public class DailyRecipeService {
 
     // 데일리 레시피 등록
     public DailyRecipeResult createDailyRecipe(Long userId, Long aiRecipeId, String title,
-                                               String description, String recipeImageUrl, Boolean isPublic) {
+                                               String description, String recipeImageUrl, String croppedImageUrl, Boolean isPublic) {
         User user = userReader.readById(userId);
 
         AiRecipe aiRecipe = aiRecipeRepository.findById(aiRecipeId)
@@ -87,6 +87,7 @@ public class DailyRecipeService {
                 .description(description)
                 .content(content)
                 .recipeImageUrl(recipeImageUrl)
+                .croppedImageUrl(croppedImageUrl)
                 .isPublic(isPublic != null ? isPublic : false)
                 .photoRewardCompleted(hasPhoto)
                 .user(user)
@@ -131,7 +132,7 @@ public class DailyRecipeService {
 
     // 데일리 레시피 수정 (제목, 한줄평, 사진)
     public DailyRecipeResult updateDailyRecipe(Long userId, Long dailyRecipeId, String title, String description,
-                                               String recipeImageUrl, Boolean deleteRecipeImage) {
+                                               String recipeImageUrl, String croppedImageUrl, Boolean deleteRecipeImage) {
         boolean isDeleteImage = Boolean.TRUE.equals(deleteRecipeImage);
 
         if ((title == null || title.isBlank())
@@ -151,9 +152,15 @@ public class DailyRecipeService {
                 .orElseThrow(() -> new AppException(ErrorCode.DAILY_RECIPE_NOT_FOUND));
 
         // 사진 삭제 요청: S3 삭제 후 DB null 업데이트
-        if (isDeleteImage && dailyRecipe.getRecipeImageUrl() != null) {
-            s3Service.delete(dailyRecipe.getRecipeImageUrl());
-            dailyRecipe.updateRecipeImageUrl(null);
+        if (isDeleteImage) {
+            if (dailyRecipe.getRecipeImageUrl() != null) {
+                s3Service.delete(dailyRecipe.getRecipeImageUrl());
+                dailyRecipe.updateRecipeImageUrl(null);
+            }
+            if (dailyRecipe.getCroppedImageUrl() != null) {
+                s3Service.delete(dailyRecipe.getCroppedImageUrl());
+                dailyRecipe.updateCroppedImageUrl(null);
+            }
         }
 
         if (title != null) {
@@ -171,6 +178,7 @@ public class DailyRecipeService {
                 throw new AppException(ErrorCode.DAILY_RECIPE_IMAGE_SAME_URL);
             }
             dailyRecipe.updateRecipeImageUrl(recipeImageUrl);
+            dailyRecipe.updateCroppedImageUrl(croppedImageUrl);
             if (!dailyRecipe.isPhotoRewardCompleted()) {
                 dailyRecipe.markPhotoRewardCompleted();
                 cookieService.updateCookie(userId, CookieLog.CookieLogType.BASIC_FOOD_PHOTO_REG);

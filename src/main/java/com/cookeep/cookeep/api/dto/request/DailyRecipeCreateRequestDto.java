@@ -43,6 +43,13 @@ public class DailyRecipeCreateRequestDto {
     private String recipeImageUrl;
 
     @Schema(
+            description = "크롭된 미리보기 사진 URL (이미지 업로드 API에서 cropX/Y/Width/Height 전달 시 반환되는 croppedImageUrl)",
+            example = "https://cookeep-images.s3.amazonaws.com/recipeImages/abc-cropped.jpg",
+            requiredMode = Schema.RequiredMode.NOT_REQUIRED
+    )
+    private String croppedImageUrl;
+
+    @Schema(
             description = "공개 여부 (true: 쿠킵스에 공개, false: 나만 보기)",
             example = "false",
             requiredMode = Schema.RequiredMode.REQUIRED
