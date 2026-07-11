@@ -120,6 +120,9 @@ public class User extends BaseEntity {
 	@Column(name = "is_first_ingredient_reward", nullable = false)
 	private boolean isFirstIngredientReward = false;
 
+	@Column(name = "profile_image_id")
+	private Integer profileImageId; // null -> 기본 식물 이미지 사용, 값 있으면 1~6번 프로필 이미지 사용
+
 	// 유저가 API를 통해 직접 프로필을 변경할 때 호출
 	public void updateProfilePlant(UserPlant nesUserPlant) {
 		this.profilePlant = nesUserPlant;
@@ -225,5 +228,10 @@ public class User extends BaseEntity {
 
 	public void markFirstIngredientRewarded() {
 		this.isFirstIngredientReward = true;
+	}
+
+	// 유저선택 프로필 이미지 변경시 S3에서 가져옴
+	public void updateProfileImage(Integer profileImageId) {
+		this.profileImageId = profileImageId;
 	}
 }
