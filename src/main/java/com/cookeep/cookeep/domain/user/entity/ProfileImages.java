@@ -1,5 +1,7 @@
 package com.cookeep.cookeep.domain.user.entity;
 
+import com.cookeep.cookeep.common.exception.AppException;
+import com.cookeep.cookeep.common.exception.ErrorCode;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
@@ -23,6 +25,6 @@ public enum ProfileImages {
                 return image;
             }
         }
-        throw new IllegalArgumentException("Invalid profile imageId: " + imageId);
+        throw new AppException(ErrorCode.INVALID_PROFILE_IMAGE_ID);
     }
 }

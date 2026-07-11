@@ -1,15 +1,20 @@
 package com.cookeep.cookeep.domain.user.application;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
 import com.cookeep.cookeep.api.dto.request.*;
 import com.cookeep.cookeep.api.dto.response.DislikeIngredientResponseDto;
+import com.cookeep.cookeep.api.dto.response.ProfileImageListResponseDto;
+import com.cookeep.cookeep.api.dto.response.ProfileImageResponseDto;
 import com.cookeep.cookeep.api.dto.response.UserProfileResponseDTO;
 import com.cookeep.cookeep.common.exception.AppException;
 import com.cookeep.cookeep.common.exception.ErrorCode;
 import com.cookeep.cookeep.domain.user.dao.UserAuthRepository;
 import com.cookeep.cookeep.domain.user.dao.UserRepository;
+import com.cookeep.cookeep.domain.user.entity.ProfileImages;
 import com.cookeep.cookeep.domain.user.entity.Provider;
 import com.cookeep.cookeep.domain.user.entity.User;
 import com.cookeep.cookeep.domain.verification.application.EmailVerificationService;
@@ -33,6 +38,7 @@ public class UserInfoService {
     private final EmailVerificationService emailVerificationService;
     private final UserAuthRepository userAuthRepository;
     private final PasswordEncoder passwordEncoder;
+    private final ProfileImageService profileImageService;
 
     // 비밀번호 입력 최대 시도 횟수
     private static final int MAX_ATTEMPTS = 5;
@@ -51,10 +57,15 @@ public class UserInfoService {
             ? user.getPhoneNumber()
             : null;
 
+        // profileImageId가 설정된 경우에만 프리셋 이미지 URL 반환, 아니면 null
+        Integer profileImageId = user.getProfileImageId();
+        String profileImageUrl = (profileImageId != null)
+                ? profileImageService.resolveUrl(profileImageId)
+                : null;
 
         return new UserProfileResponseDTO(
             nickname, phoneNumber, email,
-            provider, marketingPush
+            provider, marketingPush, profileImageUrl
         );
     }
 
@@ -244,6 +255,28 @@ public class UserInfoService {
     public void updateDislikedIngredients(Long userId, DislikeIngredientRequestDto requestDto) {
         User user = userReader.readById(userId);
         user.updateDislikedIngredients(requestDto.getDislikedIngredients());
+    }
+
+    @Transactional(readOnly = true)
+    public ProfileImageListResponseDto getProfileImages(Long userId) {
+        // 유저 존재 검증 (탈퇴/유효하지 않은 유저 필터링)
+        userReader.readById(userId);
+
+        List<ProfileImageResponseDto> images = Arrays.stream(ProfileImages.values())
+                .map(p -> new ProfileImageResponseDto(p.getImageId(), profileImageService.resolveUrl(p.getImageId())))
+                .toList();
+
+        return new ProfileImageListResponseDto(images);
+    }
+
+    @Transactional
+    public void updateProfileImage(Long userId, ProfileImageUpdateRequestDto request) {
+        User user = userReader.readById(userId);
+
+        // 유효한 imageId인지 검증 (1~6 범위 밖이면 예외)
+        ProfileImages.fromId(request.imageId());
+
+        user.updateProfileImage(request.imageId());
     }
 
 }

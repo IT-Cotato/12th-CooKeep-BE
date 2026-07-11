@@ -2,6 +2,7 @@ package com.cookeep.cookeep.api.controller;
 
 import com.cookeep.cookeep.api.dto.request.*;
 import com.cookeep.cookeep.api.dto.response.DislikeIngredientResponseDto;
+import com.cookeep.cookeep.api.dto.response.ProfileImageListResponseDto;
 import com.cookeep.cookeep.api.dto.response.UserProfileResponseDTO;
 import com.cookeep.cookeep.common.dto.DataResponse;
 import com.cookeep.cookeep.common.exception.ErrorCode;
@@ -167,6 +168,22 @@ public class UserInfoController {
     ) {
         Long userId = principal.userId();
         userInfoService.updateDislikedIngredients(userId, requestDto);
+        return ResponseEntity.ok(DataResponse.ok());
+    }
+
+    @Operation(summary = "프로필 이미지 수정", description = "프리셋 프로필 이미지 6종 중 하나로 프로필 이미지를 변경합니다.")
+    @ApiErrorCodeExamples({
+            ErrorCode.UNAUTHORIZED,
+            ErrorCode.USER_NOT_FOUND,
+            ErrorCode.INVALID_PROFILE_IMAGE_ID,
+            ErrorCode.INTERNAL_SERVER_ERROR
+    })
+    @PatchMapping("/profile-images")
+    public ResponseEntity<DataResponse<Void>> updateProfileImage(
+            @AuthenticationPrincipal(expression = "userId") Long userId,
+            @Valid @RequestBody ProfileImageUpdateRequestDto request
+    ) {
+        userInfoService.updateProfileImage(userId, request);
         return ResponseEntity.ok(DataResponse.ok());
     }
 }
