@@ -257,18 +257,6 @@ public class UserInfoService {
         user.updateDislikedIngredients(requestDto.getDislikedIngredients());
     }
 
-    @Transactional(readOnly = true)
-    public ProfileImageListResponseDto getProfileImages(Long userId) {
-        // 유저 존재 검증 (탈퇴/유효하지 않은 유저 필터링)
-        userReader.readById(userId);
-
-        List<ProfileImageResponseDto> images = Arrays.stream(ProfileImages.values())
-                .map(p -> new ProfileImageResponseDto(p.getImageId(), profileImageService.resolveUrl(p.getImageId())))
-                .toList();
-
-        return new ProfileImageListResponseDto(images);
-    }
-
     @Transactional
     public void updateProfileImage(Long userId, ProfileImageUpdateRequestDto request) {
         User user = userReader.readById(userId);

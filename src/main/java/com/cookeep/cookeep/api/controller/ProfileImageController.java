@@ -5,6 +5,7 @@ import com.cookeep.cookeep.api.dto.response.ProfileImageListResponseDto;
 import com.cookeep.cookeep.common.dto.DataResponse;
 import com.cookeep.cookeep.common.exception.ErrorCode;
 import com.cookeep.cookeep.config.ApiErrorCodeExamples;
+import com.cookeep.cookeep.domain.user.application.ProfileImageService;
 import com.cookeep.cookeep.domain.user.application.UserInfoService;
 import com.cookeep.cookeep.security.UserPrincipal;
 import io.swagger.v3.oas.annotations.Operation;
@@ -23,10 +24,12 @@ import org.springframework.web.bind.annotation.RestController;
 public class ProfileImageController {
 
     private final UserInfoService userInfoService;
+    private final ProfileImageService profileImageService;
 
     @Operation(summary = "프로필 이미지 목록 조회", description = "선택 가능한 프리셋 프로필 이미지 6종을 조회합니다.")
     @ApiErrorCodeExamples({
             ErrorCode.UNAUTHORIZED,
+            ErrorCode.USER_NOT_FOUND,
             ErrorCode.INTERNAL_SERVER_ERROR
     })
     @GetMapping("/profile-images")
@@ -34,6 +37,6 @@ public class ProfileImageController {
             @AuthenticationPrincipal UserPrincipal principal
     ) {
         Long userId = principal.userId();
-        return ResponseEntity.ok(DataResponse.from(userInfoService.getProfileImages(userId)));
+        return ResponseEntity.ok(DataResponse.from(profileImageService.getProfileImages(userId)));
     }
 }
