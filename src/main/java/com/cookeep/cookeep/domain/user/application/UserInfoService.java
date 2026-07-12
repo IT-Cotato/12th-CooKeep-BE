@@ -57,11 +57,8 @@ public class UserInfoService {
             ? user.getPhoneNumber()
             : null;
 
-        // profileImageId가 설정된 경우에만 프리셋 이미지 URL 반환, 아니면 null
-        Integer profileImageId = user.getProfileImageId();
-        String profileImageUrl = (profileImageId != null)
-                ? profileImageService.resolveUrl(profileImageId)
-                : null;
+        // profileImageId -> 기본 1, 바꾼 경우 해당 아이디로
+        String profileImageUrl = profileImageService.resolveUrl(user.getProfileImageId());
 
         return new UserProfileResponseDTO(
             nickname, phoneNumber, email,
