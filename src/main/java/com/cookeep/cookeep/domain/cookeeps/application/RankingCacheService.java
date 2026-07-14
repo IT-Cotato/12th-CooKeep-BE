@@ -5,6 +5,7 @@ import com.cookeep.cookeep.api.dto.response.RankingResponseDto.WateringRankDto;
 import com.cookeep.cookeep.domain.dailyrecipe.dao.DailyRecipeRepository;
 import com.cookeep.cookeep.domain.dailyrecipe.entity.DailyRecipe;
 import com.cookeep.cookeep.domain.plant.dao.WateringLogRepository;
+import com.cookeep.cookeep.domain.user.application.ProfileImageService;
 import com.cookeep.cookeep.domain.user.entity.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
@@ -24,6 +25,7 @@ public class RankingCacheService {
 
     private final WateringLogRepository wateringLogRepository;
     private final DailyRecipeRepository dailyRecipeRepository;
+    private final ProfileImageService profileImageService;
 
     @Cacheable(cacheNames = "wateringRanking", key = "#monthStart.toLocalDate().toString()")
     @Transactional(readOnly = true)
@@ -36,9 +38,11 @@ public class RankingCacheService {
                 Object[] row = results.get(index);
                 User user = (User) row[0];
                 Long wateringCount = (Long) row[1];
-                String profileImageUrl = user.getProfilePlant() != null
-                    ? user.getProfilePlant().getCurrentImageUrl()
-                    : null;
+//                String profileImageUrl = user.getProfilePlant() != null
+//                    ? user.getProfilePlant().getCurrentImageUrl()
+//                    : null;
+                String profileImageUrl = profileImageService.resolveUrl(user.getProfileImageId());
+
                 return WateringRankDto.builder()
                     .rank(index + 1)
                     .nickname(user.getNickname())

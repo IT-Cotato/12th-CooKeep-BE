@@ -13,7 +13,7 @@ import java.time.temporal.ChronoUnit;
 @Builder
 public class MyProfileResponseDto {
     private String nickname;
-    private String profilePlantImageUrl;
+    private String profileImageUrl;
     private String growingPlantName;
     private Long daysSinceJoined;
     private WeeklyGoalDto weeklyGoal;
@@ -36,11 +36,11 @@ public class MyProfileResponseDto {
         }
     }
 
-    public static MyProfileResponseDto of(User user, WeeklyGoal weeklyGoal, String growingPlantName) {
-        String profileImageUrl = null;
-        if (user.getProfilePlant() != null) {
-            profileImageUrl = user.getProfilePlant().getCurrentImageUrl();
-        }
+    public static MyProfileResponseDto of(User user, WeeklyGoal weeklyGoal, String growingPlantName, String profileImageUrl) {
+//        String profileImageUrl = null;
+//        if (user.getProfilePlant() != null) {
+//            profileImageUrl = user.getProfilePlant().getCurrentImageUrl();
+//        }
 
         long daysSinceJoined = ChronoUnit.DAYS.between(
                 user.getCreatedAt().toLocalDate(),
@@ -49,7 +49,7 @@ public class MyProfileResponseDto {
 
         return MyProfileResponseDto.builder()
             .nickname(user.getNickname())
-            .profilePlantImageUrl(profileImageUrl)
+            .profileImageUrl(profileImageUrl)
             .growingPlantName(growingPlantName)
             .daysSinceJoined(daysSinceJoined)
             .weeklyGoal(weeklyGoal != null ? WeeklyGoalDto.from(weeklyGoal) : null)
