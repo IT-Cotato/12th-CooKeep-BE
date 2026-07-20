@@ -1,6 +1,7 @@
 package com.cookeep.cookeep.api.dto.response;
 
 import com.cookeep.cookeep.domain.recipe.entity.AiMessage;
+import com.cookeep.cookeep.domain.recipe.entity.Feature;
 import com.cookeep.cookeep.domain.recipe.entity.MessageType;
 import com.cookeep.cookeep.domain.recipe.entity.Role;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -35,6 +36,11 @@ public class AiSessionDetailResponseDto {
             requiredMode = Schema.RequiredMode.REQUIRED
     )
     private List<MessageItem> messages;
+
+    @Schema(
+            description = "요리 종류 (일반 레시피 - 선택한 feature, 랜덤 레시피 - ANY)",
+            example = "RICE_BOWL")
+    private Feature feature;
 
     @Getter
     @Builder

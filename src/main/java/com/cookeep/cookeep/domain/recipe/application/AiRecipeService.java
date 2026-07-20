@@ -364,6 +364,7 @@ public class AiRecipeService {
 
         return AiSessionDetailResponseDto.builder()
                 .sessionId(session.getId())
+                .feature(session.getFeature())
                 .isCompleted(Boolean.TRUE.equals(session.getIsCompleted()))
                 .messages(messages.stream()
                         .map(AiSessionDetailResponseDto.MessageItem::from)
