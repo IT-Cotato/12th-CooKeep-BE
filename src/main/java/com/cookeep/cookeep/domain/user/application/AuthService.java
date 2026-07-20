@@ -61,6 +61,7 @@ public class AuthService {
 	private final JwtTokenProvider jwtTokenProvider;
 	private final UserReader userReader;
 	private final PasswordEncoder passwordEncoder;
+	private final LoginPasswordFailureService loginPasswordFailureService;
 	private final NicknameGenerator nicknameGenerator;
 	private final EmailVerificationService emailVerificationService;
 	private final CookieService cookieService;
@@ -84,6 +85,10 @@ public class AuthService {
 		}
 
 		User user = userReader.readById(userId);
+
+		// 사용자가 새로운 토큰을 발급 받을 수 있는 상태인지 검증
+		// LOCK, WITHDRAWN 상태일 경우 예외 발생
+		assertTokenIssuable(user);
 		boolean isRewarded = issueComebackReward(user);
 		user.updateLastAccessAt(LocalDateTime.now());
 
@@ -134,8 +139,9 @@ public class AuthService {
 	}
 
 	private TokenPair issueTokensAndUpsertSession(User user) {
-		// 기존 구독 삭제 (새 기기로 갱신)
-		//webPushSubscriptionRepository.deleteAllByUser_UserId(user.getUserId());
+		// 사용자가 새로운 토큰을 발급 받을 수 있는 상태인지 검증
+		// LOCK, WITHDRAWN 상태일 경우 예외 발생
+		assertTokenIssuable(user);
 
 		boolean isRewarded = issueComebackReward(user);
 		user.updateLastAccessAt(LocalDateTime.now());
@@ -155,6 +161,18 @@ public class AuthService {
 		userSessionRepository.save(userSession);
 
 		return new TokenPair(accessToken, refreshToken, isRewarded);
+	}
+
+	// 사용자가 새로운 토큰을 발급받을 수 있는 상태인지 검증
+	// LOCK, WITHDRAWN 상태일 경우 토큰 발급 제한
+	private void assertTokenIssuable(User user) {
+		if (user.getUserStatus() == UserStatus.LOCK) {
+			throw new AppException(ErrorCode.USER_ACCOUNT_LOCKED);
+		}
+
+		if (user.getUserStatus() == UserStatus.WITHDRAWN) {
+			throw new AppException(ErrorCode.USER_ACCOUNT_WITHDRAWN);
+		}
 	}
 
 	// 닉네임 제약 위반 시 재시도 횟수를 제한하기 위한 값 (무한 반복 방지)
@@ -216,7 +234,12 @@ public class AuthService {
 				/*
 				// 동일한 이메일로 가입된 User가 존재하는지 확인
 				// 존재하지 않을 경우 새로운 유저 생성
+				// 기존 이메일 계정이 LOCK/WITHDRAWN일 경우 새로운 소셜 계정 연결이 생기는 걸 막음
 				User user = userRepository.findByEmail(email)
+					.map(existingUser -> {
+						assertTokenIssuable(existingUser);
+						return existingUser;
+					})
 					.orElseGet(() -> createSocialUser(email));
 
 				// 기존 유저든 신규 유저든 UserAuth가 추가됨
@@ -317,6 +340,37 @@ public class AuthService {
 		String code = verifyCodeRequestDTO.code();
 
 		emailVerificationService.verifyCode(email, VerificationPurpose.RESET_PASSWORD, code);
+	}
+
+	// 비밀번호 검증 실패로 인해 계정이 LOCK된 경우 이메일 인증 요청
+	@Transactional
+	public void sendAccountUnlockCode(SendCodeRequestDTO sendCodeRequestDTO) {
+		User user = userRepository.findByEmail(sendCodeRequestDTO.email())
+			.orElseThrow(() -> new AppException(ErrorCode.EMAIL_NOT_REGISTERED));
+
+		if (user.getUserStatus() == UserStatus.WITHDRAWN) {
+			throw new AppException(ErrorCode.USER_ACCOUNT_WITHDRAWN);
+		}
+
+		emailVerificationService.sendCode(user.getEmail(), VerificationPurpose.PASSWORD_VERIFICATION);
+	}
+
+	// 비밀번호 검증 실패로 인해 계정이 LOCK된 경우 이메일 인증 확인
+	@Transactional
+	public void verifyAccountUnlockCode(VerifyCodeRequestDTO verifyCodeRequestDTO) {
+		User user = userRepository.findByEmail(verifyCodeRequestDTO.email())
+			.orElseThrow(() -> new AppException(ErrorCode.EMAIL_NOT_REGISTERED));
+
+		if (user.getUserStatus() == UserStatus.WITHDRAWN) {
+			throw new AppException(ErrorCode.USER_ACCOUNT_WITHDRAWN);
+		}
+
+		emailVerificationService.verifyCode(
+			verifyCodeRequestDTO.email(), VerificationPurpose.PASSWORD_VERIFICATION, verifyCodeRequestDTO.code()
+		);
+
+		user.updatePasswordCnt(0);
+		user.updateUserStatus(UserStatus.ACTIVE);
 	}
 
 	@Transactional
@@ -435,11 +489,37 @@ public class AuthService {
 		User user = userRepository.findByEmail(email)
 			.orElseThrow(() -> new AppException(ErrorCode.EMAIL_NOT_REGISTERED));
 
+		// 사용자가 새로운 토큰을 발급 받을 수 있는 상태인지 검증
+		// LOCK, WITHDRAWN 상태일 경우 예외 발생
+		assertTokenIssuable(user);
+
 		// 비밀번호가 틀렸을 경우
 		if (!passwordEncoder.matches(password, user.getPassword())) {
-			throw new AppException(ErrorCode.AUTH_PASSWORD_MISMATCH);
+			int passwordCnt = loginPasswordFailureService.increasePasswordFailCount(user.getUserId());
+
+			// 지정된 최대 횟수를 초과한 경우
+			if (passwordCnt >= LoginPasswordFailureService.MAX_PASSWORD_ATTEMPTS) {
+				throw new AppException(
+					ErrorCode.PASSWORD_VERIFICATION_LOCKED,
+					Map.of(
+						"failedCount", String.valueOf(LoginPasswordFailureService.MAX_PASSWORD_ATTEMPTS),
+						"maxCount", String.valueOf(LoginPasswordFailureService.MAX_PASSWORD_ATTEMPTS)
+					)
+				);
+			}
+
+			// 최대 횟수 미만일 경우 실패 횟수만 누적하고 AUTH_PASSWORD_MISMATCH로 응답
+			throw new AppException(
+				ErrorCode.AUTH_PASSWORD_MISMATCH,
+				Map.of(
+					"failedCount", String.valueOf(passwordCnt),
+					"maxCount", String.valueOf(LoginPasswordFailureService.MAX_PASSWORD_ATTEMPTS)
+				)
+			);
 		}
 
+		// 로그인에 성공한 경우 비밀번호 검증 실패 횟수 초기화
+		user.updatePasswordCnt(0);
 		TokenPair tokenPair = issueTokensAndUpsertSession(user);
 
 		UserStatus userStatus = user.getUserStatus();

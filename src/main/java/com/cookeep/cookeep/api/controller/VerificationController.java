@@ -148,13 +148,11 @@ public class VerificationController {
 		@ApiResponse(responseCode = "429", description = "인증 재요청이 너무 빠름"),
 		@ApiResponse(responseCode = "500", description = "서버 오류")
 	})
-	@PostMapping("/users/me/password/send-code")
-	public ResponseEntity<DataResponse<Void>> sendPasswordVerificationCode(
-		@AuthenticationPrincipal UserPrincipal principal,
+	@PostMapping("/auth/account-unlock/send-code")
+	public ResponseEntity<DataResponse<Void>> sendAccountUnlockCode(
 		@Valid @RequestBody SendCodeRequestDTO sendCodeRequestDTO
 	) {
-		Long userId = principal.userId();
-		userInfoService.sendPasswordVerificationCode(userId, sendCodeRequestDTO);
+		authService.sendAccountUnlockCode(sendCodeRequestDTO);
 		return ResponseEntity.ok(DataResponse.ok());
 	}
 
@@ -169,13 +167,11 @@ public class VerificationController {
 		@ApiResponse(responseCode = "429", description = "인증 시도 횟수 초과"),
 		@ApiResponse(responseCode = "500", description = "서버 오류")
 	})
-	@PostMapping("/users/me/password/verify-code")
-	public ResponseEntity<DataResponse<Void>> verifyPasswordVerificationCode(
-		@AuthenticationPrincipal UserPrincipal principal,
+	@PostMapping("/auth/account-unlock/verify-code")
+	public ResponseEntity<DataResponse<Void>> verifyAccountUnlockCode(
 		@Valid @RequestBody VerifyCodeRequestDTO verifyCodeRequestDTO
 	) {
-		Long userId = principal.userId();
-		userInfoService.verifyPasswordVerificationCode(userId, verifyCodeRequestDTO);
+		authService.verifyAccountUnlockCode(verifyCodeRequestDTO);
 		return ResponseEntity.ok(DataResponse.ok());
 	}
 }
