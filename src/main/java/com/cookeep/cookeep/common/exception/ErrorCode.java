@@ -56,6 +56,7 @@ public enum ErrorCode {
 	DISLIKED_INGREDIENT_INCLUDED(HttpStatus.BAD_REQUEST, "제외 재료가 포함된 레시피입니다.", "RECIPE-025"),
 	INVALID_FEATURE(HttpStatus.BAD_REQUEST, "유효하지 않은 요리 종류입니다.", "RECIPE-029"),
 	SESSION_FEATURE_NOT_FOUND(HttpStatus.BAD_REQUEST, "세션의 요리 종류 정보를 찾을 수 없습니다.", "RECIPE-030"),
+	RANDOM_RECIPE_INGREDIENT_NOT_ENOUGH(HttpStatus.BAD_REQUEST, "랜덤 레시피 생성을 위해 재료가 최소 3개 이상 필요합니다.", "RECIPE-031"),
 
 	// ONBOARDING
 	INVALID_FOOD_TYPE_COUNT(HttpStatus.BAD_REQUEST, "선호하는 음식 종류는 3개까지만 선택 가능합니다.", "ONBOARDING-001"),
@@ -79,11 +80,13 @@ public enum ErrorCode {
 	CANNOT_BOOKMARK_OWN_RECIPE(HttpStatus.BAD_REQUEST, "자신의 레시피에는 북마크를 누를 수 없습니다.", "DAILY_RECIPE-007"),
 	DAILY_RECIPE_TITLE_BLANK(HttpStatus.BAD_REQUEST, "레시피 제목은 빈 값으로 수정할 수 없습니다.", "DAILY_RECIPE-008"),
 	DAILY_RECIPE_IMAGE_SAME_URL(HttpStatus.BAD_REQUEST, "기존 사진과 동일한 URL로 변경할 수 없습니다.", "DAILY_RECIPE-009"),
+	FILE_CROP_INVALID_BOUNDS(HttpStatus.BAD_REQUEST, "크롭 영역이 이미지 범위를 벗어났습니다.", "FILE-003"),
 
 	// AUTH
 	SAME_AS_PREVIOUS_PASSWORD(HttpStatus.BAD_REQUEST, "기존 등록된 비밀번호와 동일한 비밀번호입니다.", "AUTH-005"),
 	PASSWORD_MISMATCH(HttpStatus.BAD_REQUEST, "현재 비밀번호가 일치하지 않습니다.", "AUTH-006"),
 	REGISTERED_EMAIL_MISMATCH(HttpStatus.BAD_REQUEST, "회원정보에 등록된 이메일과 일치하지 않습니다.", "AUTH-008"),
+	SOCIAL_EMAIL_NOT_PROVIDED(HttpStatus.BAD_REQUEST, "소셜 계정에서 이메일 정보를 가져올 수 없습니다.", "AUTH-010"),
 
 	// USER
 	SAME_AS_CURRENT_PHONE_NUMBER(HttpStatus.BAD_REQUEST, "기존 등록된 전화번호와 동일한 전화번호입니다.", "USER-007"),
@@ -216,6 +219,8 @@ public enum ErrorCode {
 	AI_RESPONSE_INVALID_FORMAT(HttpStatus.INTERNAL_SERVER_ERROR, "AI 응답 형식이 올바르지 않습니다.","RECIPE-014"),
 	RECIPE_TITLE_PARSE_FAILED(HttpStatus.INTERNAL_SERVER_ERROR,"레시피 제목 파싱 실패","RECIPE-020"),
 	INGREDIENTS_JSON_CONVERSION_FAILED(HttpStatus.INTERNAL_SERVER_ERROR,"재료 JSON 변환에 실패했습니다.","RECIPE-021"),
+	AI_RANDOM_SELECTION_INSUFFICIENT(HttpStatus.INTERNAL_SERVER_ERROR,"AI가 선택한 재료 개수가 3개 미달","RECIPE-032"),
+	AI_RANDOM_INGREDIENT_MISMATCH(HttpStatus.INTERNAL_SERVER_ERROR,"AI가 실제 보유하지 않은 재료 ID를 선택(할루시네이션)","RECIPE-033"),
 
 	// EMAIL
 	EMAIL_PROVIDER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "EMAIL 서비스 오류가 발생했습니다.", "EMAIL-007"),

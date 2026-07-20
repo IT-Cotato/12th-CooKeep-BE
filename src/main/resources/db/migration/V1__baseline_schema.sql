@@ -272,7 +272,7 @@ CREATE TABLE IF NOT EXISTS `watering_logs` (
 
 ALTER TABLE `users`
     ADD CONSTRAINT `FK2rjifh48h13w869flwypbuup8`
-        FOREIGN KEY IF NOT EXISTS (`profile_plant_id`) REFERENCES `user_plants` (`user_plant_id`);
+        FOREIGN KEY (`profile_plant_id`) REFERENCES `user_plants` (`user_plant_id`);
 
 -- ============================================================
 -- AI 관련 테이블

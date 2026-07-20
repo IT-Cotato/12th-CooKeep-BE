@@ -1,5 +1,7 @@
 package com.cookeep.cookeep.domain.user.application;
 
+import com.cookeep.cookeep.common.exception.AppException;
+import com.cookeep.cookeep.common.exception.ErrorCode;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatusCode;
@@ -80,6 +82,14 @@ public class KakaoOAuthProvider implements OAuthProvider {
 			.retrieve()
 			.bodyToMono(KakaoUserInfoResponseDTO.class)
 			.block();
+
+		String email = kakaoUserInfo.kakaoAccount().email();
+		Boolean isEmailVerified = kakaoUserInfo.kakaoAccount().isEmailVerified();
+		Boolean isEmailValid = kakaoUserInfo.kakaoAccount().isEmailValid();
+
+		if (email == null || !Boolean.TRUE.equals(isEmailVerified) || !Boolean.TRUE.equals(isEmailValid)) {
+			throw new AppException(ErrorCode.SOCIAL_EMAIL_NOT_PROVIDED);
+		}
 
 		return new OAuthUserInfoDTO(
 			String.valueOf(kakaoUserInfo.id()),

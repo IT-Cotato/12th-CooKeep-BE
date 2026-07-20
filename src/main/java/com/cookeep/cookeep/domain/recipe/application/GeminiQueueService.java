@@ -82,4 +82,52 @@ public class GeminiQueueService {
             }
         }
     }
+
+    public GeminiRecipeResponseDto generateRandomRecipe(
+            List<IngredientDetailDto> allIngredients,
+            List<String> dislikedIngredients) {
+
+        boolean acquired = false;
+        try {
+            acquired = semaphore.tryAcquire(QUEUE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+            if (!acquired) {
+                log.warn("Gemini 큐 대기 타임아웃(랜덤). 현재 대기 수={}", semaphore.getQueueLength());
+                throw new AppException(ErrorCode.AI_SEARCH_FAILED);
+            }
+            log.info("Gemini 슬롯 획득(랜덤). 남은 슬롯={}", semaphore.availablePermits());
+            return geminiService.generateRandomRecipe(allIngredients, dislikedIngredients);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new AppException(ErrorCode.AI_SEARCH_FAILED);
+        } finally {
+            if (acquired) {
+                semaphore.release();
+                log.info("Gemini 슬롯 반환(랜덤). 남은 슬롯={}", semaphore.availablePermits());
+            }
+        }
+    }
+
+    public GeminiRecipeResponseDto generateRandomRecipeWithExclusion(
+            List<IngredientDetailDto> allIngredients,
+            List<String> dislikedIngredients,
+            List<String> excludedTitles) {
+
+        boolean acquired = false;
+        try {
+            acquired = semaphore.tryAcquire(QUEUE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+            if (!acquired) {
+                log.warn("Gemini 큐 대기 타임아웃(랜덤 재요청). 현재 대기 수={}", semaphore.getQueueLength());
+                throw new AppException(ErrorCode.AI_SEARCH_FAILED);
+            }
+            return geminiService.generateRandomRecipeWithExclusion(
+                    allIngredients, dislikedIngredients, excludedTitles);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new AppException(ErrorCode.AI_SEARCH_FAILED);
+        } finally {
+            if (acquired) {
+                semaphore.release();
+            }
+        }
+    }
 }

@@ -57,7 +57,7 @@ public class UserIngredientCreateRequestDto {
 
     @Schema(
             description = "소비/만료 날짜 (yyyy-MM-dd). 미입력 시 db expirationDays 기준 계산",
-            example = "2026-03-20",
+            example = "2026-07-20",
             type = "string",
             format = "date",
             requiredMode = Schema.RequiredMode.NOT_REQUIRED
