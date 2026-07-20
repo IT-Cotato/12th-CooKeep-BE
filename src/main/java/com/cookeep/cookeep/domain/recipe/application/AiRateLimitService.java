@@ -24,7 +24,7 @@ public class AiRateLimitService {
     private final Map<Long, List<Long>> requestLogs = new ConcurrentHashMap<>();
 
     // 제한 설정
-    private static final int LIMIT = 3;         // 3회/m
+    private static final int LIMIT = 5;         // 5회/m
     private static final Duration WINDOW = Duration.ofMinutes(1); // 1분
     private static final String KEY_PREFIX = "rate:limit:ai:";
 
