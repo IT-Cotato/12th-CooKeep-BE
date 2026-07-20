@@ -7,6 +7,7 @@ public record UserProfileResponseDTO(
 	String phoneNumber,
 	String email,
 	Provider authProvider,
-	Boolean marketingPush
+	Boolean marketingPush,
+	String profileImageUrl
 ) {
 }

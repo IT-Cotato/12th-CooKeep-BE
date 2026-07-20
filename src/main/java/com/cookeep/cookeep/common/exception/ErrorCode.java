@@ -91,6 +91,7 @@ public enum ErrorCode {
 	// USER
 	SAME_AS_CURRENT_PHONE_NUMBER(HttpStatus.BAD_REQUEST, "기존 등록된 전화번호와 동일한 전화번호입니다.", "USER-007"),
 	SAME_AS_CURRENT_EMAIL(HttpStatus.BAD_REQUEST, "기존 등록된 이메일과 동일한 이메일입니다.", "USER-008"),
+	INVALID_PROFILE_IMAGE_ID(HttpStatus.BAD_REQUEST, "유효하지 않은 프로필 이미지 ID입니다.", "USER-010"),
 
 	// NOTIFICATION
 	INVALID_ENDPOINT(HttpStatus.BAD_REQUEST, "subscription endpoint 정보가 누락되었습니다.", "NOTIFICATION-001"),

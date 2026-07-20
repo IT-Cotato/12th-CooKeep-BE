@@ -6,6 +6,7 @@ import com.cookeep.cookeep.common.exception.AppException;
 import com.cookeep.cookeep.common.exception.ErrorCode;
 import com.cookeep.cookeep.domain.onboarding.dao.WeeklyGoalRepository;
 import com.cookeep.cookeep.domain.onboarding.entity.WeeklyGoal;
+import com.cookeep.cookeep.domain.user.application.ProfileImageService;
 import com.cookeep.cookeep.domain.user.application.UserReader;
 import com.cookeep.cookeep.domain.user.entity.User;
 import com.cookeep.cookeep.domain.plant.dao.UserPlantRepository;
@@ -25,6 +26,7 @@ public class MyCookeepService {
     private final UserReader userReader;
     private final WeeklyGoalRepository weeklyGoalRepository;
     private final UserPlantRepository userPlantRepository;
+    private final ProfileImageService profileImageService;
 
     @Transactional(readOnly = true)
     public MyProfileResponseDto getProfile(Long userId) {
@@ -43,7 +45,9 @@ public class MyCookeepService {
             .map(userPlant -> userPlant.getPlant().getPlantType().getDisplayName())
             .orElse(null);
 
-        return MyProfileResponseDto.of(user, weeklyGoal, growingPlantName);
+        String profileImageUrl = profileImageService.resolveUrl(user.getProfileImageId());
+
+        return MyProfileResponseDto.of(user, weeklyGoal, growingPlantName, profileImageUrl);
     }
 
     public void setWeeklyGoal(Long userId, WeeklyGoalRequestDto request) {
