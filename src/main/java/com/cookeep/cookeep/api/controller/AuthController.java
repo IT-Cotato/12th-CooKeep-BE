@@ -28,6 +28,10 @@ import com.cookeep.cookeep.security.RefreshTokenCookieProvider;
 import com.cookeep.cookeep.security.UserPrincipal;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.enums.ParameterIn;
+import io.swagger.v3.oas.annotations.headers.Header;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
@@ -38,23 +42,60 @@ import lombok.RequiredArgsConstructor;
 @RequestMapping("/api/auth")
 public class AuthController {
 
+	private static final String REFRESH_COOKIE_ISSUE_DESCRIPTION = """
+		refreshToken은 응답 body에 포함되지 않고 Set-Cookie 응답 헤더의 HttpOnly Cookie로 전달됨
+		""";
+
+	private static final String REFRESH_COOKIE_DELETE_DESCRIPTION = """
+		성공 시 refreshToken HttpOnly Cookie 만료됨
+		""";
+
+	private static final String REFRESH_COOKIE_SET_COOKIE_HEADER = """
+		refreshToken HttpOnly Cookie. Path=/api/auth/refresh
+		""";
+
+	private static final String REFRESH_COOKIE_DELETE_HEADER = """
+		refreshToken 만료 Cookie. Path=/api/auth/refresh
+		""";
+
 	private final AuthService authService;
 	private final RefreshTokenCookieProvider refreshTokenCookieProvider;
 
-	@Operation(summary = "액세스 토큰 재발급 API")
+	@Operation(
+		summary = "액세스 토큰 재발급 API",
+		description = """
+			request body 없이 refreshToken HttpOnly Cookie로 액세스 토큰 재발급됨
+			쿠키 누락, 빈 값, 위조, 만료, DB 불일치는 401 AUTH-002로 처리됨
+			"""
+	)
 	@ApiResponses(value = {
 		@ApiResponse(responseCode = "200", description = "액세스 토큰 갱신 성공"),
-		@ApiResponse(responseCode = "401", description = "유효하지 않은 리프레시 토큰")
+		@ApiResponse(responseCode = "401", description = "유효하지 않은 리프레시 토큰 (AUTH-002)")
 	})
 	@PostMapping("/refresh")
 	public ResponseEntity<DataResponse<TokenRefreshResponseDTO>> tokenRefresh(
+		@Parameter(
+			name = RefreshTokenCookieProvider.COOKIE_NAME,
+			in = ParameterIn.COOKIE,
+			required = true,
+			description = "로그인/회원가입/소셜 로그인 응답의 Set-Cookie 헤더로 저장된 refreshToken HttpOnly Cookie",
+			example = "eyJhbGciOiJIUzI1NiJ9..."
+		)
 		@CookieValue(value = RefreshTokenCookieProvider.COOKIE_NAME, required = false) String refreshToken) {
 		return ResponseEntity.ok(DataResponse.from(authService.tokenRefresh(refreshToken)));
 	}
 
-	@Operation(summary = "카카오 로그인 API")
+	@Operation(summary = "카카오 로그인 API", description = REFRESH_COOKIE_ISSUE_DESCRIPTION)
 	@ApiResponses(value = {
-		@ApiResponse(responseCode = "200", description = "카카오 로그인 성공"),
+		@ApiResponse(
+			responseCode = "200",
+			description = "카카오 로그인 성공",
+			headers = @Header(
+				name = "Set-Cookie",
+				description = REFRESH_COOKIE_SET_COOKIE_HEADER,
+				schema = @Schema(type = "string")
+			)
+		),
 		@ApiResponse(responseCode = "400", description = "요청 파라미터 오류")
 	})
 	@GetMapping("/login/kakao")
@@ -64,9 +105,17 @@ public class AuthController {
 		return createAuthResponse(authService.socialLogin(Provider.KAKAO, code, redirectUri));
 	}
 
-	@Operation(summary = "구글 로그인 API")
+	@Operation(summary = "구글 로그인 API", description = REFRESH_COOKIE_ISSUE_DESCRIPTION)
 	@ApiResponses(value = {
-		@ApiResponse(responseCode = "200", description = "구글 로그인 성공"),
+		@ApiResponse(
+			responseCode = "200",
+			description = "구글 로그인 성공",
+			headers = @Header(
+				name = "Set-Cookie",
+				description = REFRESH_COOKIE_SET_COOKIE_HEADER,
+				schema = @Schema(type = "string")
+			)
+		),
 		@ApiResponse(responseCode = "400", description = "요청 파라미터 오류")
 	})
 	@GetMapping("/login/google")
@@ -76,9 +125,17 @@ public class AuthController {
 		return createAuthResponse(authService.socialLogin(Provider.GOOGLE, code, redirectUri));
 	}
 
-	@Operation(summary = "이메일 회원가입 API")
+	@Operation(summary = "이메일 회원가입 API", description = REFRESH_COOKIE_ISSUE_DESCRIPTION)
 	@ApiResponses(value = {
-		@ApiResponse(responseCode = "200", description = "회원가입 성공"),
+		@ApiResponse(
+			responseCode = "200",
+			description = "회원가입 성공",
+			headers = @Header(
+				name = "Set-Cookie",
+				description = REFRESH_COOKIE_SET_COOKIE_HEADER,
+				schema = @Schema(type = "string")
+			)
+		),
 		@ApiResponse(responseCode = "400", description = "요청 파라미터 오류"),
 		@ApiResponse(responseCode = "409", description = "이미 사용중인 전화번호 또는 이메일")
 	})
@@ -87,10 +144,18 @@ public class AuthController {
 		return createAuthResponse(authService.signUp(signupRequestDTO));
 	}
 
-	@Operation(summary = "이메일 로그인 API")
+	@Operation(summary = "이메일 로그인 API", description = REFRESH_COOKIE_ISSUE_DESCRIPTION)
 	@PostMapping("/login")
 	@ApiResponses(value = {
-		@ApiResponse(responseCode = "200", description = "로그인 성공"),
+		@ApiResponse(
+			responseCode = "200",
+			description = "로그인 성공",
+			headers = @Header(
+				name = "Set-Cookie",
+				description = REFRESH_COOKIE_SET_COOKIE_HEADER,
+				schema = @Schema(type = "string")
+			)
+		),
 		@ApiResponse(responseCode = "400", description = "요청 파라미터 오류")
 	})
 	public ResponseEntity<DataResponse<LoginResponseDTO>> login(@Valid @RequestBody LoginRequestDTO loginRequestDTO) {
@@ -110,9 +175,17 @@ public class AuthController {
 		return ResponseEntity.ok(DataResponse.ok());
 	}
 
-	@Operation(summary = "로그아웃 API")
+	@Operation(summary = "로그아웃 API", description = REFRESH_COOKIE_DELETE_DESCRIPTION)
 	@ApiResponses(value = {
-		@ApiResponse(responseCode = "200", description = "로그아웃 성공"),
+		@ApiResponse(
+			responseCode = "200",
+			description = "로그아웃 성공",
+			headers = @Header(
+				name = "Set-Cookie",
+				description = REFRESH_COOKIE_DELETE_HEADER,
+				schema = @Schema(type = "string")
+			)
+		),
 		@ApiResponse(responseCode = "401", description = "회원 인증 실패, AccessToken이 없거나 유효하지 않음")
 	})
 	@PostMapping("/logout")
@@ -124,9 +197,17 @@ public class AuthController {
 		return createLogoutResponse();
 	}
 
-	@Operation(summary = "회원 탈퇴 API", description = "현재 로그인한 사용자를 탈퇴 처리합니다.")
+	@Operation(summary = "회원 탈퇴 API", description = "현재 로그인한 사용자를 탈퇴 처리함\n" + REFRESH_COOKIE_DELETE_DESCRIPTION)
 	@ApiResponses(value = {
-		@ApiResponse(responseCode = "200", description = "회원 탈퇴 성공"),
+		@ApiResponse(
+			responseCode = "200",
+			description = "회원 탈퇴 성공",
+			headers = @Header(
+				name = "Set-Cookie",
+				description = REFRESH_COOKIE_DELETE_HEADER,
+				schema = @Schema(type = "string")
+			)
+		),
 		@ApiResponse(responseCode = "401", description = "회원 인증 실패, AccessToken이 없거나 유효하지 않음"),
 		@ApiResponse(responseCode = "404", description = "사용자를 찾을 수 없음")
 	})
