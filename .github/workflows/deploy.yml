@@ -167,6 +167,6 @@ jobs:
               -e "VAPID_PRIVATE_KEY=${{ secrets.VAPID_PRIVATE_KEY }}" \
               -e "EMAIL_USERNAME=${{ secrets.EMAIL_USERNAME }}" \
               -e "EMAIL_PASSWORD=${{ secrets.EMAIL_PASSWORD }}" \
-              -e "REFRESH_COOKIE_SECURE=false" \
+              -e "REFRESH_COOKIE_SECURE=true" \
               ${{ secrets.DOCKER_USERNAME }}/cookeep:dev
             docker image prune -f
