@@ -23,7 +23,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import com.cookeep.cookeep.api.dto.request.LoginRequestDTO;
 import com.cookeep.cookeep.api.dto.request.SendCodeRequestDTO;
 import com.cookeep.cookeep.api.dto.request.SignupRequestDTO;
-import com.cookeep.cookeep.api.dto.request.TokenRefreshRequestDTO;
 import com.cookeep.cookeep.api.dto.request.VerifyCodeRequestDTO;
 import com.cookeep.cookeep.api.dto.response.SignUpResponseDTO;
 import com.cookeep.cookeep.common.exception.AppException;
@@ -126,11 +125,12 @@ class AuthServiceTest {
 		given(userSessionRepository.save(any(UserSession.class))).willAnswer(invocation -> invocation.getArgument(0));
 		given(userAuthRepository.save(any(UserAuth.class))).willAnswer(invocation -> invocation.getArgument(0));
 
-		SignUpResponseDTO response = authService.signUp(request);
+		var authResult = authService.signUp(request);
+		SignUpResponseDTO response = authResult.response();
 
 		assertThat(response.userId()).isEqualTo(1L);
 		assertThat(response.accessToken()).isEqualTo("access-token");
-		assertThat(response.refreshToken()).isEqualTo("refresh-token");
+		assertThat(authResult.refreshToken()).isEqualTo("refresh-token");
 		verify(emailVerificationService).assertVerified(email, VerificationPurpose.SIGNUP);
 		verify(userRepository).saveAndFlush(any(User.class));
 	}
@@ -241,11 +241,12 @@ class AuthServiceTest {
 		given(userSessionRepository.findByUser(user)).willReturn(Optional.empty());
 		given(userSessionRepository.save(any(UserSession.class))).willAnswer(invocation -> invocation.getArgument(0));
 
-		var response = authService.login(new LoginRequestDTO(user.getEmail(), "password1"));
+		var authResult = authService.login(new LoginRequestDTO(user.getEmail(), "password1"));
+		var response = authResult.response();
 
 		assertThat(user.getPasswordCnt()).isZero();
 		assertThat(response.accessToken()).isEqualTo("access-token");
-		assertThat(response.refreshToken()).isEqualTo("refresh-token");
+		assertThat(authResult.refreshToken()).isEqualTo("refresh-token");
 		verify(loginPasswordFailureService, never()).increasePasswordFailCount(any());
 	}
 
@@ -355,6 +356,21 @@ class AuthServiceTest {
 		assertTokenRefreshBlocked(UserStatus.WITHDRAWN, ErrorCode.USER_ACCOUNT_WITHDRAWN);
 	}
 
+	@Test
+	@DisplayName("tokenRefresh rejects a missing or blank refresh token")
+	void tokenRefresh_missingOrBlankToken_throwsInvalidRefreshToken() {
+		assertThatThrownBy(() -> authService.tokenRefresh(null))
+			.isInstanceOf(AppException.class)
+			.extracting("errorCode")
+			.isEqualTo(ErrorCode.INVALID_REFRESH_TOKEN);
+
+		assertThatThrownBy(() -> authService.tokenRefresh(" "))
+			.isInstanceOf(AppException.class)
+			.extracting("errorCode")
+			.isEqualTo(ErrorCode.INVALID_REFRESH_TOKEN);
+	}
+
+
 	private void assertLoginBlocked(UserStatus userStatus, ErrorCode errorCode) {
 		User user = user("test@example.com", userStatus);
 		given(userRepository.findByEmail(user.getEmail())).willReturn(Optional.of(user));
@@ -423,7 +439,7 @@ class AuthServiceTest {
 		given(userSessionRepository.findByUser_UserId(user.getUserId())).willReturn(Optional.of(userSession));
 		given(userReader.readById(user.getUserId())).willReturn(user);
 
-		assertThatThrownBy(() -> authService.tokenRefresh(new TokenRefreshRequestDTO("refresh-token")))
+		assertThatThrownBy(() -> authService.tokenRefresh("refresh-token"))
 			.isInstanceOf(AppException.class)
 			.extracting("errorCode")
 			.isEqualTo(errorCode);
