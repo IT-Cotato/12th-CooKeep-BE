@@ -1,8 +1,9 @@
 package com.cookeep.cookeep.api.controller;
 
-
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -15,14 +16,15 @@ import org.springframework.web.bind.annotation.RestController;
 import com.cookeep.cookeep.api.dto.request.LoginRequestDTO;
 import com.cookeep.cookeep.api.dto.request.ResetPasswordRequestDTO;
 import com.cookeep.cookeep.api.dto.request.SignupRequestDTO;
-import com.cookeep.cookeep.api.dto.request.TokenRefreshRequestDTO;
-import com.cookeep.cookeep.api.dto.response.SocialLoginResponseDTO;
 import com.cookeep.cookeep.api.dto.response.LoginResponseDTO;
 import com.cookeep.cookeep.api.dto.response.SignUpResponseDTO;
+import com.cookeep.cookeep.api.dto.response.SocialLoginResponseDTO;
 import com.cookeep.cookeep.api.dto.response.TokenRefreshResponseDTO;
 import com.cookeep.cookeep.common.dto.DataResponse;
 import com.cookeep.cookeep.domain.user.application.AuthService;
+import com.cookeep.cookeep.domain.user.dto.AuthResult;
 import com.cookeep.cookeep.domain.user.entity.Provider;
+import com.cookeep.cookeep.security.RefreshTokenCookieProvider;
 import com.cookeep.cookeep.security.UserPrincipal;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -37,16 +39,17 @@ import lombok.RequiredArgsConstructor;
 public class AuthController {
 
 	private final AuthService authService;
+	private final RefreshTokenCookieProvider refreshTokenCookieProvider;
 
 	@Operation(summary = "액세스 토큰 재발급 API")
 	@ApiResponses(value = {
 		@ApiResponse(responseCode = "200", description = "액세스 토큰 갱신 성공"),
-		@ApiResponse(responseCode = "401", description = "유효하지 않은 리프레쉬 토큰")
+		@ApiResponse(responseCode = "401", description = "유효하지 않은 리프레시 토큰")
 	})
 	@PostMapping("/refresh")
-	public ResponseEntity<DataResponse<TokenRefreshResponseDTO>> tokenRefresh(@RequestBody TokenRefreshRequestDTO tokenRefreshRequestDTO) {
-		return ResponseEntity.ok(DataResponse.from(authService.tokenRefresh(tokenRefreshRequestDTO)));
-
+	public ResponseEntity<DataResponse<TokenRefreshResponseDTO>> tokenRefresh(
+		@CookieValue(value = RefreshTokenCookieProvider.COOKIE_NAME, required = false) String refreshToken) {
+		return ResponseEntity.ok(DataResponse.from(authService.tokenRefresh(refreshToken)));
 	}
 
 	@Operation(summary = "카카오 로그인 API")
@@ -58,7 +61,7 @@ public class AuthController {
 	public ResponseEntity<DataResponse<SocialLoginResponseDTO>> kakaoLogin(
 		@RequestParam String code,
 		@RequestParam(value = "redirect_uri", required = false) String redirectUri) {
-		return ResponseEntity.ok(DataResponse.from(authService.socialLogin(Provider.KAKAO, code, redirectUri)));
+		return createAuthResponse(authService.socialLogin(Provider.KAKAO, code, redirectUri));
 	}
 
 	@Operation(summary = "구글 로그인 API")
@@ -70,7 +73,7 @@ public class AuthController {
 	public ResponseEntity<DataResponse<SocialLoginResponseDTO>> googleLogin(
 		@RequestParam String code,
 		@RequestParam(value = "redirect_uri", required = false) String redirectUri) {
-		return ResponseEntity.ok(DataResponse.from(authService.socialLogin(Provider.GOOGLE, code, redirectUri)));
+		return createAuthResponse(authService.socialLogin(Provider.GOOGLE, code, redirectUri));
 	}
 
 	@Operation(summary = "이메일 회원가입 API")
@@ -81,17 +84,17 @@ public class AuthController {
 	})
 	@PostMapping("/signup")
 	public ResponseEntity<DataResponse<SignUpResponseDTO>> signup(@Valid @RequestBody SignupRequestDTO signupRequestDTO) {
-		return ResponseEntity.ok(DataResponse.from(authService.signUp(signupRequestDTO)));
+		return createAuthResponse(authService.signUp(signupRequestDTO));
 	}
 
 	@Operation(summary = "이메일 로그인 API")
 	@PostMapping("/login")
 	@ApiResponses(value = {
-		@ApiResponse(responseCode = "200", description = "회원가입 성공"),
+		@ApiResponse(responseCode = "200", description = "로그인 성공"),
 		@ApiResponse(responseCode = "400", description = "요청 파라미터 오류")
 	})
 	public ResponseEntity<DataResponse<LoginResponseDTO>> login(@Valid @RequestBody LoginRequestDTO loginRequestDTO) {
-		return ResponseEntity.ok(DataResponse.from(authService.login(loginRequestDTO)));
+		return createAuthResponse(authService.login(loginRequestDTO));
 	}
 
 	@Operation(summary = "비밀번호 초기화 API")
@@ -107,7 +110,6 @@ public class AuthController {
 		return ResponseEntity.ok(DataResponse.ok());
 	}
 
-
 	@Operation(summary = "로그아웃 API")
 	@ApiResponses(value = {
 		@ApiResponse(responseCode = "200", description = "로그아웃 성공"),
@@ -119,7 +121,7 @@ public class AuthController {
 	) {
 		Long userId = principal.userId();
 		authService.logout(userId);
-		return ResponseEntity.ok(DataResponse.ok());
+		return createLogoutResponse();
 	}
 
 	@Operation(summary = "회원 탈퇴 API", description = "현재 로그인한 사용자를 탈퇴 처리합니다.")
@@ -134,6 +136,19 @@ public class AuthController {
 	) {
 		Long userId = principal.userId();
 		authService.withdraw(userId);
-		return ResponseEntity.ok(DataResponse.ok());
+		return createLogoutResponse();
+	}
+
+	private <T> ResponseEntity<DataResponse<T>> createAuthResponse(AuthResult<T> authResult) {
+		// refresh token은 응답 body에 노출하지 않고 브라우저의 HttpOnly cookie로만 전달한다.
+		return ResponseEntity.ok()
+			.header(HttpHeaders.SET_COOKIE, refreshTokenCookieProvider.create(authResult.refreshToken()).toString())
+			.body(DataResponse.from(authResult.response()));
+	}
+
+	private ResponseEntity<DataResponse<Void>> createLogoutResponse() {
+		return ResponseEntity.ok()
+			.header(HttpHeaders.SET_COOKIE, refreshTokenCookieProvider.delete().toString())
+			.body(DataResponse.ok());
 	}
 }
