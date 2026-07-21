@@ -22,7 +22,6 @@ import com.cookeep.cookeep.api.dto.request.LoginRequestDTO;
 import com.cookeep.cookeep.api.dto.request.ResetPasswordRequestDTO;
 import com.cookeep.cookeep.api.dto.request.SendCodeRequestDTO;
 import com.cookeep.cookeep.api.dto.request.SignupRequestDTO;
-import com.cookeep.cookeep.api.dto.request.TokenRefreshRequestDTO;
 import com.cookeep.cookeep.api.dto.request.VerifyCodeRequestDTO;
 import com.cookeep.cookeep.api.dto.response.SocialLoginResponseDTO;
 import com.cookeep.cookeep.api.dto.response.LoginResponseDTO;
@@ -30,6 +29,7 @@ import com.cookeep.cookeep.api.dto.response.SignUpResponseDTO;
 import com.cookeep.cookeep.api.dto.response.TokenRefreshResponseDTO;
 import com.cookeep.cookeep.domain.cookie.application.CookieService;
 import com.cookeep.cookeep.domain.cookie.entity.CookieLog;
+import com.cookeep.cookeep.domain.user.dto.AuthResult;
 import com.cookeep.cookeep.domain.user.dto.OAuthUserInfoDTO;
 import com.cookeep.cookeep.domain.user.dto.TokenPair;
 import com.cookeep.cookeep.domain.user.entity.Provider;
@@ -69,9 +69,7 @@ public class AuthService {
 
 	// 액세스 토큰이 만료되었을 경우 리프레쉬 토큰으로 액세스 토큰 갱신
 	@Transactional
-	public TokenRefreshResponseDTO tokenRefresh(TokenRefreshRequestDTO tokenRefreshRequestDTO) {
-		String refreshToken = tokenRefreshRequestDTO.refreshToken();
-
+	public TokenRefreshResponseDTO tokenRefresh(String refreshToken) {
 		validateRefreshToken(refreshToken);
 
 		Long userId = extractUserIdFromRefreshToken(refreshToken);
@@ -99,6 +97,11 @@ public class AuthService {
 	}
 
 	private void validateRefreshToken(String refreshToken) {
+		// 쿠키가 없거나 빈 경우 JWT 검증기에 null을 전달하지 않고 기존 INVALID_REFRESH_TOKEN(401) 응답으로 통일
+		if (refreshToken == null || refreshToken.isBlank()) {
+			throw new AppException(ErrorCode.INVALID_REFRESH_TOKEN);
+		}
+
 		// 위조/서명오류/만료된 리프레쉬 토큰인지 검증
 		boolean valid = jwtTokenProvider.validateToken(refreshToken, true);
 
@@ -190,7 +193,7 @@ public class AuthService {
 
 	// 소셜 로그인
 	@Transactional
-	public SocialLoginResponseDTO socialLogin(Provider provider, String code, String redirectUri) {
+	public AuthResult<SocialLoginResponseDTO> socialLogin(Provider provider, String code, String redirectUri) {
 		// provider 타입에 따라 KakaoOAuthProvider 또는 GoogleOAuthProvider 반환
 		OAuthProvider oAuthProvider = getProvider(provider);
 		String accessToken = oAuthProvider.getAccessToken(code, redirectUri);
@@ -271,10 +274,12 @@ public class AuthService {
 				: NextStep.ONBOARDING;
 		}
 
-		return new SocialLoginResponseDTO(
-			user.getUserId(), tokenPair.accessToken(), tokenPair.refreshToken(),
+		SocialLoginResponseDTO response = new SocialLoginResponseDTO(
+			user.getUserId(), tokenPair.accessToken(),
 			userStatus, nextStep, tokenPair.isRewarded()
 		);
+
+		return new AuthResult<>(response, tokenPair.refreshToken());
 	}
 
 	private User createSocialUser(String email) {
@@ -374,7 +379,7 @@ public class AuthService {
 	}
 
 	@Transactional
-	public SignUpResponseDTO signUp(SignupRequestDTO signupRequestDTO) {
+	public AuthResult<SignUpResponseDTO> signUp(SignupRequestDTO signupRequestDTO) {
 		String email = signupRequestDTO.email();
 
 		// 이메일 중복 검증 진행
@@ -428,9 +433,11 @@ public class AuthService {
 				.provider(LOCAL)
 				.build());
 
-		return new SignUpResponseDTO(
-			user.getUserId(), tokenPair.accessToken(), tokenPair.refreshToken()
+		SignUpResponseDTO response = new SignUpResponseDTO(
+			user.getUserId(), tokenPair.accessToken()
 		);
+
+		return new AuthResult<>(response, tokenPair.refreshToken());
 	}
 
 	private boolean shouldRetryNickname(DataIntegrityViolationException e) {
@@ -481,7 +488,7 @@ public class AuthService {
 	}
 
 	@Transactional
-	public LoginResponseDTO login(LoginRequestDTO loginRequestDTO) {
+	public AuthResult<LoginResponseDTO> login(LoginRequestDTO loginRequestDTO) {
 		String email = loginRequestDTO.email();
 		String password = loginRequestDTO.password();
 
@@ -524,9 +531,11 @@ public class AuthService {
 
 		UserStatus userStatus = user.getUserStatus();
 
-		return new LoginResponseDTO(
-			user.getUserId(), tokenPair.accessToken(), tokenPair.refreshToken(), userStatus, tokenPair.isRewarded()
+		LoginResponseDTO response = new LoginResponseDTO(
+			user.getUserId(), tokenPair.accessToken(), userStatus, tokenPair.isRewarded()
 		);
+
+		return new AuthResult<>(response, tokenPair.refreshToken());
 	}
 
 	@Transactional
