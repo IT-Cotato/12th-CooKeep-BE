@@ -42,7 +42,7 @@ public class AiRecipeController {
     )
     @ApiErrorCodeExamples({
             ErrorCode.RECIPE_INGREDIENTS_REQUIRED,
-            ErrorCode.INVALID_DIFFICULTY,
+            ErrorCode.INVALID_FEATURE,
             ErrorCode.INVALID_INGREDIENT_TYPE,
             ErrorCode.INGREDIENT_NOT_FOUND,
             ErrorCode.AI_SEARCH_FAILED,
@@ -57,7 +57,7 @@ public class AiRecipeController {
             @ApiResponse(responseCode = "400", description = """
                     잘못된 요청입니다. 다음 오류가 발생할 수 있습니다:
                     - RECIPE_INGREDIENTS_REQUIRED: 레시피 생성을 위한 재료가 필요합니다.
-                    - INVALID_DIFFICULTY: 유효하지 않은 난이도입니다.
+                    - INVALID_FEATURE: 유효하지 않은 요리 종류입니다.
                     - INVALID_INGREDIENT_TYPE: 유효하지 않은 재료 타입입니다.
                     """, content = @Content),
             @ApiResponse(responseCode = "401", description = """
