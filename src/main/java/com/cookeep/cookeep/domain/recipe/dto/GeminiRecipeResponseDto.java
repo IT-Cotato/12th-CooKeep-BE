@@ -37,7 +37,16 @@ public class GeminiRecipeResponseDto {
             example = "[\"1. 팬에 기름을 두른다\", \"2. 재료를 볶는다\", \"3. 밥을 넣고 섞는다\"]",
             requiredMode = Schema.RequiredMode.REQUIRED
     )
-    private List<String> steps;
+    private List<Step> steps;
+
+    @Getter
+    @NoArgsConstructor
+    public static class Step {
+        private String content;
+
+        @JsonProperty("usedIngredientIds")
+        private List<Long> usedIngredientIds;
+    }
 
     @Schema(
             description = "참고용 유튜브 영상 목록",
