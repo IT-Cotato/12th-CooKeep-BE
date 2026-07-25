@@ -75,11 +75,26 @@ public class GeminiRecipeResponseDto {
                     return new Step(node.asText(), null);
                 }
 
-                // 신규 포맷: {content, usedIngredientIds}
-                String content = node.hasNonNull("content") ? node.get("content").asText() : null;
+                // 신규 포맷: content(문자열)와 usedIngredientIds(배열)를 모두 필수로 검증
+                if (!node.isObject()
+                        || !node.hasNonNull("content")
+                        || !node.get("content").isTextual()
+                        || !node.has("usedIngredientIds")
+                        || !node.get("usedIngredientIds").isArray()) {
+                    throw com.fasterxml.jackson.databind.JsonMappingException.from(
+                            p, "step must contain textual content and array usedIngredientIds"
+                    );
+                }
+
+                String content = node.get("content").asText();
                 List<Long> usedIds = new ArrayList<>();
-                if (node.has("usedIngredientIds") && node.get("usedIngredientIds").isArray()) {
-                    node.get("usedIngredientIds").forEach(idNode -> usedIds.add(idNode.asLong()));
+                for (JsonNode idNode : node.get("usedIngredientIds")) {
+                    if (!idNode.isIntegralNumber()) {
+                        throw com.fasterxml.jackson.databind.JsonMappingException.from(
+                                p, "usedIngredientIds must contain integers"
+                        );
+                    }
+                    usedIds.add(idNode.asLong());
                 }
                 return new Step(content, usedIds);
             }
