@@ -2,11 +2,17 @@ package com.cookeep.cookeep.domain.recipe.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.databind.DeserializationContext;
+import com.fasterxml.jackson.databind.JsonDeserializer;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Schema(
@@ -41,11 +47,43 @@ public class GeminiRecipeResponseDto {
 
     @Getter
     @NoArgsConstructor
+    @JsonDeserialize(using = Step.StepDeserializer.class)
     public static class Step {
+
         private String content;
 
         @JsonProperty("usedIngredientIds")
         private List<Long> usedIngredientIds;
+
+        Step(String content, List<Long> usedIngredientIds) {
+            this.content = content;
+            this.usedIngredientIds = usedIngredientIds;
+        }
+
+        // 레거시 문자열 포맷인지 여부 (usedIngredientIds 정보 자체가 없음)
+        public boolean isLegacyFormat() {
+            return usedIngredientIds == null;
+        }
+
+        static class StepDeserializer extends JsonDeserializer<Step> {
+            @Override
+            public Step deserialize(JsonParser p, DeserializationContext ctxt) throws java.io.IOException {
+                JsonNode node = p.getCodec().readTree(p);
+
+                // 레거시 포맷: 순수 문자열 → usedIngredientIds는 null(정보 없음)로 표시
+                if (node.isTextual()) {
+                    return new Step(node.asText(), null);
+                }
+
+                // 신규 포맷: {content, usedIngredientIds}
+                String content = node.hasNonNull("content") ? node.get("content").asText() : null;
+                List<Long> usedIds = new ArrayList<>();
+                if (node.has("usedIngredientIds") && node.get("usedIngredientIds").isArray()) {
+                    node.get("usedIngredientIds").forEach(idNode -> usedIds.add(idNode.asLong()));
+                }
+                return new Step(content, usedIds);
+            }
+        }
     }
 
     @Schema(

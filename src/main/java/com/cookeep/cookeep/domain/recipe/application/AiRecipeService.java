@@ -1144,7 +1144,8 @@ public class AiRecipeService {
             GeminiRecipeResponseDto aiResponse,
             List<Long> requestedIngredientIds
     ) {
-        Set<Long> stepIds = extractStepReferencedIngredientIds(aiResponse);
+
+        List<GeminiRecipeResponseDto.Step> steps = aiResponse.getSteps();
 
         Set<Long> responseUserIngredientIds =
                 (aiResponse.getIngredients() == null || aiResponse.getIngredients().getUserIngredients() == null)
@@ -1153,9 +1154,21 @@ public class AiRecipeService {
                         .map(GeminiRecipeResponseDto.UserIngredient::getIngredientId)
                         .collect(Collectors.toSet());
 
-        Set<Long> validated = stepIds.stream()
-                .filter(responseUserIngredientIds::contains)
-                .collect(Collectors.toSet());
+        // 레거시 판별: steps가 비어있지 않은데 모든 step이 usedIngredientIds 정보가 null인 경우
+        boolean isLegacyRecipe = steps != null && !steps.isEmpty()
+                && steps.stream().allMatch(GeminiRecipeResponseDto.Step::isLegacyFormat);
+
+        Set<Long> validated;
+        if (isLegacyRecipe) {
+            // 레거시 fallback: step 단위 검증 불가 → 요청 재료 + 응답 userIngredients로 판단
+            log.info("레거시 포맷 steps 감지, requestedIngredientIds 기반 fallback 적용");
+            validated = responseUserIngredientIds;
+        } else {
+            Set<Long> stepIds = extractStepReferencedIngredientIds(aiResponse);
+            validated = stepIds.stream()
+                    .filter(responseUserIngredientIds::contains)
+                    .collect(Collectors.toSet());
+        }
 
         if (requestedIngredientIds != null) {
             Set<Long> requestedSet = new HashSet<>(requestedIngredientIds);
