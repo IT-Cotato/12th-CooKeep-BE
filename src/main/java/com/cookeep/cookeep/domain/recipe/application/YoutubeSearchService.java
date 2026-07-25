@@ -62,7 +62,7 @@ public class YoutubeSearchService {
                 .flatMap(query ->
                         searchSingleVideo(query)
                                 .onErrorResume(e -> {
-                                    log.warn("유튜브 검색 실패 (검색어: '{}'): {}", query, e.getMessage());
+                                    log.warn("유튜브 검색 실패 (검색어: '{}', 원인: {})", query, describeError(e));
                                     return Mono.empty();
                                 })
                 )
@@ -119,7 +119,7 @@ public class YoutubeSearchService {
                         .filter(this::isRetriableApiError)
                         .doBeforeRetry(signal -> log.warn("유튜브 API 재시도 (검색어: '{}', 시도: {})",
                                 query, signal.totalRetries() + 1)))
-                .doOnError(e -> log.error("YouTube API 호출 최종 실패 (검색어: '{}')", query, e));
+                .doOnError(e -> log.error("YouTube API 호출 최종 실패 (검색어: '{}', 원인: {})", query, describeError(e)));
     }
 
     // 재시도 대상 판별: 타임아웃 / 5xx / 네트워크 오류만 재시도, 4xx나 파싱 오류는 재시도하지 않음
@@ -199,5 +199,14 @@ public class YoutubeSearchService {
             log.error("유튜브 응답 파싱 실패 (검색어: '{}')", searchQuery, e);
             return null;
         }
+    }
+
+    // 예외 객체 전체(toString/스택트레이스)를 로그에 남기지 않기 위한 안전한 요약 정보 추출
+    // URI 쿼리 파라미터(API 키 등) 노출 방지 목적 - 예외 타입과 HTTP 상태코드만 기록
+    private String describeError(Throwable e) {
+        if (e instanceof WebClientResponseException wcre) {
+            return e.getClass().getSimpleName() + " status=" + wcre.getStatusCode().value();
+        }
+        return e.getClass().getSimpleName();
     }
 }
