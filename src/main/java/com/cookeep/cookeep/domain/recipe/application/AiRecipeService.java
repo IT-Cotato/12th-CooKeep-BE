@@ -36,10 +36,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 
 @Slf4j
@@ -170,7 +169,7 @@ public class AiRecipeService {
                 .feature(request.getFeature())
                 .recipe(aiResponse)
                 .youtubeReferences(youtubeReferences)
-                .usedIngredientCount(countActuallyUsedIngredients(aiResponse))
+                .usedIngredientCount(countActuallyUsedIngredients(aiResponse, request.getIngredientIds()))
                 .build();
     }
 
@@ -245,7 +244,7 @@ public class AiRecipeService {
                 .feature(session.getFeature())
                 .recipe(aiResponse)
                 .youtubeReferences(youtubeReferences)
-                .usedIngredientCount(countActuallyUsedIngredients(aiResponse))
+                .usedIngredientCount(countActuallyUsedIngredients(aiResponse, ingredients.stream().map(IngredientDetailDto::getIngredientId).toList()))
                 .build();
     }
 
@@ -296,9 +295,8 @@ public class AiRecipeService {
         }
 
         // 요청했던 재료 중 실제 steps에서 사용된 것만 남김 (엣지케이스 방지)
-        java.util.Set<Long> actuallyUsedIds = extractActuallyUsedIngredientIds(parsedRecipe);
-        List<Long> ingredientIds = requestedIngredientIds.stream()
-                .filter(actuallyUsedIds::contains)
+        List<Long> ingredientIds = resolveValidatedUsedIngredientIds(parsedRecipe, requestedIngredientIds)
+                .stream()
                 .toList();
 
         // 8. 임박 재료(leftDays=0) 포함 세션이면 쿠키 지급 (하루 1회)
@@ -521,7 +519,7 @@ public class AiRecipeService {
                 .feature(Feature.ANY)
                 .recipe(aiResponse)
                 .youtubeReferences(youtubeReferences)
-                .usedIngredientCount(countActuallyUsedIngredients(aiResponse))
+                .usedIngredientCount(countActuallyUsedIngredients(aiResponse, selectedIds))
                 .build();
     }
 
@@ -586,7 +584,7 @@ public class AiRecipeService {
                 .feature(Feature.ANY)
                 .recipe(aiResponse)
                 .youtubeReferences(youtubeReferences)
-                .usedIngredientCount(countActuallyUsedIngredients(aiResponse))
+                .usedIngredientCount(countActuallyUsedIngredients(aiResponse, selectedIds))
                 .build();
     }
 
@@ -1126,28 +1124,47 @@ public class AiRecipeService {
         throw new AppException(ErrorCode.AI_RANDOM_SELECTION_INSUFFICIENT);
     }
 
-    // 레시피의 steps에서 실제로 언급된 ingredientId 집합 추출
-    private java.util.Set<Long> extractActuallyUsedIngredientIds(GeminiRecipeResponseDto aiResponse) {
-        if (aiResponse.getSteps() == null) return java.util.Set.of();
+    // 레시피의 steps에서 실제로 언급된 ingredientId 집합 추출 후 카운트
+    private int countActuallyUsedIngredients(GeminiRecipeResponseDto aiResponse, List<Long> requestedIngredientIds) {
+        return resolveValidatedUsedIngredientIds(aiResponse, requestedIngredientIds).size();
+    }
+
+    // 세 집합(steps 참조 id ∩ 응답 userIngredients ∩ 요청 재료 id)의 교집합 계산
+    // requestedIngredientIds가 null이면(요청 시점 검증이 필요 없는 컨텍스트) 요청 id 제약 없이 계산
+    private Set<Long> extractStepReferencedIngredientIds(GeminiRecipeResponseDto aiResponse) {
+        if (aiResponse.getSteps() == null) return Set.of();
         return aiResponse.getSteps().stream()
-                .filter(java.util.Objects::nonNull)
+                .filter(Objects::nonNull)
                 .flatMap(step -> step.getUsedIngredientIds() == null
-                        ? java.util.stream.Stream.<Long>empty()
+                        ? Stream.<Long>empty()
                         : step.getUsedIngredientIds().stream())
                 .collect(Collectors.toSet());
     }
+    private Set<Long> resolveValidatedUsedIngredientIds(
+            GeminiRecipeResponseDto aiResponse,
+            List<Long> requestedIngredientIds
+    ) {
+        Set<Long> stepIds = extractStepReferencedIngredientIds(aiResponse);
 
-    // "보유 재료 중 n개 사용" 카운트 (표시용)
-    private int countActuallyUsedIngredients(GeminiRecipeResponseDto aiResponse) {
-        if (aiResponse.getIngredients() == null || aiResponse.getIngredients().getUserIngredients() == null) {
-            return 0;
+        Set<Long> responseUserIngredientIds =
+                (aiResponse.getIngredients() == null || aiResponse.getIngredients().getUserIngredients() == null)
+                        ? Set.of()
+                        : aiResponse.getIngredients().getUserIngredients().stream()
+                        .map(GeminiRecipeResponseDto.UserIngredient::getIngredientId)
+                        .collect(Collectors.toSet());
+
+        Set<Long> validated = stepIds.stream()
+                .filter(responseUserIngredientIds::contains)
+                .collect(Collectors.toSet());
+
+        if (requestedIngredientIds != null) {
+            Set<Long> requestedSet = new HashSet<>(requestedIngredientIds);
+            validated = validated.stream()
+                    .filter(requestedSet::contains)
+                    .collect(Collectors.toSet());
         }
-        java.util.Set<Long> usedIds = extractActuallyUsedIngredientIds(aiResponse);
-        return (int) aiResponse.getIngredients().getUserIngredients().stream()
-                .map(GeminiRecipeResponseDto.UserIngredient::getIngredientId)
-                .filter(usedIds::contains)
-                .count();
-    }
 
+        return validated;
+    }
 
 }
