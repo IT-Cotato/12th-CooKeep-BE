@@ -14,13 +14,13 @@ public class MyPlantResponseDto {
     private Integer level;         // 성장 단계 (1~4)
     private Boolean isHarvested;   // 수확 여부 (false면 '키우는 중', true면 '수확 완료')
     private Boolean isFrozen;      // 성장 정지 여부 (14일 미접속 시 true)
-    private Boolean isProfile;     // 현재 이 식물이 유저의 프로필 식물인지 여부
+    //private Boolean isProfile;     // 현재 이 식물이 유저의 프로필 식물인지 여부
     private String createdAt;      // 언제부터 키웠는지 (BaseEntity 활용)
 
     public static MyPlantResponseDto from(UserPlant userPlant, User user) {
-        // 유저의 profile_plant_id와 현재 식물의 ID가 같으면 true
-        boolean isProfile = user.getProfilePlant() != null &&
-                user.getProfilePlant().getUserPlantId().equals(userPlant.getUserPlantId());
+//        // 유저의 profile_plant_id와 현재 식물의 ID가 같으면 true
+//        boolean isProfile = user.getProfilePlant() != null &&
+//                user.getProfilePlant().getUserPlantId().equals(userPlant.getUserPlantId());
 
         return MyPlantResponseDto.builder()
                 .userPlantId(userPlant.getUserPlantId())
@@ -29,7 +29,7 @@ public class MyPlantResponseDto {
                 .level(userPlant.getLevel())
                 .isHarvested(userPlant.getIsHarvested())
                 .isFrozen(userPlant.getIsFrozen())
-                .isProfile(isProfile)
+                //.isProfile(isProfile)
                 .createdAt(userPlant.getCreatedAt().toLocalDate().toString())
                 .build();
     }

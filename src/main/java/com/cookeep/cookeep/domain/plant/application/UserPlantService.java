@@ -95,24 +95,24 @@ public class UserPlantService {
     }
 
     // 프로필 식물 지정
-    @Transactional
-    public void updateProfilePlant(Long userId, Long userPlantId) {
-        // 1. 유저 조회
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND));
-
-        // 2. 변경할 식물 조회
-        UserPlant userPlant = userPlantRepository.findById(userPlantId)
-                .orElseThrow(() -> new AppException(ErrorCode.PLANT_NOT_FOUND));
-
-        // 3. 보안 체크: 이 식물의 주인이 현재 로그인한 유저가 맞는지 검증
-        if (!userPlant.getUser().getUserId().equals(userId)) {
-            throw new AppException(ErrorCode.NOT_MY_PLANT); // 본인 식물이 아닐 경우 예외 발생
-        }
-
-        // 4. 프로필 식물 업데이트 (더티 체킹에 의해 자동 반영)
-        user.updateProfilePlant(userPlant);
-    }
+//    @Transactional
+//    public void updateProfilePlant(Long userId, Long userPlantId) {
+//        // 1. 유저 조회
+//        User user = userRepository.findById(userId)
+//                .orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND));
+//
+//        // 2. 변경할 식물 조회
+//        UserPlant userPlant = userPlantRepository.findById(userPlantId)
+//                .orElseThrow(() -> new AppException(ErrorCode.PLANT_NOT_FOUND));
+//
+//        // 3. 보안 체크: 이 식물의 주인이 현재 로그인한 유저가 맞는지 검증
+//        if (!userPlant.getUser().getUserId().equals(userId)) {
+//            throw new AppException(ErrorCode.NOT_MY_PLANT); // 본인 식물이 아닐 경우 예외 발생
+//        }
+//
+//        // 4. 프로필 식물 업데이트 (더티 체킹에 의해 자동 반영)
+//        user.updateProfilePlant(userPlant);
+//    }
 
     // 현재 키우는 식물 등록 (첫 식물 등록 여부 + userPlantId 반환)
     @Transactional
@@ -140,8 +140,8 @@ public class UserPlantService {
 
         userPlantRepository.save(newUserPlant);
 
-        // 5. 자동 모드(isProfileAutoUpdate=true)일 때만 프로필 갱신
-        user.setProfilePlantAuto(newUserPlant);
+//        // 5. 자동 모드(isProfileAutoUpdate=true)일 때만 프로필 갱신
+//        user.setProfilePlantAuto(newUserPlant);
 
         // 6. 새 식물 등록 시 plantStatus를 NORMAL로 초기화
         // (키우는 식물 없이 14일+ 미접속 후 로그인하면 FROZEN이 설정될 수 있으므로)
@@ -168,11 +168,11 @@ public class UserPlantService {
             throw new AppException(ErrorCode.PLANT_NOT_FROZEN);
         }
 
-        // 4. 삭제한 식물이 현재 프로필 식물이라면 연관 관계 해제
-        User user = userPlant.getUser();
-        if (user.getProfilePlant() != null && user.getProfilePlant().getUserPlantId().equals(userPlantId)) {
-            user.updateProfilePlant(null);
-        }
+//        // 4. 삭제한 식물이 현재 프로필 식물이라면 연관 관계 해제
+//        User user = userPlant.getUser();
+//        if (user.getProfilePlant() != null && user.getProfilePlant().getUserPlantId().equals(userPlantId)) {
+//            user.updateProfilePlant(null);
+//        }
 
         // 5. 식물 삭제
         userPlantRepository.delete(userPlant);
