@@ -37,8 +37,7 @@ public class ProfileImageController {
             ErrorCode.INTERNAL_SERVER_ERROR
     })
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "조회 성공",
-                    content = @Content(schema = @Schema(implementation = ProfileImageListResponseDto.class))),
+            @ApiResponse(responseCode = "200", description = "조회 성공"),
             @ApiResponse(responseCode = "401", description = """
             인증 실패입니다.
             - UNAUTHORIZED: 인증에 실패했습니다.
