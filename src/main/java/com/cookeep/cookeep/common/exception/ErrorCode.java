@@ -33,6 +33,7 @@ public enum ErrorCode {
 	INVALID_DELETE_REQUEST(HttpStatus.BAD_REQUEST, "삭제할 식재료를 입력해주세요.", "INGREDIENT_010"),
 	INVALID_INGREDIENT_REQUEST(HttpStatus.BAD_REQUEST, "type과 referenceId는 필수 입력입니다.", "INGREDIENT-011"),
 	CUSTOM_UNIT_NAME_REQUIRED(HttpStatus.BAD_REQUEST, "직접입력 시 사용할 단위명을 입력하세요.", "INGREDIENT-012"),
+	CUSTOM_UNIT_NAME_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "CUSTOM unit 사용 시에만 단위명을 입력하세요.", "INGREDIENT-013"),
 
 	// COOKIE
 	NOT_ENOUGH_COOKIES(HttpStatus.BAD_REQUEST, "보유한 쿠키가 부족합니다.", "COOKIE-001"),

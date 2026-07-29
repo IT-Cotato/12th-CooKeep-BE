@@ -212,6 +212,12 @@ public class UserIngredientServiceImpl implements UserIngredientService {
             }
             return customUnitName.trim();
         }
+
+        // CUSTOM이 아닌데 값이 들어온 경우 명시적으로 거부
+        if (customUnitName != null && !customUnitName.isBlank()) {
+            throw new AppException(ErrorCode.CUSTOM_UNIT_NAME_NOT_ALLOWED);
+        }
+
         return null; // CUSTOM이 아니면 항상 null
     }
 }
