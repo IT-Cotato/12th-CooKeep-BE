@@ -9,7 +9,8 @@ public enum Unit {
     BUNDLE("묶음"),
     CAN("캔"),
     GRAM("g"),
-    MILLILITER("ml");
+    MILLILITER("ml"),
+    CUSTOM("직접입력");
 
     private final String displayName;
 

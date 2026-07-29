@@ -42,7 +42,7 @@ public class UserIngredientCreateRequestDto {
     @Schema(
             description = "수량 단위 (미입력 시 DEFAULT=db값, CUSTOM=PIECE)",
             example = "PIECE",
-            allowableValues = {"PIECE", "PACK", "BAG", "BOTTLE", "BUNDLE", "CAN", "GRAM", "MILLILITER"},
+            allowableValues = {"PIECE", "PACK", "BAG", "BOTTLE", "BUNDLE", "CAN", "GRAM", "MILLILITER", "CUSTOM"},
             requiredMode = Schema.RequiredMode.NOT_REQUIRED
     )
     private Unit unit;
@@ -70,4 +70,11 @@ public class UserIngredientCreateRequestDto {
             requiredMode = Schema.RequiredMode.NOT_REQUIRED
     )
     private String memo;
+
+    @Schema(
+            description = "직접 입력한 단위명. unit == CUSTOM일 때만 사용, 필수",
+            example = "상자",
+            requiredMode = Schema.RequiredMode.NOT_REQUIRED
+    )
+    private String customUnitName;
 }
