@@ -3,20 +3,26 @@ package com.cookeep.cookeep.api.controller;
 import com.cookeep.cookeep.api.dto.request.*;
 import com.cookeep.cookeep.api.dto.response.DislikeIngredientResponseDto;
 import com.cookeep.cookeep.api.dto.response.ProfileImageListResponseDto;
+import com.cookeep.cookeep.api.dto.response.ReauthenticationResponseDTO;
 import com.cookeep.cookeep.api.dto.response.UserProfileResponseDTO;
 import com.cookeep.cookeep.common.dto.DataResponse;
 import com.cookeep.cookeep.common.exception.ErrorCode;
 import com.cookeep.cookeep.config.ApiErrorCodeExamples;
 import com.cookeep.cookeep.domain.user.application.UserInfoService;
+import com.cookeep.cookeep.security.RefreshTokenCookieProvider;
 import com.cookeep.cookeep.security.UserPrincipal;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.headers.Header;
 import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -28,6 +34,7 @@ import org.springframework.web.bind.annotation.*;
 public class UserInfoController {
 
     private final UserInfoService userInfoService;
+    private final RefreshTokenCookieProvider refreshTokenCookieProvider;
 
     // 회원정보 조회
     @Operation(summary = "회원정보 조회 API")
@@ -86,39 +93,57 @@ public class UserInfoController {
     // 비밀번호 확인
     @Operation(summary =  "비밀번호 확인 API")
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "요청 성공"),
+        @ApiResponse(
+            responseCode = "200",
+            description = "재인증 토큰 발급 성공",
+            content = @Content(schema = @Schema(implementation = ReauthenticationResponseDTO.class))
+        ),
         @ApiResponse(responseCode = "400", description = "요청 파라미터 오류(@Valid 검증 실패, 비밀번호 불일치)"),
         @ApiResponse(responseCode = "401", description = "회원 인증 실패, AccessToken이 없거나 유효하지 않음"),
-        @ApiResponse(responseCode = "403", description = "접근 권한 없음"),
-        @ApiResponse(responseCode = "423", description = "비밀번호 검증 시도 가능 횟수 초과")
+        @ApiResponse(responseCode = "403", description = "소셜 회원은 비밀번호 확인 불가"),
+        @ApiResponse(responseCode = "423", description = "비밀번호 검증 시도 가능 횟수 초과"),
+        @ApiResponse(responseCode = "503", description = "Redis 재인증 서비스 사용 불가")
     })
     @PostMapping("/password/verify")
-    public ResponseEntity<DataResponse<Void>> verifyMyPassword(
+    public ResponseEntity<DataResponse<ReauthenticationResponseDTO>> verifyMyPassword(
         @AuthenticationPrincipal UserPrincipal principal,
         @Valid @RequestBody VerifyPasswordRequestDTO verifyPasswordRequestDTO
     ) {
         Long userId = principal.userId();
-        userInfoService.verifyMyPassword(userId, verifyPasswordRequestDTO);
-        return ResponseEntity.ok(DataResponse.ok());
+        return ResponseEntity.ok(DataResponse.from(
+            userInfoService.verifyMyPassword(userId, verifyPasswordRequestDTO)));
     }
 
 
     // 비밀번호 변경
     @Operation(summary = "비밀번호 변경 API")
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "요청 성공"),
+        @ApiResponse(
+            responseCode = "200",
+            description = "비밀번호 변경 및 Refresh Cookie 만료 성공",
+            headers = @Header(
+                name = HttpHeaders.SET_COOKIE,
+                description = "만료된 Refresh Token Cookie",
+                schema = @Schema(type = "string")
+            )
+        ),
         @ApiResponse(responseCode = "400", description = "요청 파라미터 오류(@Valid 검증 실패, 기존 비밀번호와 동일 등)"),
-        @ApiResponse(responseCode = "401", description = "회원 인증 실패, AccessToken이 없거나 유효하지 않음"),
-        @ApiResponse(responseCode = "403", description = "접근 권한 없음(소셜 로그인 유저는 비밀번호 변경 불가 등)")
+        @ApiResponse(responseCode = "401", description = "Access Token 또는 Reauth Token 누락·무효"),
+        @ApiResponse(responseCode = "403", description = "소셜 회원은 비밀번호 변경 불가"),
+        @ApiResponse(responseCode = "503", description = "Redis 재인증 서비스 사용 불가")
     })
     @PatchMapping("/password")
     public ResponseEntity<DataResponse<Void>> updateMyPassword(
         @AuthenticationPrincipal UserPrincipal principal,
+        @Parameter(description = "비밀번호 확인 API에서 발급한 일회용 토큰", required = true)
+        @RequestHeader(value = "X-Reauth-Token", required = false) String reauthToken,
         @Valid @RequestBody UpdatePasswordRequestDTO updatePasswordRequestDTO
     ) {
         Long userId = principal.userId();
-        userInfoService.updateMyPassword(userId, updatePasswordRequestDTO);
-        return ResponseEntity.ok(DataResponse.ok());
+        userInfoService.updateMyPassword(userId, reauthToken, updatePasswordRequestDTO);
+        return ResponseEntity.ok()
+            .header(HttpHeaders.SET_COOKIE, refreshTokenCookieProvider.delete().toString())
+            .body(DataResponse.ok());
     }
 
     // 알림설정 변경

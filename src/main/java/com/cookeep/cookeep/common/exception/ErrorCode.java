@@ -105,6 +105,8 @@ public enum ErrorCode {
 	UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "인증에 실패했습니다.", "AUTH-001"),
 	INVALID_REFRESH_TOKEN(HttpStatus.UNAUTHORIZED, "유효하지 않은 리프레쉬 토큰입니다.", "AUTH-002"),
 	AUTH_PASSWORD_MISMATCH (HttpStatus.UNAUTHORIZED, "비밀번호가 올바르지 않습니다.", "AUTH-003"),
+	REAUTH_TOKEN_REQUIRED(HttpStatus.UNAUTHORIZED, "비밀번호 변경을 위한 재인증 토큰이 필요합니다.", "AUTH-011"),
+	INVALID_REAUTH_TOKEN(HttpStatus.UNAUTHORIZED, "재인증 토큰이 유효하지 않거나 만료되었습니다.", "AUTH-012"),
 
 	// ==============================
 	// 403 FORBIDDEN
@@ -128,6 +130,7 @@ public enum ErrorCode {
 	// USER
 	USER_ACCOUNT_WITHDRAWN(HttpStatus.FORBIDDEN, "탈퇴한 회원입니다.", "USER-010"),
 	SOCIAL_USER_EMAIL_CHANGE_NOT_ALLOWED(HttpStatus.FORBIDDEN, "소셜 로그인 사용자는 이메일을 변경할 수 없습니다.", "USER-009"),
+	SOCIAL_USER_PASSWORD_CHANGE_NOT_ALLOWED(HttpStatus.FORBIDDEN, "소셜 회원은 비밀번호 확인 및 변경을 사용할 수 없습니다.", "AUTH-013"),
 
 	// ==============================
 	// 404 NOT FOUND
@@ -239,6 +242,7 @@ public enum ErrorCode {
 
 	// RECIPE
 	AI_SERVER_FAILED(HttpStatus.SERVICE_UNAVAILABLE, "AI 서비스가 일시적으로 불안정합니다. 잠시 후 다시 시도해주세요.", "RECIPE-028"),
+	REAUTHENTICATION_UNAVAILABLE(HttpStatus.SERVICE_UNAVAILABLE, "재인증 서비스를 일시적으로 사용할 수 없습니다.", "AUTH-014"),
 	;
 
 	private final HttpStatus httpStatus;
