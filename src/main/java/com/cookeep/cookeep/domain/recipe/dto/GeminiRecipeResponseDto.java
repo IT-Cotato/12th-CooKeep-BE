@@ -39,19 +39,35 @@ public class GeminiRecipeResponseDto {
     private Ingredients ingredients;
 
     @Schema(
-            description = "조리 단계 목록",
-            example = "[\"1. 팬에 기름을 두른다\", \"2. 재료를 볶는다\", \"3. 밥을 넣고 섞는다\"]",
+            description = "조리 단계 목록. content + usedIngredientIds 조합으로 작성됨.",
+            example = "[{\"content\": \"팬에 기름을 두른다\", \"usedIngredientIds\": []}, "
+                    + "{\"content\": \"양파와 김치를 볶는다\", \"usedIngredientIds\": [3, 7]}, "
+                    + "{\"content\": \"밥을 넣고 섞는다\", \"usedIngredientIds\": [12]}]",
             requiredMode = Schema.RequiredMode.REQUIRED
     )
     private List<Step> steps;
 
+    @Schema(
+            name = "GeminiRecipeStep",
+            description = "조리 단계 DTO"
+    )
     @Getter
     @NoArgsConstructor
     @JsonDeserialize(using = Step.StepDeserializer.class)
     public static class Step {
 
+        @Schema(
+                description = "조리 단계 설명",
+                example = "양파와 김치를 볶는다",
+                requiredMode = Schema.RequiredMode.REQUIRED
+        )
         private String content;
 
+        @Schema(
+                description = "해당 단계에서 사용된 재료 ID 목록 (레거시 포맷인 경우 null)",
+                example = "[3, 7]",
+                requiredMode = Schema.RequiredMode.NOT_REQUIRED
+        )
         @JsonProperty("usedIngredientIds")
         private List<Long> usedIngredientIds;
 
