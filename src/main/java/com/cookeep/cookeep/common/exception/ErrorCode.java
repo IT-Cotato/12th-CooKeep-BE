@@ -34,6 +34,7 @@ public enum ErrorCode {
 	INVALID_INGREDIENT_REQUEST(HttpStatus.BAD_REQUEST, "type과 referenceId는 필수 입력입니다.", "INGREDIENT-011"),
 	CUSTOM_UNIT_NAME_REQUIRED(HttpStatus.BAD_REQUEST, "직접입력 시 사용할 단위명을 입력하세요.", "INGREDIENT-012"),
 	CUSTOM_UNIT_NAME_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "CUSTOM unit 사용 시에만 단위명을 입력하세요.", "INGREDIENT-013"),
+	CUSTOM_UNIT_NAME_TOO_LONG(HttpStatus.BAD_REQUEST, "직접 입력 단위명은 최대 255자까지 입력 가능합니다.", "INGREDIENT-014"),
 
 	// COOKIE
 	NOT_ENOUGH_COOKIES(HttpStatus.BAD_REQUEST, "보유한 쿠키가 부족합니다.", "COOKIE-001"),

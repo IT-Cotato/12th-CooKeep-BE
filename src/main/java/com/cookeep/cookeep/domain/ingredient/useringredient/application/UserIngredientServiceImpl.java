@@ -36,6 +36,7 @@ public class UserIngredientServiceImpl implements UserIngredientService {
 
     private static final int DEFAULT_QUANTITY = 1;
     private static final Unit DEFAULT_CUSTOM_UNIT = Unit.PIECE;
+    private static final int CUSTOM_UNIT_NAME_MAX_LENGTH = 255;
 
     private final UserIngredientRepository userIngredientRepository;
     private final DefaultIngredientRepository defaultIngredientRepository;
@@ -210,7 +211,13 @@ public class UserIngredientServiceImpl implements UserIngredientService {
             if (customUnitName == null || customUnitName.isBlank()) {
                 throw new AppException(ErrorCode.CUSTOM_UNIT_NAME_REQUIRED);
             }
-            return customUnitName.trim();
+            String trimmed = customUnitName.trim();
+
+            if (trimmed.length() > CUSTOM_UNIT_NAME_MAX_LENGTH) {
+                throw new AppException(ErrorCode.CUSTOM_UNIT_NAME_TOO_LONG);
+            }
+
+            return trimmed;
         }
 
         // CUSTOM이 아닌데 값이 들어온 경우 명시적으로 거부
