@@ -22,7 +22,7 @@ public class UserIngredientCreateRequestDto {
     @NotNull(message = "식재료 타입은 필수입니다.")
     @Schema(
             description = "식재료 타입 (DEFAULT / CUSTOM)",
-            example = "CUSTOM",
+            example = "DEFAULT",
             requiredMode = Schema.RequiredMode.REQUIRED
     )
     private Type type;
