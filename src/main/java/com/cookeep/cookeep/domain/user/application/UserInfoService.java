@@ -9,11 +9,13 @@ import com.cookeep.cookeep.api.dto.request.*;
 import com.cookeep.cookeep.api.dto.response.DislikeIngredientResponseDto;
 import com.cookeep.cookeep.api.dto.response.ProfileImageListResponseDto;
 import com.cookeep.cookeep.api.dto.response.ProfileImageResponseDto;
+import com.cookeep.cookeep.api.dto.response.ReauthenticationResponseDTO;
 import com.cookeep.cookeep.api.dto.response.UserProfileResponseDTO;
 import com.cookeep.cookeep.common.exception.AppException;
 import com.cookeep.cookeep.common.exception.ErrorCode;
 import com.cookeep.cookeep.domain.user.dao.UserAuthRepository;
 import com.cookeep.cookeep.domain.user.dao.UserRepository;
+import com.cookeep.cookeep.domain.user.dao.UserSessionRepository;
 import com.cookeep.cookeep.domain.user.entity.ProfileImages;
 import com.cookeep.cookeep.domain.user.entity.Provider;
 import com.cookeep.cookeep.domain.user.entity.User;
@@ -39,6 +41,8 @@ public class UserInfoService {
     private final UserAuthRepository userAuthRepository;
     private final PasswordEncoder passwordEncoder;
     private final ProfileImageService profileImageService;
+    private final UserSessionRepository userSessionRepository;
+    private final ReauthenticationService reauthenticationService;
 
     // 비밀번호 입력 최대 시도 횟수
     private static final int MAX_ATTEMPTS = 5;
@@ -143,13 +147,20 @@ public class UserInfoService {
     // 비밀번호 확인
     // 비밀번호 검증 실패 횟수를 예외 발생 시에도 누적시키기 위해 rollback 제외하였음
     @Transactional(noRollbackFor = AppException.class)
-    public void verifyMyPassword(Long userId, VerifyPasswordRequestDTO verifyPasswordRequestDTO) {
+    public ReauthenticationResponseDTO verifyMyPassword(
+        Long userId,
+        VerifyPasswordRequestDTO verifyPasswordRequestDTO
+    ) {
         User user = userReader.readById(userId);
+        assertLocalPasswordUser(userId);
 
         if (passwordEncoder.matches(verifyPasswordRequestDTO.password(), user.getPassword())) {
+            ReauthenticationResponseDTO response =
+                reauthenticationService.issueForPasswordChange(userId);
+
             // 기존 비밀번호와 일치할 경우 passwordCnt 초기화
             user.updatePasswordCnt(0);
-            return;
+            return response;
         }
 
         // null일 경우 0으로 세팅 후 +1, 값이 있을 경우 해당 값을 가져오고 + 1
@@ -183,17 +194,37 @@ public class UserInfoService {
 
     // 비밀번호 변경
     @Transactional
-    public void updateMyPassword(Long userId, UpdatePasswordRequestDTO updatePasswordRequestDTO) {
-        User user = userReader.readById(userId);
-
-        String encodedPassword = passwordEncoder.encode(updatePasswordRequestDTO.password());
+    public void updateMyPassword(
+        Long userId,
+        String reauthToken,
+        UpdatePasswordRequestDTO updatePasswordRequestDTO
+    ) {
+        reauthenticationService.assertTokenPresent(reauthToken);
+        User user = userRepository.findByIdForUpdate(userId)
+            .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+        assertLocalPasswordUser(userId);
 
         // 기존에 등록되어 있던 비밀번호와 새로 들어온 비밀번호가 동일할 경우
         if (passwordEncoder.matches(updatePasswordRequestDTO.password(), user.getPassword())) {
             throw new AppException(ErrorCode.SAME_AS_PREVIOUS_PASSWORD);
         }
 
+        reauthenticationService.consumeForPasswordChange(userId, reauthToken);
+
+        String encodedPassword = passwordEncoder.encode(updatePasswordRequestDTO.password());
         user.updatePassword(encodedPassword);
+        user.updatePasswordCnt(0);
+        userSessionRepository.deleteByUser_UserId(userId);
+    }
+
+    private void assertLocalPasswordUser(Long userId) {
+        boolean hasLocalProvider = userAuthRepository.existsByUser_UserIdAndProvider(
+            userId,
+            Provider.LOCAL
+        );
+        if (!hasLocalProvider) {
+            throw new AppException(ErrorCode.SOCIAL_USER_PASSWORD_CHANGE_NOT_ALLOWED);
+        }
     }
 
     // 알림설정 변경

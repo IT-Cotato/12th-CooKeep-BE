@@ -20,4 +20,6 @@ public interface UserAuthRepository extends JpaRepository<UserAuth, Long> {
 	Provider findProviderByUserId(@Param("userId") Long userId);
 
 	Optional<UserAuth> findByProviderAndUser(Provider provider, User user);
+
+	boolean existsByUser_UserIdAndProvider(Long userId, Provider provider);
 }
