@@ -10,8 +10,7 @@ public interface AuthSessionStore {
 		Long userId,
 		String sessionId,
 		String currentRawToken,
-		String nextRawToken,
-		Instant expiresAt
+		String nextRawToken
 	);
 
 	boolean isActive(Long userId, String sessionId);

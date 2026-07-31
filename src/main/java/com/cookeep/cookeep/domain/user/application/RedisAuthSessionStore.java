@@ -47,7 +47,7 @@ public class RedisAuthSessionStore implements AuthSessionStore {
 		end
 
 		local nextValue = ARGV[1] .. ':' .. ARGV[3]
-		redis.call('SET', KEYS[1], nextValue, 'PXAT', ARGV[4])
+		redis.call('SET', KEYS[1], nextValue, 'KEEPTTL')
 		return 1
 		""", Long.class);
 
@@ -77,18 +77,15 @@ public class RedisAuthSessionStore implements AuthSessionStore {
 		Long userId,
 		String sessionId,
 		String currentRawToken,
-		String nextRawToken,
-		Instant expiresAt
+		String nextRawToken
 	) {
-		assertFutureExpiration(expiresAt);
 		try {
 			Long result = redisTemplate.execute(
 				ROTATE_SCRIPT,
 				List.of(key(userId)),
 				sessionId,
 				digest(currentRawToken),
-				digest(nextRawToken),
-				String.valueOf(expiresAt.toEpochMilli())
+				digest(nextRawToken)
 			);
 
 			if (result == null) {

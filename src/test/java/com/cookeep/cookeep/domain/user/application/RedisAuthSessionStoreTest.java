@@ -20,11 +20,15 @@ import org.junit.jupiter.api.Test;
 import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.core.script.DefaultRedisScript;
 
 class RedisAuthSessionStoreTest {
 
 	private static final long USER_ID = 9_910_001L;
 	private static final String KEY = "auth:session:" + USER_ID;
+	private static final DefaultRedisScript<Long> EXPIRATION_TIME_SCRIPT = new DefaultRedisScript<>(
+		"return redis.call('PEXPIRETIME', KEYS[1])", Long.class
+	);
 
 	private static LettuceConnectionFactory connectionFactory;
 	private static StringRedisTemplate redisTemplate;
@@ -77,7 +81,7 @@ class RedisAuthSessionStoreTest {
 	}
 
 	@Test
-	void rotateReplacesDigestWithoutExtendingAbsoluteLifetime() {
+	void rotateReplacesDigestAndKeepsExistingAbsoluteExpiration() {
 		store.create(
 			USER_ID,
 			"session-id",
@@ -85,12 +89,19 @@ class RedisAuthSessionStoreTest {
 			Instant.now().plus(Duration.ofMinutes(5))
 		);
 
+		Long expiresAtBefore = redisTemplate.execute(
+			EXPIRATION_TIME_SCRIPT,
+			List.of(KEY)
+		);
 		RefreshRotationResult result = store.rotate(
 			USER_ID,
 			"session-id",
 			"current-token",
-			"next-token",
-			Instant.now().plus(Duration.ofSeconds(60))
+			"next-token"
+		);
+		Long expiresAtAfter = redisTemplate.execute(
+			EXPIRATION_TIME_SCRIPT,
+			List.of(KEY)
 		);
 
 		assertThat(result).isEqualTo(RefreshRotationResult.ROTATED);
@@ -98,7 +109,7 @@ class RedisAuthSessionStoreTest {
 			.startsWith("session-id:")
 			.doesNotContain("current-token")
 			.doesNotContain("next-token");
-		assertThat(redisTemplate.getExpire(KEY, TimeUnit.SECONDS)).isBetween(55L, 60L);
+		assertThat(expiresAtAfter).isEqualTo(expiresAtBefore);
 	}
 
 	@Test
@@ -113,16 +124,14 @@ class RedisAuthSessionStoreTest {
 			USER_ID,
 			"session-id",
 			"current-token",
-			"next-token",
-			Instant.now().plus(Duration.ofMinutes(4))
+			"next-token"
 		);
 
 		RefreshRotationResult result = store.rotate(
 			USER_ID,
 			"session-id",
 			"current-token",
-			"another-token",
-			Instant.now().plus(Duration.ofMinutes(3))
+			"another-token"
 		);
 
 		assertThat(result).isEqualTo(RefreshRotationResult.REUSE_DETECTED);
@@ -142,8 +151,7 @@ class RedisAuthSessionStoreTest {
 			USER_ID,
 			"old-session",
 			"old-token",
-			"next-token",
-			Instant.now().plus(Duration.ofMinutes(4))
+			"next-token"
 		);
 
 		assertThat(result).isEqualTo(RefreshRotationResult.DIFFERENT_SESSION);
@@ -169,8 +177,7 @@ class RedisAuthSessionStoreTest {
 				USER_ID,
 				"session-id",
 				"current-token",
-				Thread.currentThread().getName(),
-				Instant.now().plus(Duration.ofMinutes(4))
+				Thread.currentThread().getName()
 			);
 		};
 

@@ -82,7 +82,7 @@ class AuthSessionRotationServiceTest {
 		given(jwtTokenProvider.createRefreshToken(1L, "session-id", claims.expiresAt()))
 			.willReturn("next-refresh");
 		given(authSessionStore.rotate(
-			any(), any(), any(), any(), any()
+			any(), any(), any(), any()
 		)).willReturn(RefreshRotationResult.ROTATED);
 		given(jwtTokenProvider.createAccessToken(1L, "session-id")).willReturn("next-access");
 
@@ -92,7 +92,7 @@ class AuthSessionRotationServiceTest {
 		assertThat(result.refreshToken()).isEqualTo("next-refresh");
 		assertThat(result.refreshExpiresInSeconds()).isBetween(3500L, 3600L);
 		verify(authSessionStore).rotate(
-			any(), any(), any(), any(), any()
+			any(), any(), any(), any()
 		);
 	}
 
@@ -103,7 +103,7 @@ class AuthSessionRotationServiceTest {
 		given(jwtTokenProvider.createRefreshToken(1L, "session-id", claims.expiresAt()))
 			.willReturn("next-refresh");
 		given(authSessionStore.rotate(
-			any(), any(), any(), any(), any()
+			any(), any(), any(), any()
 		)).willReturn(RefreshRotationResult.REUSE_DETECTED);
 
 		assertThatThrownBy(() -> authService.tokenRefresh("reused-refresh"))
@@ -121,7 +121,7 @@ class AuthSessionRotationServiceTest {
 		given(jwtTokenProvider.createRefreshToken(1L, "session-id", claims.expiresAt()))
 			.willReturn("unused-next-refresh");
 		given(authSessionStore.rotate(
-			any(), any(), any(), any(), any()
+			any(), any(), any(), any()
 		)).willReturn(RefreshRotationResult.DIFFERENT_SESSION);
 
 		assertThatThrownBy(() -> authService.tokenRefresh("old-refresh"))

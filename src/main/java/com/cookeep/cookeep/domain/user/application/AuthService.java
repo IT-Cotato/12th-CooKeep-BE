@@ -104,8 +104,7 @@ public class AuthService {
 			claims.userId(),
 			claims.sessionId(),
 			refreshToken,
-			nextRefreshToken,
-			claims.expiresAt()
+			nextRefreshToken
 		);
 
 		if (rotationResult == RefreshRotationResult.REUSE_DETECTED) {

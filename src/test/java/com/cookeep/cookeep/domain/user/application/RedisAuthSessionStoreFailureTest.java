@@ -54,15 +54,14 @@ class RedisAuthSessionStoreFailureTest {
 
 	@Test
 	void rotateFailsClosedWhenRedisIsUnavailable() {
-		when(redisTemplate.execute(any(RedisScript.class), anyList(), any(), any(), any(), any()))
+		when(redisTemplate.execute(any(RedisScript.class), anyList(), any(), any(), any()))
 			.thenThrow(new RedisConnectionFailureException("redis unavailable"));
 
 		assertUnavailable(() -> store.rotate(
 			1L,
 			"session-id",
 			"refresh-token",
-			"next-refresh-token",
-			Instant.now().plus(Duration.ofMinutes(5))
+			"next-refresh-token"
 		));
 	}
 
