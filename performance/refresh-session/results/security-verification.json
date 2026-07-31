@@ -1,8 +1,8 @@
 {
-  "generatedAt": "2026-07-31T08:23:04.443Z",
+  "generatedAt": "2026-07-31T15:39:51.955Z",
   "target": {
     "stage": "B",
-    "commit": "363fa0a",
+    "commit": "0d5d992",
     "baseUrl": "http://localhost:8080",
     "redisContainer": "cookeep-benchmark-redis"
   },
@@ -20,7 +20,7 @@
     {
       "name": "rotation keeps the original absolute expiration",
       "passed": true,
-      "details": "status=200, ttlBeforeMs=1209599246, ttlAfterMs=1209597150"
+      "details": "status=200, expiresAtBeforeMs=1786721863000, expiresAtAfterMs=1786721863000, ttlBeforeMs=1209597143, ttlAfterMs=1209595527, elapsedMs=1449, ttlDecreaseMs=1616, toleranceMs=500"
     },
     {
       "name": "rotated token reuse is detected and cookie is expired",

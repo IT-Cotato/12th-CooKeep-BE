@@ -1,12 +1,12 @@
 # B 보안 동작 검증
 
-대상은 Redis Session과 Refresh Token Rotation이 적용된 `363fa0a` 커밋이다. benchmark 환경의 실제 API와 Redis를 사용했으며 결과 원문은 `security-verification.json`에 저장했다.
+대상 애플리케이션은 Redis Session과 Refresh Token Rotation 및 절대 만료시각 보완이 적용된 `0d5d992` 커밋이다. benchmark 환경의 실제 API와 Redis를 사용했으며 결과 원문은 `security-verification.json`에 저장했다.
 
 | 검증 | 관측 결과 | 판정 |
 | --- | --- | --- |
 | 로그인 Session 생성 | `auth:session:90` 생성, Cookie 발급 | 통과 |
 | 원본 Token 미저장 | `{sessionId}:{64자리 SHA-256 digest}` 패턴, 원본 불포함 | 통과 |
-| 절대 TTL 유지 | Rotation 전 1,209,599,246ms → 후 1,209,597,150ms | 통과 |
+| 절대 TTL 유지 | Rotation 전·후 만료 epoch 1,786,721,863,000ms 동일, TTL 감소 1,616ms(경과 1,449ms) | 통과 |
 | 이전 Token 재사용 | 첫 Rotation `200`, 이전 Token `401 AUTH-015`, 만료 Cookie | 통과 |
 | 재사용 탐지 후 승자 폐기 | 새 Token 재사용 시 `401 AUTH-002` | 통과 |
 | 동일 Token 동시 요청 | 상태 코드 `200, 401`, 거부 응답 `AUTH-015` | 통과 |
