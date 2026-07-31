@@ -5,6 +5,7 @@ import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.MalformedJwtException;
 import io.jsonwebtoken.UnsupportedJwtException;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -12,16 +13,21 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import com.cookeep.cookeep.common.dto.ErrorResponse;
+import com.cookeep.cookeep.security.RefreshTokenCookieProvider;
 
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
+import lombok.RequiredArgsConstructor;
 
 import java.security.SignatureException;
 import java.util.Map;
 
 @Slf4j
 @RestControllerAdvice
+@RequiredArgsConstructor
 public class GlobalExceptionHandler {
+
+	private final RefreshTokenCookieProvider refreshTokenCookieProvider;
 
 	@ExceptionHandler(AppException.class)
 	public ResponseEntity<ErrorResponse> handleAppCustomException(AppException e, HttpServletRequest request) {
@@ -32,9 +38,16 @@ public class GlobalExceptionHandler {
 			? ErrorResponse.of(e.getErrorCode(), request)
 			: ErrorResponse.ofWithErrors(e.getErrorCode(), e.getErrors(), request);
 
-		return ResponseEntity
-			.status(e.getErrorCode().getHttpStatus())
-			.body(errorResponse);
+		ResponseEntity.BodyBuilder response = ResponseEntity.status(e.getErrorCode().getHttpStatus());
+		if ("/api/auth/refresh".equals(request.getRequestURI())
+			&& (e.getErrorCode() == ErrorCode.INVALID_REFRESH_TOKEN
+				|| e.getErrorCode() == ErrorCode.REFRESH_TOKEN_REUSE_DETECTED)) {
+			response.header(
+				HttpHeaders.SET_COOKIE,
+				refreshTokenCookieProvider.delete().toString()
+			);
+		}
+		return response.body(errorResponse);
 	}
 
 
