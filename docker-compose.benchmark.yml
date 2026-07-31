@@ -7,7 +7,6 @@ services:
     environment:
       MYSQL_DATABASE: cookeep
       MYSQL_ROOT_PASSWORD: ${BENCHMARK_DB_PASSWORD:?Set BENCHMARK_DB_PASSWORD}
-      MYSQL_PWD: ${BENCHMARK_DB_PASSWORD:?Set BENCHMARK_DB_PASSWORD}
       TZ: Asia/Seoul
     command:
       - --performance-schema=ON
@@ -15,7 +14,7 @@ services:
     ports:
       - "3307:3306"
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot"]
+      test: ["CMD-SHELL", "MYSQL_PWD=$$MYSQL_ROOT_PASSWORD mysqladmin ping -h localhost -uroot --silent"]
       interval: 5s
       timeout: 5s
       retries: 30

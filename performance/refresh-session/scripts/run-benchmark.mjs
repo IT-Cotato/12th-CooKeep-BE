@@ -18,7 +18,7 @@ const image = required("BENCHMARK_APP_IMAGE");
 const commit = required("BENCHMARK_COMMIT");
 const round = Number(required("ROUND"));
 const order = required("ROUND_ORDER");
-required("BENCHMARK_DB_PASSWORD");
+const benchmarkDbPassword = required("BENCHMARK_DB_PASSWORD");
 required("BENCHMARK_USER_PASSWORD");
 const warmupSeconds = Number(process.env.WARMUP_SECONDS ?? 180);
 const measurementSeconds = Number(process.env.MEASUREMENT_SECONDS ?? 180);
@@ -44,6 +44,7 @@ await log(`START ${attemptName} image=${image} order=${order}`);
 compose(["rm", "-sf", "benchmark-app"], { allowFailure: true });
 compose(["up", "-d", "--no-build", "benchmark-app"]);
 await waitForHealth();
+configureMysqlClient();
 const restartCountBefore = Number(
   docker(["inspect", "-f", "{{.RestartCount}}", "cookeep-benchmark-app"]).trim(),
 );
@@ -305,6 +306,7 @@ function run(file, args, options = {}) {
     env: runEnv,
     encoding: "utf8",
     stdio: options.capture ? "pipe" : "inherit",
+    input: options.input,
   });
   if (result.error) throw result.error;
   if (result.status !== 0 && !options.allowFailure) {
@@ -358,13 +360,32 @@ function composeAsync(args, options = {}) {
   );
 }
 
+function configureMysqlClient() {
+  const optionFile = [
+    "[client]",
+    "user=root",
+    `password=${benchmarkDbPassword}`,
+    "",
+  ].join("\n");
+  docker(
+    [
+      "exec",
+      "-i",
+      "cookeep-benchmark-mysql",
+      "sh",
+      "-c",
+      "umask 077; cat > /tmp/benchmark-client.cnf",
+    ],
+    { input: optionFile },
+  );
+}
+
 function mysql(sql) {
   return docker([
     "exec",
     "cookeep-benchmark-mysql",
     "mysql",
-
-    "-uroot",
+    "--defaults-extra-file=/tmp/benchmark-client.cnf",
     "-N",
     "-e",
     sql,

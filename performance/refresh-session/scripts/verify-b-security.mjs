@@ -15,6 +15,7 @@ const outputPath = path.join(
 const baseUrl = process.env.BASE_URL ?? "http://localhost:8080";
 const redisContainer =
   process.env.REDIS_CONTAINER ?? "cookeep-benchmark-redis";
+const targetCommit = process.env.BENCHMARK_COMMIT ?? "working-tree";
 const benchmarkPassword = process.env.BENCHMARK_USER_PASSWORD;
 
 if (!benchmarkPassword) {
@@ -150,15 +151,24 @@ async function verifyStorageAndAbsoluteTtl() {
   );
 
   const ttlBefore = Number(redis("PTTL", key));
+  const expiresAtBefore = Number(redis("PEXPIRETIME", key));
+  const measuredAt = performance.now();
   await new Promise((resolve) => setTimeout(resolve, 1_200));
   const rotated = await refresh(issued.cookie);
   const ttlAfter = Number(redis("PTTL", key));
+  const elapsedMs = performance.now() - measuredAt;
+  const ttlDecreaseMs = ttlBefore - ttlAfter;
+  const expiresAtAfter = Number(redis("PEXPIRETIME", key));
+  const toleranceMs = 500;
   assertCheck(
     "rotation keeps the original absolute expiration",
     rotated.response.status === 200 &&
+      ttlBefore > 0 &&
       ttlAfter > 0 &&
-      ttlAfter < ttlBefore - 700,
-    `status=${rotated.response.status}, ttlBeforeMs=${ttlBefore}, ttlAfterMs=${ttlAfter}`,
+      ttlAfter <= ttlBefore &&
+      expiresAtAfter === expiresAtBefore &&
+      Math.abs(ttlDecreaseMs - elapsedMs) <= toleranceMs,
+    `status=${rotated.response.status}, expiresAtBeforeMs=${expiresAtBefore}, expiresAtAfterMs=${expiresAtAfter}, ttlBeforeMs=${ttlBefore}, ttlAfterMs=${ttlAfter}, elapsedMs=${Math.round(elapsedMs)}, ttlDecreaseMs=${ttlDecreaseMs}, toleranceMs=${toleranceMs}`,
   );
 }
 
@@ -286,7 +296,7 @@ const result = {
   generatedAt: new Date().toISOString(),
   target: {
     stage: "B",
-    commit: "363fa0a",
+    commit: targetCommit,
     baseUrl,
     redisContainer,
   },

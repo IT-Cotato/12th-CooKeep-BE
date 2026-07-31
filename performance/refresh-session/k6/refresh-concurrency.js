@@ -13,6 +13,9 @@ export const options = {
       maxDuration: "30s",
     },
   },
+  thresholds: {
+    checks: ["rate==1"],
+  },
 };
 
 export function setup() {
