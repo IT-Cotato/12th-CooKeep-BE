@@ -46,4 +46,7 @@ public class AiRecipeResponseDto {
 
     @Schema(description = "요리 종류", example = "RICE_BOWL")
     private Feature feature;
+
+    @Schema(description = "보유 재료 중 실제로 레시피에 사용된 재료 개수", example = "3")
+    private Integer usedIngredientCount;
 }

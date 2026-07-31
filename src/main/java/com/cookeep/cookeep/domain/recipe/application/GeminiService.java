@@ -255,7 +255,9 @@ public class GeminiService {
                 "additional_ingredients에 없는 새로운 재료를 이 목록에 추가하는 것은 절대 금지합니다. " +
                 "description은 \"이 재료는 [대체재료]로 대체 가능합니다\" 또는 \"이 재료는 생략 가능합니다\" 중 하나로만 작성하세요.\n" +
                 "4. youtube_search_queries는 한국어 검색어 1~3개를 작성하세요.\n" +
-                "5. steps는 단계별 조리 방법을 작성하세요.\n\n" +
+                "5. steps는 각 단계를 {\"content\": \"조리 설명\", \"usedIngredientIds\": [...]} 형식으로 작성하세요. " +
+                "usedIngredientIds에는 해당 단계에서 실제로 사용하는 user_ingredients의 ingredientId만 포함하세요. " +
+                "레시피에서 전혀 쓰이지 않는 user_ingredients가 있다면 어떤 step의 usedIngredientIds에도 포함하지 마세요.\n\n" +
                 "[user_ingredients]\n" +
                 ingredientsJson + "\n";
     }
@@ -294,7 +296,9 @@ public class GeminiService {
                 "additional_ingredients에 없는 새로운 재료를 이 목록에 추가하는 것은 절대 금지합니다. " +
                 "description은 \"이 재료는 [대체재료]로 대체 가능합니다\" 또는 \"이 재료는 생략 가능합니다\" 중 하나로만 작성하세요.\n" +
                 "5. youtube_search_queries는 한국어 검색어 1~3개를 작성하세요.\n" +
-                "6. steps는 단계별 조리 방법을 작성하세요.\n\n" +
+                "6. steps는 각 단계를 {\"content\": \"조리 설명\", \"usedIngredientIds\": [...]} 형식으로 작성하세요. " +
+                "usedIngredientIds에는 해당 단계에서 실제로 사용하는 user_ingredients의 ingredientId만 포함하세요. " +
+                "레시피에서 전혀 쓰이지 않는 user_ingredients가 있다면 어떤 step의 usedIngredientIds에도 포함하지 마세요.\n\n" +
                 "[user_ingredients]\n" +
                 ingredientsJson + "\n";
 

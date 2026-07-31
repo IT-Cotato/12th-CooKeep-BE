@@ -36,10 +36,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 
 @Slf4j
@@ -170,6 +169,7 @@ public class AiRecipeService {
                 .feature(request.getFeature())
                 .recipe(aiResponse)
                 .youtubeReferences(youtubeReferences)
+                .usedIngredientCount(countActuallyUsedIngredients(aiResponse, request.getIngredientIds()))
                 .build();
     }
 
@@ -244,6 +244,7 @@ public class AiRecipeService {
                 .feature(session.getFeature())
                 .recipe(aiResponse)
                 .youtubeReferences(youtubeReferences)
+                .usedIngredientCount(countActuallyUsedIngredients(aiResponse, ingredients.stream().map(IngredientDetailDto::getIngredientId).toList()))
                 .build();
     }
 
@@ -274,9 +275,9 @@ public class AiRecipeService {
         boolean rewardGranted = grantFirstRecipeRewardIfEligible(userId);
 
         // 7. 세션의 ingredientIds 조회
-        List<Long> ingredientIds;
+        List<Long> requestedIngredientIds;
         try {
-            ingredientIds = objectMapper.readValue(
+            requestedIngredientIds = objectMapper.readValue(
                     session.getIngredientIdsJson(),
                     new TypeReference<List<Long>>() {}
             );
@@ -284,6 +285,19 @@ public class AiRecipeService {
             log.error("❌ingredientIdsJson 파싱 실패", e);
             throw new AppException(ErrorCode.INTERNAL_SERVER_ERROR);
         }
+
+        GeminiRecipeResponseDto parsedRecipe;
+        try {
+            parsedRecipe = objectMapper.readValue(rawContent, GeminiRecipeResponseDto.class);
+        } catch (Exception e) {
+            log.error("❌ 채택 시 레시피 파싱 실패", e);
+            throw new AppException(ErrorCode.AI_RESPONSE_PARSE_FAILED);
+        }
+
+        // 요청했던 재료 중 실제 steps에서 사용된 것만 남김 (엣지케이스 방지)
+        List<Long> ingredientIds = resolveValidatedUsedIngredientIds(parsedRecipe, requestedIngredientIds)
+                .stream()
+                .toList();
 
         // 8. 임박 재료(leftDays=0) 포함 세션이면 쿠키 지급 (하루 1회)
         boolean urgentRewardGranted = grantUrgentCookieRewardIfEligible(userId, ingredientIds);
@@ -364,6 +378,7 @@ public class AiRecipeService {
 
         return AiSessionDetailResponseDto.builder()
                 .sessionId(session.getId())
+                .feature(session.getFeature())
                 .isCompleted(Boolean.TRUE.equals(session.getIsCompleted()))
                 .messages(messages.stream()
                         .map(AiSessionDetailResponseDto.MessageItem::from)
@@ -504,6 +519,7 @@ public class AiRecipeService {
                 .feature(Feature.ANY)
                 .recipe(aiResponse)
                 .youtubeReferences(youtubeReferences)
+                .usedIngredientCount(countActuallyUsedIngredients(aiResponse, selectedIds))
                 .build();
     }
 
@@ -568,6 +584,7 @@ public class AiRecipeService {
                 .feature(Feature.ANY)
                 .recipe(aiResponse)
                 .youtubeReferences(youtubeReferences)
+                .usedIngredientCount(countActuallyUsedIngredients(aiResponse, selectedIds))
                 .build();
     }
 
@@ -1105,6 +1122,62 @@ public class AiRecipeService {
         log.error("❌ AI가 {}회 시도 후에도 재료를 {}개 이상 선택하지 못했습니다.",
                 RANDOM_SELECTION_MAX_ATTEMPTS, RANDOM_MIN_SELECT_COUNT);
         throw new AppException(ErrorCode.AI_RANDOM_SELECTION_INSUFFICIENT);
+    }
+
+    // 레시피의 steps에서 실제로 언급된 ingredientId 집합 추출 후 카운트
+    private int countActuallyUsedIngredients(GeminiRecipeResponseDto aiResponse, List<Long> requestedIngredientIds) {
+        return resolveValidatedUsedIngredientIds(aiResponse, requestedIngredientIds).size();
+    }
+
+    // 세 집합(steps 참조 id ∩ 응답 userIngredients ∩ 요청 재료 id)의 교집합 계산
+    // requestedIngredientIds가 null이면(요청 시점 검증이 필요 없는 컨텍스트) 요청 id 제약 없이 계산
+    private Set<Long> extractStepReferencedIngredientIds(GeminiRecipeResponseDto aiResponse) {
+        if (aiResponse.getSteps() == null) return Set.of();
+        return aiResponse.getSteps().stream()
+                .filter(Objects::nonNull)
+                .flatMap(step -> step.getUsedIngredientIds() == null
+                        ? Stream.<Long>empty()
+                        : step.getUsedIngredientIds().stream())
+                .collect(Collectors.toSet());
+    }
+    private Set<Long> resolveValidatedUsedIngredientIds(
+            GeminiRecipeResponseDto aiResponse,
+            List<Long> requestedIngredientIds
+    ) {
+
+        List<GeminiRecipeResponseDto.Step> steps = aiResponse.getSteps();
+
+        Set<Long> responseUserIngredientIds =
+                (aiResponse.getIngredients() == null || aiResponse.getIngredients().getUserIngredients() == null)
+                        ? Set.of()
+                        : aiResponse.getIngredients().getUserIngredients().stream()
+                        .map(GeminiRecipeResponseDto.UserIngredient::getIngredientId)
+                        .collect(Collectors.toSet());
+
+        // 레거시 판별: steps가 비어있지 않은데 모든 step이 usedIngredientIds 정보가 null인 경우
+        boolean isLegacyRecipe = steps != null && !steps.isEmpty()
+                && steps.stream().allMatch(GeminiRecipeResponseDto.Step::isLegacyFormat);
+
+        Set<Long> validated;
+        if (isLegacyRecipe) {
+            // 레거시 fallback: step 단위 검증 불가 → 요청 재료 + 응답 userIngredients로 판단
+            log.info("레거시 포맷 steps 감지, requestedIngredientIds 기반 fallback 적용");
+            validated = responseUserIngredientIds;
+        } else {
+            Set<Long> stepIds = extractStepReferencedIngredientIds(aiResponse);
+            validated = stepIds.stream()
+                    .filter(responseUserIngredientIds::contains)
+                    .collect(Collectors.toSet());
+        }
+
+        if (requestedIngredientIds != null) {
+            Set<Long> requestedSet = new HashSet<>(requestedIngredientIds);
+            validated = validated.stream()
+                    .filter(requestedSet::contains)
+                    .collect(Collectors.toSet());
+        }
+
+        return validated;
     }
 
 }

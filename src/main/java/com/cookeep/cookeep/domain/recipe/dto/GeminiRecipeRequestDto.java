@@ -94,13 +94,23 @@ public class GeminiRecipeRequestDto {
                 "required", List.of("user_ingredients")
         );
 
+        // step
+        Map<String, Object> stepItem = Map.of(
+                "type", "object",
+                "properties", Map.of(
+                        "content", Map.of("type", "string"),
+                        "usedIngredientIds", Map.of("type", "array", "items", Map.of("type", "integer"))
+                ),
+                "required", List.of("content", "usedIngredientIds")
+        );
+
         // 최상위 schema
         Map<String, Object> schema = Map.of(
                 "type", "object",
                 "properties", Map.of(
                         "title",       Map.of("type", "string"),
                         "ingredients", ingredients,
-                        "steps",       Map.of("type", "array", "items", Map.of("type", "string")),
+                        "steps",       Map.of("type", "array", "items", stepItem),
                         "youtube_search_queries", Map.of(
                                 "type", "array",
                                 "items", Map.of("type", "string")
@@ -183,13 +193,26 @@ public class GeminiRecipeRequestDto {
                 "required", List.of("user_ingredients")
         );
 
+        // step
+        Map<String, Object> stepItem = Map.of(
+                "type", "object",
+                "properties", Map.of(
+                        "content", Map.of("type", "string"),
+                        "usedIngredientIds", Map.of(
+                                "type", "array",
+                                "items", Map.of("type", "integer")
+                        )
+                ),
+                "required", List.of("content", "usedIngredientIds")
+        );
+
         // 최상위 schema
         Map<String, Object> schema = Map.of(
                 "type", "object",
                 "properties", Map.of(
                         "title",       Map.of("type", "string"),
                         "ingredients", ingredients,
-                        "steps",       Map.of("type", "array", "items", Map.of("type", "string")),
+                        "steps",       Map.of("type", "array", "items", stepItem),
                         "youtube_search_queries", Map.of(
                                 "type", "array",
                                 "items", Map.of("type", "string")

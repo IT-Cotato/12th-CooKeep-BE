@@ -2,11 +2,17 @@ package com.cookeep.cookeep.domain.recipe.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.databind.DeserializationContext;
+import com.fasterxml.jackson.databind.JsonDeserializer;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Schema(
@@ -33,11 +39,83 @@ public class GeminiRecipeResponseDto {
     private Ingredients ingredients;
 
     @Schema(
-            description = "조리 단계 목록",
-            example = "[\"1. 팬에 기름을 두른다\", \"2. 재료를 볶는다\", \"3. 밥을 넣고 섞는다\"]",
+            description = "조리 단계 목록. content + usedIngredientIds 조합으로 작성됨.",
+            example = "[{\"content\": \"팬에 기름을 두른다\", \"usedIngredientIds\": []}, "
+                    + "{\"content\": \"양파와 김치를 볶는다\", \"usedIngredientIds\": [3, 7]}, "
+                    + "{\"content\": \"밥을 넣고 섞는다\", \"usedIngredientIds\": [12]}]",
             requiredMode = Schema.RequiredMode.REQUIRED
     )
-    private List<String> steps;
+    private List<Step> steps;
+
+    @Schema(
+            name = "GeminiRecipeStep",
+            description = "조리 단계 DTO"
+    )
+    @Getter
+    @NoArgsConstructor
+    @JsonDeserialize(using = Step.StepDeserializer.class)
+    public static class Step {
+
+        @Schema(
+                description = "조리 단계 설명",
+                example = "양파와 김치를 볶는다",
+                requiredMode = Schema.RequiredMode.REQUIRED
+        )
+        private String content;
+
+        @Schema(
+                description = "해당 단계에서 사용된 재료 ID 목록 (레거시 포맷인 경우 null)",
+                example = "[3, 7]",
+                requiredMode = Schema.RequiredMode.NOT_REQUIRED
+        )
+        @JsonProperty("usedIngredientIds")
+        private List<Long> usedIngredientIds;
+
+        Step(String content, List<Long> usedIngredientIds) {
+            this.content = content;
+            this.usedIngredientIds = usedIngredientIds;
+        }
+
+        // 레거시 문자열 포맷인지 여부 (usedIngredientIds 정보 자체가 없음)
+        public boolean isLegacyFormat() {
+            return usedIngredientIds == null;
+        }
+
+        static class StepDeserializer extends JsonDeserializer<Step> {
+            @Override
+            public Step deserialize(JsonParser p, DeserializationContext ctxt) throws java.io.IOException {
+                JsonNode node = p.getCodec().readTree(p);
+
+                // 레거시 포맷: 순수 문자열 → usedIngredientIds는 null(정보 없음)로 표시
+                if (node.isTextual()) {
+                    return new Step(node.asText(), null);
+                }
+
+                // 신규 포맷: content(문자열)와 usedIngredientIds(배열)를 모두 필수로 검증
+                if (!node.isObject()
+                        || !node.hasNonNull("content")
+                        || !node.get("content").isTextual()
+                        || !node.has("usedIngredientIds")
+                        || !node.get("usedIngredientIds").isArray()) {
+                    throw com.fasterxml.jackson.databind.JsonMappingException.from(
+                            p, "step must contain textual content and array usedIngredientIds"
+                    );
+                }
+
+                String content = node.get("content").asText();
+                List<Long> usedIds = new ArrayList<>();
+                for (JsonNode idNode : node.get("usedIngredientIds")) {
+                    if (!idNode.isIntegralNumber() || !idNode.canConvertToLong()) {
+                        throw com.fasterxml.jackson.databind.JsonMappingException.from(
+                                p, "usedIngredientIds must contain 64-bit integers"
+                        );
+                    }
+                    usedIds.add(idNode.asLong());
+                }
+                return new Step(content, usedIds);
+            }
+        }
+    }
 
     @Schema(
             description = "참고용 유튜브 영상 목록",
