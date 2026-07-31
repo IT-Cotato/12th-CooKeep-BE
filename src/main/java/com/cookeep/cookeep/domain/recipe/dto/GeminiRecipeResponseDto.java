@@ -105,9 +105,9 @@ public class GeminiRecipeResponseDto {
                 String content = node.get("content").asText();
                 List<Long> usedIds = new ArrayList<>();
                 for (JsonNode idNode : node.get("usedIngredientIds")) {
-                    if (!idNode.isIntegralNumber()) {
+                    if (!idNode.isIntegralNumber() || !idNode.canConvertToLong()) {
                         throw com.fasterxml.jackson.databind.JsonMappingException.from(
-                                p, "usedIngredientIds must contain integers"
+                                p, "usedIngredientIds must contain 64-bit integers"
                         );
                     }
                     usedIds.add(idNode.asLong());
