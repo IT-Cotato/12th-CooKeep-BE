@@ -1,0 +1,177 @@
+services:
+  benchmark-mysql:
+    image: mysql:8.0.36
+    container_name: cookeep-benchmark-mysql
+    cpus: 1.0
+    mem_limit: 1g
+    environment:
+      MYSQL_DATABASE: cookeep
+      MYSQL_ROOT_PASSWORD: ${BENCHMARK_DB_PASSWORD:?Set BENCHMARK_DB_PASSWORD}
+      MYSQL_PWD: ${BENCHMARK_DB_PASSWORD:?Set BENCHMARK_DB_PASSWORD}
+      TZ: Asia/Seoul
+    command:
+      - --performance-schema=ON
+      - --max-connections=200
+    ports:
+      - "3307:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+    networks:
+      - benchmark
+
+  benchmark-redis:
+    image: redis:7.2-alpine
+    container_name: cookeep-benchmark-redis
+    cpus: 0.5
+    mem_limit: 256m
+    command: redis-server --appendonly no --save ""
+    ports:
+      - "6380:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 3s
+      timeout: 3s
+      retries: 30
+    networks:
+      - benchmark
+
+  benchmark-app:
+    image: ${BENCHMARK_APP_IMAGE:-12th-cookeep-be-benchmark-app:latest}
+    build:
+      context: ${BENCHMARK_APP_CONTEXT:-.}
+      dockerfile: Dockerfile
+    container_name: cookeep-benchmark-app
+    cpus: 2.0
+    mem_limit: 768m
+    environment:
+      SPRING_PROFILES_ACTIVE: benchmark
+      JAVA_TOOL_OPTIONS: -Xms512m -Xmx512m
+      DB_URL: jdbc:mysql://benchmark-mysql:3306/cookeep?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul
+      LOGGING_LEVEL_ROOT: WARN
+      LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_SECURITY: WARN
+      LOGGING_LEVEL_COM_COOKEEP_COOKEEP: WARN
+      SPRING_JPA_SHOW_SQL: "false"
+      SPRING_JPA_PROPERTIES_HIBERNATE_FORMAT_SQL: "false"
+      DB_USERNAME: root
+      DB_PASSWORD: ${BENCHMARK_DB_PASSWORD:?Set BENCHMARK_DB_PASSWORD}
+      REDIS_HOST: benchmark-redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ""
+      REDIS_SSL: "false"
+      JWT_ACCESS_SECRET_KEY: ${BENCHMARK_JWT_ACCESS_SECRET:?Set BENCHMARK_JWT_ACCESS_SECRET}
+      JWT_REFRESH_SECRET_KEY: ${BENCHMARK_JWT_REFRESH_SECRET:?Set BENCHMARK_JWT_REFRESH_SECRET}
+      REFRESH_COOKIE_SECURE: "false"
+      KAKAO_CLIENT_ID: benchmark
+      KAKAO_CLIENT_SECRET: benchmark
+      KAKAO_REDIRECT_URI: http://localhost
+      GOOGLE_CLIENT_ID: benchmark
+      GOOGLE_CLIENT_SECRET: benchmark
+      GOOGLE_REDIRECT_URI: http://localhost
+      GEMINI_API_KEY: benchmark
+      YOUTUBE_API_KEY: benchmark
+      AWS_ACCESS_KEY: benchmark
+      AWS_SECRET_KEY: benchmark
+      S3_BUCKET_NAME: benchmark
+      SMS_KEY: benchmark
+      SMS_SECRET: benchmark
+      SMS_SENDER: "01000000000"
+      VAPID_PUBLIC_KEY: ${BENCHMARK_VAPID_PUBLIC_KEY:?Set BENCHMARK_VAPID_PUBLIC_KEY}
+      VAPID_PRIVATE_KEY: ${BENCHMARK_VAPID_PRIVATE_KEY:?Set BENCHMARK_VAPID_PRIVATE_KEY}
+      EMAIL_USERNAME: benchmark@example.com
+      EMAIL_PASSWORD: benchmark
+    ports:
+      - "8080:8080"
+    depends_on:
+      benchmark-mysql:
+        condition: service_healthy
+      benchmark-redis:
+        condition: service_healthy
+    networks:
+      - benchmark
+
+  benchmark-seed:
+    image: mysql:8.0.36
+    container_name: cookeep-benchmark-seed
+    environment:
+      MYSQL_PWD: ${BENCHMARK_DB_PASSWORD:?Set BENCHMARK_DB_PASSWORD}
+    cpus: 0.25
+    mem_limit: 256m
+    volumes:
+      - ./performance/refresh-session/mysql/seed.sql:/seed.sql:ro
+    command:
+      - sh
+      - -c
+      - >
+        until mysql -h benchmark-mysql -uroot cookeep
+        -e "SELECT 1 FROM users LIMIT 1; SELECT 1 FROM user_auths LIMIT 1" >/dev/null 2>&1;
+        do sleep 2; done;
+        mysql -h benchmark-mysql -uroot cookeep < /seed.sql
+    depends_on:
+      benchmark-app:
+        condition: service_started
+    networks:
+      - benchmark
+
+  benchmark-prepare:
+    image: node:20-alpine
+    container_name: cookeep-benchmark-prepare
+    cpus: 0.5
+    mem_limit: 256m
+    environment:
+      BASE_URL: http://benchmark-app:8080
+      USER_START: ${BENCHMARK_USER_START:-11}
+      USER_COUNT: ${BENCHMARK_VUS:-50}
+      BENCHMARK_USER_PASSWORD: ${BENCHMARK_USER_PASSWORD:?Set BENCHMARK_USER_PASSWORD}
+      OUTPUT_PATH: /runtime/measurement-sessions.json
+    volumes:
+      - ./performance/refresh-session/scripts:/scripts:ro
+      - benchmark-runtime:/runtime
+    command:
+      - node
+      - /scripts/prepare-sessions.mjs
+    depends_on:
+      benchmark-app:
+        condition: service_started
+    networks:
+      - benchmark
+    profiles:
+      - load
+
+  k6:
+    image: grafana/k6:0.49.0
+    container_name: cookeep-benchmark-k6
+    cpus: 1.0
+    mem_limit: 512m
+    environment:
+      BASE_URL: http://benchmark-app:8080
+      VUS: ${BENCHMARK_VUS:-50}
+      DURATION: ${BENCHMARK_DURATION:-3m}
+      RESULT_NAME: ${BENCHMARK_RESULT_NAME:-result}
+      BENCHMARK_USER_PASSWORD: ${BENCHMARK_USER_PASSWORD:?Set BENCHMARK_USER_PASSWORD}
+    volumes:
+      - ./performance/refresh-session/k6:/scripts:ro
+      - ./performance/refresh-session/results:/results
+      - benchmark-runtime:/runtime:ro
+    command:
+      - run
+      - --summary-export
+      - /results/${BENCHMARK_RESULT_NAME:-result}.json
+      - /scripts/${BENCHMARK_SCRIPT:-refresh-load.js}
+    depends_on:
+      benchmark-seed:
+        condition: service_completed_successfully
+    networks:
+      - benchmark
+    profiles:
+      - load
+
+networks:
+  benchmark:
+    name: cookeep-benchmark
+
+volumes:
+  benchmark-runtime:
+    name: cookeep-benchmark-runtime

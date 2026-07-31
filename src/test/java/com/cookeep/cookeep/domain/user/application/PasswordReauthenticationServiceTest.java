@@ -23,7 +23,6 @@ import com.cookeep.cookeep.common.exception.AppException;
 import com.cookeep.cookeep.common.exception.ErrorCode;
 import com.cookeep.cookeep.domain.user.dao.UserAuthRepository;
 import com.cookeep.cookeep.domain.user.dao.UserRepository;
-import com.cookeep.cookeep.domain.user.dao.UserSessionRepository;
 import com.cookeep.cookeep.domain.user.entity.Provider;
 import com.cookeep.cookeep.domain.user.entity.ReauthenticationPurpose;
 import com.cookeep.cookeep.domain.user.entity.User;
@@ -45,7 +44,7 @@ class PasswordReauthenticationServiceTest {
 	@Mock
 	private ProfileImageService profileImageService;
 	@Mock
-	private UserSessionRepository userSessionRepository;
+	private AuthSessionStore userSessionRepository;
 	@Mock
 	private ReauthenticationStore reauthenticationStore;
 
@@ -183,7 +182,7 @@ class PasswordReauthenticationServiceTest {
 
 		assertThat(user.getPassword()).isEqualTo("encoded-old");
 		verify(passwordEncoder, never()).encode(any());
-		verify(userSessionRepository, never()).deleteByUser_UserId(any());
+		verify(userSessionRepository, never()).revoke(any());
 	}
 
 	@Test
@@ -247,7 +246,7 @@ class PasswordReauthenticationServiceTest {
 		);
 		assertThat(user.getPassword()).isEqualTo("encoded-new");
 		assertThat(user.getPasswordCnt()).isZero();
-		verify(userSessionRepository).deleteByUser_UserId(1L);
+		verify(userSessionRepository).revoke(1L);
 	}
 
 	@Test
@@ -272,7 +271,7 @@ class PasswordReauthenticationServiceTest {
 
 		assertThat(user.getPassword()).isEqualTo("encoded-old");
 		verify(passwordEncoder, never()).encode(any());
-		verify(userSessionRepository, never()).deleteByUser_UserId(any());
+		verify(userSessionRepository, never()).revoke(any());
 	}
 
 	private UpdatePasswordRequestDTO updateRequest(String password) {

@@ -23,6 +23,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import com.cookeep.cookeep.api.dto.request.LoginRequestDTO;
+import com.cookeep.cookeep.api.dto.request.ResetPasswordRequestDTO;
 import com.cookeep.cookeep.api.dto.request.SignupRequestDTO;
 import com.cookeep.cookeep.api.dto.response.LoginResponseDTO;
 import com.cookeep.cookeep.api.dto.response.SignUpResponseDTO;
@@ -52,7 +53,7 @@ class AuthControllerTest {
 	void setUp() {
 		authController = new AuthController(authService, new RefreshTokenCookieProvider(true));
 		mockMvc = MockMvcBuilders.standaloneSetup(authController)
-			.setControllerAdvice(new GlobalExceptionHandler())
+			.setControllerAdvice(new GlobalExceptionHandler(new RefreshTokenCookieProvider(true)))
 			.build();
 	}
 
@@ -60,7 +61,7 @@ class AuthControllerTest {
 	void login_setsRefreshTokenCookieWithoutExposingItInBody() throws Exception {
 		LoginResponseDTO response = new LoginResponseDTO(1L, "access-token", UserStatus.ACTIVE, false);
 		given(authService.login(any(LoginRequestDTO.class)))
-			.willReturn(new AuthResult<>(response, "refresh-token"));
+			.willReturn(new AuthResult<>(response, "refresh-token", 14L * 24 * 60 * 60));
 
 		mockMvc.perform(post("/api/auth/login")
 				.contentType("application/json")
@@ -81,7 +82,7 @@ class AuthControllerTest {
 	void signup_setsRefreshTokenCookieWithoutExposingItInBody() throws Exception {
 		SignUpResponseDTO response = new SignUpResponseDTO(1L, "access-token");
 		given(authService.signUp(any(SignupRequestDTO.class)))
-			.willReturn(new AuthResult<>(response, "refresh-token"));
+			.willReturn(new AuthResult<>(response, "refresh-token", 14L * 24 * 60 * 60));
 
 		mockMvc.perform(post("/api/auth/signup")
 				.contentType("application/json")
@@ -105,7 +106,7 @@ class AuthControllerTest {
 			1L, "access-token", UserStatus.ACTIVE, null, false
 		);
 		given(authService.socialLogin(Provider.KAKAO, "code", null))
-			.willReturn(new AuthResult<>(response, "refresh-token"));
+			.willReturn(new AuthResult<>(response, "refresh-token", 14L * 24 * 60 * 60));
 
 		mockMvc.perform(get("/api/auth/login/kakao").param("code", "code"))
 			.andExpect(status().isOk())
@@ -117,12 +118,14 @@ class AuthControllerTest {
 	@Test
 	void tokenRefresh_readsRefreshTokenFromCookieWithoutRequestBody() throws Exception {
 		given(authService.tokenRefresh("refresh-token"))
-			.willReturn(new TokenRefreshResponseDTO("new-access-token", false));
+			.willReturn(new AuthResult<>(new TokenRefreshResponseDTO("new-access-token", false), "next-refresh-token", 600));
 
 		mockMvc.perform(post("/api/auth/refresh")
 				.cookie(new MockCookie(RefreshTokenCookieProvider.COOKIE_NAME, "refresh-token")))
 			.andExpect(status().isOk())
-			.andExpect(jsonPath("$.data.accessToken").value("new-access-token"));
+			.andExpect(jsonPath("$.data.accessToken").value("new-access-token"))
+			.andExpect(header().string(HttpHeaders.SET_COOKIE, containsString("refreshToken=next-refresh-token")))
+			.andExpect(header().string(HttpHeaders.SET_COOKIE, containsString("Max-Age=600")));
 
 		verify(authService).tokenRefresh("refresh-token");
 	}
@@ -136,12 +139,50 @@ class AuthControllerTest {
 
 		mockMvc.perform(post("/api/auth/refresh"))
 			.andExpect(status().isUnauthorized())
-			.andExpect(jsonPath("$.code").value(ErrorCode.INVALID_REFRESH_TOKEN.getCode()));
+			.andExpect(jsonPath("$.code").value(ErrorCode.INVALID_REFRESH_TOKEN.getCode()))
+			.andExpect(header().string(HttpHeaders.SET_COOKIE, containsString("Max-Age=0")));
 
 		mockMvc.perform(post("/api/auth/refresh")
 				.cookie(new MockCookie(RefreshTokenCookieProvider.COOKIE_NAME, "invalid-token")))
 			.andExpect(status().isUnauthorized())
-			.andExpect(jsonPath("$.code").value(ErrorCode.INVALID_REFRESH_TOKEN.getCode()));
+			.andExpect(jsonPath("$.code").value(ErrorCode.INVALID_REFRESH_TOKEN.getCode()))
+			.andExpect(header().string(HttpHeaders.SET_COOKIE, containsString("Max-Age=0")));
+	}
+
+	@Test
+	void tokenRefreshExpiresCookieWhenReuseIsDetected() throws Exception {
+		given(authService.tokenRefresh("reused-token"))
+			.willThrow(new AppException(ErrorCode.REFRESH_TOKEN_REUSE_DETECTED));
+
+		mockMvc.perform(post("/api/auth/refresh")
+				.cookie(new MockCookie(RefreshTokenCookieProvider.COOKIE_NAME, "reused-token")))
+			.andExpect(status().isUnauthorized())
+			.andExpect(jsonPath("$.code").value(ErrorCode.REFRESH_TOKEN_REUSE_DETECTED.getCode()))
+			.andExpect(header().string(HttpHeaders.SET_COOKIE, containsString("refreshToken=")))
+			.andExpect(header().string(HttpHeaders.SET_COOKIE, containsString("Max-Age=0")));
+	}
+
+	@Test
+	void tokenRefreshKeepsCookieWhenSessionStoreIsUnavailable() throws Exception {
+		given(authService.tokenRefresh("refresh-token"))
+			.willThrow(new AppException(ErrorCode.AUTH_SESSION_UNAVAILABLE));
+
+		mockMvc.perform(post("/api/auth/refresh")
+				.cookie(new MockCookie(RefreshTokenCookieProvider.COOKIE_NAME, "refresh-token")))
+			.andExpect(status().isServiceUnavailable())
+			.andExpect(jsonPath("$.code").value(ErrorCode.AUTH_SESSION_UNAVAILABLE.getCode()))
+			.andExpect(header().doesNotExist(HttpHeaders.SET_COOKIE));
+	}
+
+	@Test
+	void resetPasswordExpiresRefreshTokenCookie() {
+		ResetPasswordRequestDTO request =
+			new ResetPasswordRequestDTO("test@example.com", "new-password1", "new-password1");
+
+		ResponseEntity<DataResponse<Void>> response = authController.resetPassword(request);
+
+		assertExpiredRefreshTokenCookie(response);
+		verify(authService).resetPassword(request);
 	}
 
 	@Test

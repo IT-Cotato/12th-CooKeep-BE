@@ -7,6 +7,7 @@ import static org.mockito.BDDMockito.given;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.time.Instant;
 import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -25,10 +26,8 @@ import com.cookeep.cookeep.domain.cookie.application.CookieService;
 import com.cookeep.cookeep.domain.notification.dao.WebPushSubscriptionRepository;
 import com.cookeep.cookeep.domain.user.dao.UserAuthRepository;
 import com.cookeep.cookeep.domain.user.dao.UserRepository;
-import com.cookeep.cookeep.domain.user.dao.UserSessionRepository;
 import com.cookeep.cookeep.domain.user.entity.Provider;
 import com.cookeep.cookeep.domain.user.entity.User;
-import com.cookeep.cookeep.domain.user.entity.UserSession;
 import com.cookeep.cookeep.domain.user.entity.UserStatus;
 import com.cookeep.cookeep.domain.verification.application.EmailVerificationService;
 import com.cookeep.cookeep.security.JwtTokenProvider;
@@ -41,7 +40,7 @@ class PasswordChangeLoginFlowTest {
 	@Mock
 	private UserAuthRepository userAuthRepository;
 	@Mock
-	private UserSessionRepository userSessionRepository;
+	private AuthSessionStore authSessionStore;
 	@Mock
 	private JwtTokenProvider jwtTokenProvider;
 	@Mock
@@ -77,13 +76,13 @@ class PasswordChangeLoginFlowTest {
 			userAuthRepository,
 			passwordEncoder,
 			profileImageService,
-			userSessionRepository,
+			authSessionStore,
 			new ReauthenticationService(reauthenticationStore)
 		);
 		authService = new AuthService(
 			userRepository,
 			userAuthRepository,
-			userSessionRepository,
+			authSessionStore,
 			jwtTokenProvider,
 			userReader,
 			passwordEncoder,
@@ -112,11 +111,8 @@ class PasswordChangeLoginFlowTest {
 			.willReturn(true);
 		given(userRepository.findByEmail("test@example.com")).willReturn(Optional.of(user));
 		given(loginPasswordFailureService.increasePasswordFailCount(1L)).willReturn(1);
-		given(jwtTokenProvider.createAccessToken(1L)).willReturn("access-token");
-		given(jwtTokenProvider.createRefreshToken(1L)).willReturn("refresh-token");
-		given(userSessionRepository.findByUser(user)).willReturn(Optional.empty());
-		given(userSessionRepository.save(any(UserSession.class)))
-			.willAnswer(invocation -> invocation.getArgument(0));
+		given(jwtTokenProvider.createAccessToken(any(Long.class), any(String.class))).willReturn("access-token");
+		given(jwtTokenProvider.createRefreshToken(any(Long.class), any(String.class), any(Instant.class))).willReturn("refresh-token");
 
 		userInfoService.updateMyPassword(
 			1L,
