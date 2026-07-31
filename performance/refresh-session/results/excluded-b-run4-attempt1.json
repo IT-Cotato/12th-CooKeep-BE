@@ -1,0 +1,222 @@
+{
+  "metadata": {
+    "stage": "b",
+    "commit": "363fa0a",
+    "image": "cookeep-benchmark-b:363fa0a",
+    "round": 4,
+    "roundOrder": "B4-A4",
+    "attempt": 1,
+    "executionStartedAt": "2026-07-31T07:24:40.846Z",
+    "measurementCommandStartedAt": "2026-07-31T07:29:14.239Z",
+    "measurementCommandEndedAt": "2026-07-31T07:32:02.695Z",
+    "configuredMeasurementSeconds": 180,
+    "warmupSeconds": 180,
+    "seedUsers": 100,
+    "warmupUsers": {
+      "start": 1,
+      "count": 10
+    },
+    "measurementUsers": {
+      "start": 11,
+      "count": 50
+    },
+    "reserveUsers": {
+      "start": 61,
+      "count": 40
+    },
+    "workload": "closed"
+  },
+  "calculated": {
+    "refreshCompleted": 51764,
+    "directRps": 287.5777777777778,
+    "k6CounterRate": 318.04652503134554,
+    "commandWallSeconds": 168.456
+  },
+  "validation": {
+    "valid": false,
+    "reasons": [
+      "refresh_started=51814 differs from completed=51764",
+      "k6 execution failed: docker compose -f docker-compose.benchmark.yml --profile load run --rm --no-deps -e VUS=50 -e DURATION=180s -e SESSIONS_PATH=/runtime/measurement-sessions.json k6 run --quiet --summary-export /results/raw/b-run4-attempt1-k6.json /scripts/refresh-load.js failed with 105: "
+    ],
+    "restartCountBefore": 0,
+    "restartCountAfter": 0
+  },
+  "summary": {
+    "metrics": {
+      "http_reqs": {
+        "count": 51764,
+        "rate": 318.04652503134554
+      },
+      "http_req_tls_handshaking": {
+        "min": 0,
+        "med": 0,
+        "p(90)": 0,
+        "p(95)": 0,
+        "p(99)": 0,
+        "max": 0,
+        "avg": 0
+      },
+      "http_req_blocked": {
+        "med": 0.003584,
+        "p(90)": 0.005668,
+        "p(95)": 0.006683,
+        "p(99)": 0.29708335000000013,
+        "max": 90.541599,
+        "avg": 0.08202882109187962,
+        "min": 0.001015
+      },
+      "http_req_connecting": {
+        "p(99)": 0.1878944200000046,
+        "max": 6.226607,
+        "avg": 0.007608646858820806,
+        "min": 0,
+        "med": 0,
+        "p(90)": 0,
+        "p(95)": 0
+      },
+      "refresh_completed": {
+        "rate": 318.04652503134554,
+        "count": 51764
+      },
+      "vus_max": {
+        "max": 50,
+        "value": 50,
+        "min": 50
+      },
+      "http_req_receiving": {
+        "p(99)": 3.9028241600000007,
+        "max": 55.358369,
+        "avg": 0.3917388152963446,
+        "min": -2.508316,
+        "med": 0.106072,
+        "p(90)": 1.1227884000000001,
+        "p(95)": 1.9560236999999998
+      },
+      "checks": {
+        "passes": 103528,
+        "fails": 0,
+        "value": 1
+      },
+      "data_sent": {
+        "count": 21140112,
+        "rate": 129888.3231661666
+      },
+      "refresh_started": {
+        "count": 51814,
+        "rate": 318.35373325040837
+      },
+      "http_req_duration": {
+        "p(90)": 238.20942870000007,
+        "p(95)": 277.4400220499999,
+        "p(99)": 399.04843340000093,
+        "max": 1012.863212,
+        "avg": 156.5658792540771,
+        "min": 16.471798,
+        "med": 147.52239200000002
+      },
+      "prepared_vus": {
+        "count": 50,
+        "rate": 0.3072082190628096
+      },
+      "measurement_start_ms": {
+        "min": 1785482956190,
+        "max": 1785482956190,
+        "value": 1785482956190
+      },
+      "iterations": {
+        "count": 51764,
+        "rate": 318.04652503134554
+      },
+      "vus": {
+        "value": 50,
+        "min": 50,
+        "max": 50
+      },
+      "http_req_duration{expected_response:true}": {
+        "max": 1012.863212,
+        "avg": 156.5658792540771,
+        "min": 16.471798,
+        "med": 147.52239200000002,
+        "p(90)": 238.20942870000007,
+        "p(95)": 277.4400220499999,
+        "p(99)": 399.04843340000093
+      },
+      "refresh_failures": {
+        "passes": 0,
+        "fails": 51764,
+        "value": 0
+      },
+      "data_received": {
+        "count": 58973247,
+        "rate": 362341.3236644236
+      },
+      "http_req_failed": {
+        "fails": 51764,
+        "passes": 0,
+        "value": 0
+      },
+      "refresh_successes": {
+        "count": 51764,
+        "rate": 318.04652503134554
+      },
+      "iteration_duration": {
+        "p(95)": 278.20782189999994,
+        "p(99)": 400.4766778000001,
+        "max": 1013.14117,
+        "avg": 157.07442677924766,
+        "min": 16.820363,
+        "med": 147.93476800000002,
+        "p(90)": 238.85677690000003
+      },
+      "http_req_waiting": {
+        "p(95)": 276.93547645,
+        "p(99)": 398.3417172500005,
+        "max": 1012.764708,
+        "avg": 156.14034971841346,
+        "min": 16.299918,
+        "med": 147.1344525,
+        "p(90)": 237.7760444000001
+      },
+      "refresh_duration": {
+        "p(99)": 399.04843340000093,
+        "max": 1012.863212,
+        "avg": 156.5658792540771,
+        "min": 16.471798,
+        "med": 147.52239200000002,
+        "p(90)": 238.20942870000007,
+        "p(95)": 277.4400220499999
+      },
+      "http_req_sending": {
+        "avg": 0.0337907203655051,
+        "min": 0.006186,
+        "med": 0.020032,
+        "p(90)": 0.04721580000000015,
+        "p(95)": 0.062962,
+        "p(99)": 0.1467983000000031,
+        "max": 12.056581
+      }
+    },
+    "root_group": {
+      "name": "",
+      "path": "",
+      "id": "d41d8cd98f00b204e9800998ecf8427e",
+      "groups": {},
+      "checks": {
+        "refresh status is 200": {
+          "fails": 0,
+          "name": "refresh status is 200",
+          "path": "::refresh status is 200",
+          "id": "21d24baef4f41f912314735161302e15",
+          "passes": 51764
+        },
+        "access token is returned": {
+          "name": "access token is returned",
+          "path": "::access token is returned",
+          "id": "7e96387821b5e2835b8627ac87f16645",
+          "passes": 51764,
+          "fails": 0
+        }
+      }
+    }
+  }
+}
