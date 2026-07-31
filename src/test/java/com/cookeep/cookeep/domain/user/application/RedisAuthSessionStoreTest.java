@@ -3,6 +3,7 @@ package com.cookeep.cookeep.domain.user.application;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.time.Duration;
+import java.time.Instant;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Callable;
@@ -61,7 +62,12 @@ class RedisAuthSessionStoreTest {
 
 	@Test
 	void createStoresDigestOnlyWithTtl() {
-		store.create(USER_ID, "session-id", "raw-refresh-token", Duration.ofMinutes(5));
+		store.create(
+			USER_ID,
+			"session-id",
+			"raw-refresh-token",
+			Instant.now().plus(Duration.ofMinutes(5))
+		);
 
 		String value = redisTemplate.opsForValue().get(KEY);
 		assertThat(value)
@@ -72,14 +78,19 @@ class RedisAuthSessionStoreTest {
 
 	@Test
 	void rotateReplacesDigestWithoutExtendingAbsoluteLifetime() {
-		store.create(USER_ID, "session-id", "current-token", Duration.ofMinutes(5));
+		store.create(
+			USER_ID,
+			"session-id",
+			"current-token",
+			Instant.now().plus(Duration.ofMinutes(5))
+		);
 
 		RefreshRotationResult result = store.rotate(
 			USER_ID,
 			"session-id",
 			"current-token",
 			"next-token",
-			Duration.ofSeconds(60)
+			Instant.now().plus(Duration.ofSeconds(60))
 		);
 
 		assertThat(result).isEqualTo(RefreshRotationResult.ROTATED);
@@ -92,13 +103,18 @@ class RedisAuthSessionStoreTest {
 
 	@Test
 	void reusedTokenRevokesCurrentSession() {
-		store.create(USER_ID, "session-id", "current-token", Duration.ofMinutes(5));
+		store.create(
+			USER_ID,
+			"session-id",
+			"current-token",
+			Instant.now().plus(Duration.ofMinutes(5))
+		);
 		store.rotate(
 			USER_ID,
 			"session-id",
 			"current-token",
 			"next-token",
-			Duration.ofMinutes(4)
+			Instant.now().plus(Duration.ofMinutes(4))
 		);
 
 		RefreshRotationResult result = store.rotate(
@@ -106,7 +122,7 @@ class RedisAuthSessionStoreTest {
 			"session-id",
 			"current-token",
 			"another-token",
-			Duration.ofMinutes(3)
+			Instant.now().plus(Duration.ofMinutes(3))
 		);
 
 		assertThat(result).isEqualTo(RefreshRotationResult.REUSE_DETECTED);
@@ -115,14 +131,19 @@ class RedisAuthSessionStoreTest {
 
 	@Test
 	void tokenFromDifferentLoginDoesNotRevokeCurrentSession() {
-		store.create(USER_ID, "current-session", "current-token", Duration.ofMinutes(5));
+		store.create(
+			USER_ID,
+			"current-session",
+			"current-token",
+			Instant.now().plus(Duration.ofMinutes(5))
+		);
 
 		RefreshRotationResult result = store.rotate(
 			USER_ID,
 			"old-session",
 			"old-token",
 			"next-token",
-			Duration.ofMinutes(4)
+			Instant.now().plus(Duration.ofMinutes(4))
 		);
 
 		assertThat(result).isEqualTo(RefreshRotationResult.DIFFERENT_SESSION);
@@ -131,7 +152,12 @@ class RedisAuthSessionStoreTest {
 
 	@Test
 	void concurrentRotationAllowsOneSuccessAndDetectsOneReuse() throws Exception {
-		store.create(USER_ID, "session-id", "current-token", Duration.ofMinutes(5));
+		store.create(
+			USER_ID,
+			"session-id",
+			"current-token",
+			Instant.now().plus(Duration.ofMinutes(5))
+		);
 		ExecutorService executor = Executors.newFixedThreadPool(2);
 		CountDownLatch ready = new CountDownLatch(2);
 		CountDownLatch start = new CountDownLatch(1);
@@ -144,7 +170,7 @@ class RedisAuthSessionStoreTest {
 				"session-id",
 				"current-token",
 				Thread.currentThread().getName(),
-				Duration.ofMinutes(4)
+				Instant.now().plus(Duration.ofMinutes(4))
 			);
 		};
 

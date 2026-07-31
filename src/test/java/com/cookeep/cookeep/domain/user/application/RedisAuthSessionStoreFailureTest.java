@@ -4,10 +4,10 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.anyList;
-import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 
 import java.time.Duration;
+import java.time.Instant;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -39,13 +39,16 @@ class RedisAuthSessionStoreFailureTest {
 
 	@Test
 	void createFailsClosedWhenRedisIsUnavailable() {
-		when(redisTemplate.opsForValue()).thenReturn(valueOperations);
-		doThrow(new RedisConnectionFailureException("redis unavailable"))
-			.when(valueOperations)
-			.set(anyString(), anyString(), any(Duration.class));
+		when(redisTemplate.execute(any(RedisScript.class), anyList(), any(), any()))
+			.thenThrow(new RedisConnectionFailureException("redis unavailable"));
 
 		assertUnavailable(() ->
-			store.create(1L, "session-id", "refresh-token", Duration.ofMinutes(5))
+			store.create(
+				1L,
+				"session-id",
+				"refresh-token",
+				Instant.now().plus(Duration.ofMinutes(5))
+			)
 		);
 	}
 
@@ -59,7 +62,7 @@ class RedisAuthSessionStoreFailureTest {
 			"session-id",
 			"refresh-token",
 			"next-refresh-token",
-			Duration.ofMinutes(5)
+			Instant.now().plus(Duration.ofMinutes(5))
 		));
 	}
 

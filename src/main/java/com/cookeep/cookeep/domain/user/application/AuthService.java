@@ -105,7 +105,7 @@ public class AuthService {
 			claims.sessionId(),
 			refreshToken,
 			nextRefreshToken,
-			remainingTtl
+			claims.expiresAt()
 		);
 
 		if (rotationResult == RefreshRotationResult.REUSE_DETECTED) {
@@ -153,7 +153,9 @@ public class AuthService {
 		user.updateLastAccessAt(LocalDateTime.now());
 
 		String sessionId = generateSessionId();
-		Instant refreshExpiresAt = Instant.now().plus(AuthSessionPolicy.REFRESH_TOKEN_TTL);
+		Instant refreshExpiresAt = Instant.now()
+			.plus(AuthSessionPolicy.REFRESH_TOKEN_TTL)
+			.truncatedTo(ChronoUnit.SECONDS);
 		String accessToken = jwtTokenProvider.createAccessToken(user.getUserId(), sessionId);
 		String refreshToken = jwtTokenProvider.createRefreshToken(
 			user.getUserId(),
@@ -165,7 +167,7 @@ public class AuthService {
 			user.getUserId(),
 			sessionId,
 			refreshToken,
-			AuthSessionPolicy.REFRESH_TOKEN_TTL
+			refreshExpiresAt
 		);
 
 		return new TokenPair(accessToken, refreshToken, isRewarded);

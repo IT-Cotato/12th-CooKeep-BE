@@ -85,22 +85,27 @@ class AuthSessionLifecycleServiceTest {
 		ArgumentCaptor<String> accessSessionId = ArgumentCaptor.forClass(String.class);
 		ArgumentCaptor<String> refreshSessionId = ArgumentCaptor.forClass(String.class);
 		ArgumentCaptor<String> storedSessionId = ArgumentCaptor.forClass(String.class);
+		ArgumentCaptor<Instant> tokenExpiresAt = ArgumentCaptor.forClass(Instant.class);
+		ArgumentCaptor<Instant> storedExpiresAt = ArgumentCaptor.forClass(Instant.class);
 		verify(jwtTokenProvider).createAccessToken(eq(1L), accessSessionId.capture());
 		verify(jwtTokenProvider).createRefreshToken(
 			eq(1L),
 			refreshSessionId.capture(),
-			any(Instant.class)
+			tokenExpiresAt.capture()
 		);
 		verify(authSessionStore).create(
 			eq(1L),
 			storedSessionId.capture(),
 			eq("refresh-token"),
-			eq(AuthSessionPolicy.REFRESH_TOKEN_TTL)
+			storedExpiresAt.capture()
 		);
 
 		assertThat(accessSessionId.getValue())
 			.isEqualTo(refreshSessionId.getValue())
 			.isEqualTo(storedSessionId.getValue());
+		assertThat(storedExpiresAt.getValue())
+			.isEqualTo(tokenExpiresAt.getValue());
+		assertThat(storedExpiresAt.getValue().getNano()).isZero();
 	}
 
 	@Test
@@ -124,7 +129,7 @@ class AuthSessionLifecycleServiceTest {
 			eq(2L),
 			anyString(),
 			eq("refresh-token"),
-			eq(AuthSessionPolicy.REFRESH_TOKEN_TTL)
+			any(Instant.class)
 		);
 	}
 
@@ -152,7 +157,7 @@ class AuthSessionLifecycleServiceTest {
 			eq(3L),
 			anyString(),
 			eq("refresh-token"),
-			eq(AuthSessionPolicy.REFRESH_TOKEN_TTL)
+			any(Instant.class)
 		);
 	}
 

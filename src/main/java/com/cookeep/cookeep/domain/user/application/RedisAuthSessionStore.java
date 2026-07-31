@@ -3,7 +3,7 @@ package com.cookeep.cookeep.domain.user.application;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.time.Duration;
+import java.time.Instant;
 import java.util.HexFormat;
 import java.util.List;
 
@@ -19,6 +19,10 @@ public class RedisAuthSessionStore implements AuthSessionStore {
 
 	private static final String KEY_PREFIX = "auth:session:";
 	private static final String VALUE_SEPARATOR = ":";
+	private static final DefaultRedisScript<Long> CREATE_SCRIPT = new DefaultRedisScript<>("""
+		redis.call('SET', KEYS[1], ARGV[1], 'PXAT', ARGV[2])
+		return 1
+		""", Long.class);
 
 	private static final DefaultRedisScript<Long> ROTATE_SCRIPT = new DefaultRedisScript<>("""
 		local current = redis.call('GET', KEYS[1])
@@ -43,7 +47,7 @@ public class RedisAuthSessionStore implements AuthSessionStore {
 		end
 
 		local nextValue = ARGV[1] .. ':' .. ARGV[3]
-		redis.call('SET', KEYS[1], nextValue, 'PX', ARGV[4])
+		redis.call('SET', KEYS[1], nextValue, 'PXAT', ARGV[4])
 		return 1
 		""", Long.class);
 
@@ -54,13 +58,14 @@ public class RedisAuthSessionStore implements AuthSessionStore {
 	}
 
 	@Override
-	public void create(Long userId, String sessionId, String rawRefreshToken, Duration ttl) {
-		assertPositiveTtl(ttl);
+	public void create(Long userId, String sessionId, String rawRefreshToken, Instant expiresAt) {
+		assertFutureExpiration(expiresAt);
 		try {
-			redisTemplate.opsForValue().set(
-				key(userId),
+			redisTemplate.execute(
+				CREATE_SCRIPT,
+				List.of(key(userId)),
 				value(sessionId, digest(rawRefreshToken)),
-				ttl
+				String.valueOf(expiresAt.toEpochMilli())
 			);
 		} catch (RuntimeException e) {
 			throw unavailable(e);
@@ -73,9 +78,9 @@ public class RedisAuthSessionStore implements AuthSessionStore {
 		String sessionId,
 		String currentRawToken,
 		String nextRawToken,
-		Duration remainingTtl
+		Instant expiresAt
 	) {
-		assertPositiveTtl(remainingTtl);
+		assertFutureExpiration(expiresAt);
 		try {
 			Long result = redisTemplate.execute(
 				ROTATE_SCRIPT,
@@ -83,7 +88,7 @@ public class RedisAuthSessionStore implements AuthSessionStore {
 				sessionId,
 				digest(currentRawToken),
 				digest(nextRawToken),
-				String.valueOf(remainingTtl.toMillis())
+				String.valueOf(expiresAt.toEpochMilli())
 			);
 
 			if (result == null) {
@@ -122,8 +127,8 @@ public class RedisAuthSessionStore implements AuthSessionStore {
 		}
 	}
 
-	private void assertPositiveTtl(Duration ttl) {
-		if (ttl == null || ttl.isZero() || ttl.isNegative()) {
+	private void assertFutureExpiration(Instant expiresAt) {
+		if (expiresAt == null || !expiresAt.isAfter(Instant.now())) {
 			throw new AppException(ErrorCode.INVALID_REFRESH_TOKEN);
 		}
 	}

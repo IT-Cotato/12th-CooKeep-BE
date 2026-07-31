@@ -1,17 +1,17 @@
 package com.cookeep.cookeep.domain.user.application;
 
-import java.time.Duration;
+import java.time.Instant;
 
 public interface AuthSessionStore {
 
-	void create(Long userId, String sessionId, String rawRefreshToken, Duration ttl);
+	void create(Long userId, String sessionId, String rawRefreshToken, Instant expiresAt);
 
 	RefreshRotationResult rotate(
 		Long userId,
 		String sessionId,
 		String currentRawToken,
 		String nextRawToken,
-		Duration remainingTtl
+		Instant expiresAt
 	);
 
 	boolean isActive(Long userId, String sessionId);
