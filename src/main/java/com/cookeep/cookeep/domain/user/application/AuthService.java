@@ -2,7 +2,11 @@ package com.cookeep.cookeep.domain.user.application;
 
 import static com.cookeep.cookeep.domain.user.entity.Provider.*;
 
+import java.security.SecureRandom;
+import java.time.Duration;
+import java.time.Instant;
 import java.time.LocalDateTime;
+import java.util.Base64;
 import java.time.temporal.ChronoUnit;
 import java.util.EnumSet;
 import java.util.List;
@@ -38,16 +42,15 @@ import com.cookeep.cookeep.domain.verification.entity.VerificationPurpose;
 import com.cookeep.cookeep.security.JwtTokenProvider;
 import com.cookeep.cookeep.domain.user.dao.UserAuthRepository;
 import com.cookeep.cookeep.domain.user.dao.UserRepository;
-import com.cookeep.cookeep.domain.user.dao.UserSessionRepository;
 import com.cookeep.cookeep.domain.user.entity.NextStep;
 import com.cookeep.cookeep.domain.user.entity.User;
 import com.cookeep.cookeep.domain.user.entity.UserAuth;
-import com.cookeep.cookeep.domain.user.entity.UserSession;
 import com.cookeep.cookeep.domain.user.entity.UserStatus;
 import com.cookeep.cookeep.common.exception.AppException;
 import com.cookeep.cookeep.common.exception.ErrorCode;
 
 import lombok.RequiredArgsConstructor;
+import com.cookeep.cookeep.security.TokenClaims;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -55,9 +58,11 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class AuthService {
 
+	private static final SecureRandom SESSION_ID_RANDOM = new SecureRandom();
+
 	private final UserRepository userRepository;
 	private final UserAuthRepository userAuthRepository;
-	private final UserSessionRepository userSessionRepository;
+	private final AuthSessionStore authSessionStore;
 	private final JwtTokenProvider jwtTokenProvider;
 	private final UserReader userReader;
 	private final PasswordEncoder passwordEncoder;
@@ -69,45 +74,52 @@ public class AuthService {
 
 	// 액세스 토큰이 만료되었을 경우 리프레쉬 토큰으로 액세스 토큰 갱신
 	@Transactional
-	public TokenRefreshResponseDTO tokenRefresh(String refreshToken) {
-		validateRefreshToken(refreshToken);
-
-		Long userId = extractUserIdFromRefreshToken(refreshToken);
-
-		UserSession userSession = userSessionRepository.findByUser_UserId(userId)
-			.orElseThrow(() -> new AppException(ErrorCode.INVALID_REFRESH_TOKEN));
-
-		// request로 들어온 리프레쉬 토큰이 DB에 저장되어있는 리프레쉬 토큰과 동일한지 검증
-		if (!userSession.getRefreshToken().equals(refreshToken)) {
-			throw new AppException(ErrorCode.INVALID_REFRESH_TOKEN);
-		}
-
-		User user = userReader.readById(userId);
-
-		// 사용자가 새로운 토큰을 발급 받을 수 있는 상태인지 검증
-		// LOCK, WITHDRAWN 상태일 경우 예외 발생
-		assertTokenIssuable(user);
-		boolean isRewarded = issueComebackReward(user);
-		user.updateLastAccessAt(LocalDateTime.now());
-
-		// 새로운 액세스토큰 발급
-		String accessToken = jwtTokenProvider.createAccessToken(user.getUserId());
-
-		return new TokenRefreshResponseDTO(accessToken, isRewarded);
-	}
-
-	private void validateRefreshToken(String refreshToken) {
-		// 쿠키가 없거나 빈 경우 JWT 검증기에 null을 전달하지 않고 기존 INVALID_REFRESH_TOKEN(401) 응답으로 통일
+	public AuthResult<TokenRefreshResponseDTO> tokenRefresh(String refreshToken) {
 		if (refreshToken == null || refreshToken.isBlank()) {
 			throw new AppException(ErrorCode.INVALID_REFRESH_TOKEN);
 		}
 
-		// 위조/서명오류/만료된 리프레쉬 토큰인지 검증
-		boolean valid = jwtTokenProvider.validateToken(refreshToken, true);
-
-		if (!valid) {
-			throw new AppException(ErrorCode.INVALID_REFRESH_TOKEN); // 만료/위조/서명오류
+		TokenClaims claims;
+		try {
+			claims = jwtTokenProvider.parseRefreshToken(refreshToken);
+		} catch (RuntimeException e) {
+			throw new AppException(ErrorCode.INVALID_REFRESH_TOKEN);
 		}
+
+		User user = userReader.readById(claims.userId());
+		assertTokenIssuable(user);
+
+		Duration remainingTtl = Duration.between(Instant.now(), claims.expiresAt());
+		if (remainingTtl.isZero() || remainingTtl.isNegative()) {
+			throw new AppException(ErrorCode.INVALID_REFRESH_TOKEN);
+		}
+
+		String nextRefreshToken = jwtTokenProvider.createRefreshToken(
+			claims.userId(),
+			claims.sessionId(),
+			claims.expiresAt()
+		);
+
+		RefreshRotationResult rotationResult = authSessionStore.rotate(
+			claims.userId(),
+			claims.sessionId(),
+			refreshToken,
+			nextRefreshToken
+		);
+
+		if (rotationResult == RefreshRotationResult.REUSE_DETECTED) {
+			throw new AppException(ErrorCode.REFRESH_TOKEN_REUSE_DETECTED);
+		}
+		if (rotationResult != RefreshRotationResult.ROTATED) {
+			throw new AppException(ErrorCode.INVALID_REFRESH_TOKEN);
+		}
+
+		boolean isRewarded = issueComebackReward(user);
+		user.updateLastAccessAt(LocalDateTime.now());
+
+		String accessToken = jwtTokenProvider.createAccessToken(user.getUserId(), claims.sessionId());
+		TokenRefreshResponseDTO response = new TokenRefreshResponseDTO(accessToken, isRewarded);
+		return new AuthResult<>(response, nextRefreshToken, Math.max(1, remainingTtl.toSeconds()));
 	}
 
 	private boolean issueComebackReward(User user) {
@@ -132,38 +144,38 @@ public class AuthService {
 		return true;
 	}
 
-	private Long extractUserIdFromRefreshToken(String refreshToken) {
-		// 리프레쉬 토큰에서 UserId 추출
-		try {
-			return jwtTokenProvider.getUserId(refreshToken, true);
-		} catch (Exception e) {
-			throw new AppException(ErrorCode.INVALID_REFRESH_TOKEN);
-		}
-	}
 
 	private TokenPair issueTokensAndUpsertSession(User user) {
-		// 사용자가 새로운 토큰을 발급 받을 수 있는 상태인지 검증
-		// LOCK, WITHDRAWN 상태일 경우 예외 발생
 		assertTokenIssuable(user);
 
 		boolean isRewarded = issueComebackReward(user);
 		user.updateLastAccessAt(LocalDateTime.now());
 
-		// 액세스 토큰, 리프레쉬 토큰 발급
-		String accessToken = jwtTokenProvider.createAccessToken(user.getUserId());
-		String refreshToken = jwtTokenProvider.createRefreshToken(user.getUserId());
+		String sessionId = generateSessionId();
+		Instant refreshExpiresAt = Instant.now()
+			.plus(AuthSessionPolicy.REFRESH_TOKEN_TTL)
+			.truncatedTo(ChronoUnit.SECONDS);
+		String accessToken = jwtTokenProvider.createAccessToken(user.getUserId(), sessionId);
+		String refreshToken = jwtTokenProvider.createRefreshToken(
+			user.getUserId(),
+			sessionId,
+			refreshExpiresAt
+		);
 
-		// userSession 존재하는지 조회, 없으면 생성
-		UserSession userSession = userSessionRepository.findByUser(user)
-			.orElseGet(() -> UserSession.builder()
-				.user(user)
-				.build());
-
-		userSession.update(refreshToken, LocalDateTime.now().plusDays(14));
-
-		userSessionRepository.save(userSession);
+		authSessionStore.create(
+			user.getUserId(),
+			sessionId,
+			refreshToken,
+			refreshExpiresAt
+		);
 
 		return new TokenPair(accessToken, refreshToken, isRewarded);
+	}
+
+	private String generateSessionId() {
+		byte[] bytes = new byte[AuthSessionPolicy.SESSION_ID_BYTES];
+		SESSION_ID_RANDOM.nextBytes(bytes);
+		return Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
 	}
 
 	// 사용자가 새로운 토큰을 발급받을 수 있는 상태인지 검증
@@ -279,7 +291,11 @@ public class AuthService {
 			userStatus, nextStep, tokenPair.isRewarded()
 		);
 
-		return new AuthResult<>(response, tokenPair.refreshToken());
+		return new AuthResult<>(
+			response,
+			tokenPair.refreshToken(),
+			AuthSessionPolicy.REFRESH_TOKEN_TTL.toSeconds()
+		);
 	}
 
 	private User createSocialUser(String email) {
@@ -437,7 +453,11 @@ public class AuthService {
 			user.getUserId(), tokenPair.accessToken()
 		);
 
-		return new AuthResult<>(response, tokenPair.refreshToken());
+		return new AuthResult<>(
+			response,
+			tokenPair.refreshToken(),
+			AuthSessionPolicy.REFRESH_TOKEN_TTL.toSeconds()
+		);
 	}
 
 	private boolean shouldRetryNickname(DataIntegrityViolationException e) {
@@ -535,7 +555,11 @@ public class AuthService {
 			user.getUserId(), tokenPair.accessToken(), userStatus, tokenPair.isRewarded()
 		);
 
-		return new AuthResult<>(response, tokenPair.refreshToken());
+		return new AuthResult<>(
+			response,
+			tokenPair.refreshToken(),
+			AuthSessionPolicy.REFRESH_TOKEN_TTL.toSeconds()
+		);
 	}
 
 	@Transactional
@@ -555,12 +579,13 @@ public class AuthService {
 		}
 
 		user.updatePassword(encodedPassword);
+		authSessionStore.revoke(user.getUserId());
 	}
 
 	@Transactional
 	public void logout(Long userId) {
 		// 로그아웃 시 refreshToken 저장된 userSession 폐기
-		userSessionRepository.deleteByUser_UserId(userId);
+		authSessionStore.revoke(userId);
 
 		// 알림 구독 삭제
 		webPushSubscriptionRepository.deleteAllByUser_UserId(userId);
@@ -572,14 +597,14 @@ public class AuthService {
 
 		// 멱등성 보장을 위해 이미 탈퇴된 회원은 성공 처리
 		if (user.getUserStatus() == UserStatus.WITHDRAWN) {
-			userSessionRepository.deleteByUser_UserId(userId);
+			authSessionStore.revoke(userId);
 			return;
 		}
 
 		user.withdraw();
 
 		// 탈퇴 시 refreshToken도 함께 무효화
-		userSessionRepository.deleteByUser_UserId(userId);
+		authSessionStore.revoke(userId);
 		// 알림 구독 삭제
 		webPushSubscriptionRepository.deleteAllByUser_UserId(userId);
 	}

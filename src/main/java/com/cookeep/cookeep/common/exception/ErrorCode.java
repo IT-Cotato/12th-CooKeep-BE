@@ -107,6 +107,7 @@ public enum ErrorCode {
 	AUTH_PASSWORD_MISMATCH (HttpStatus.UNAUTHORIZED, "비밀번호가 올바르지 않습니다.", "AUTH-003"),
 	REAUTH_TOKEN_REQUIRED(HttpStatus.UNAUTHORIZED, "비밀번호 변경을 위한 재인증 토큰이 필요합니다.", "AUTH-011"),
 	INVALID_REAUTH_TOKEN(HttpStatus.UNAUTHORIZED, "재인증 토큰이 유효하지 않거나 만료되었습니다.", "AUTH-012"),
+	REFRESH_TOKEN_REUSE_DETECTED(HttpStatus.UNAUTHORIZED, "리프레시 토큰 재사용이 감지되어 인증 세션을 폐기했습니다.", "AUTH-015"),
 
 	// ==============================
 	// 403 FORBIDDEN
@@ -243,6 +244,7 @@ public enum ErrorCode {
 	// RECIPE
 	AI_SERVER_FAILED(HttpStatus.SERVICE_UNAVAILABLE, "AI 서비스가 일시적으로 불안정합니다. 잠시 후 다시 시도해주세요.", "RECIPE-028"),
 	REAUTHENTICATION_UNAVAILABLE(HttpStatus.SERVICE_UNAVAILABLE, "재인증 서비스를 일시적으로 사용할 수 없습니다.", "AUTH-014"),
+	AUTH_SESSION_UNAVAILABLE(HttpStatus.SERVICE_UNAVAILABLE, "인증 세션 서비스를 일시적으로 사용할 수 없습니다.", "AUTH-016"),
 	;
 
 	private final HttpStatus httpStatus;

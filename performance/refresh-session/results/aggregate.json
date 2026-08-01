@@ -1,0 +1,1013 @@
+{
+  "generatedAt": "2026-07-31T12:48:26.291Z",
+  "methodology": {
+    "repeats": 5,
+    "warmupSeconds": 180,
+    "measurementSeconds": 180,
+    "vus": 50,
+    "workload": "closed",
+    "order": [
+      "A1-B1",
+      "B2-A2",
+      "A3-B3",
+      "B4-A4",
+      "A5-B5"
+    ],
+    "representativeStatistic": "median",
+    "quartileMethod": "linear interpolation (R type 7)"
+  },
+  "runs": [
+    {
+      "stage": "A",
+      "round": 1,
+      "attempt": 1,
+      "order": "A1-B1",
+      "commit": "b68c85c",
+      "completed": 50176,
+      "rps": 278.75555555555553,
+      "k6Rate": 278.5611251983041,
+      "errorRate": 0,
+      "latencyMs": {
+        "avg": 178.99876752168348,
+        "p50": 170.3784175,
+        "p90": 260.826815,
+        "p95": 308.4588505,
+        "p99": 424.2540115,
+        "max": 1021.542186
+      },
+      "mysql": {
+        "statementExecutions": 298946,
+        "userSessionSelects": 50051,
+        "userSelects": 0,
+        "userUpdates": 50079,
+        "connections": 439,
+        "maxUsedConnections": 11
+      },
+      "redis": {
+        "config|resetstat": 1,
+        "ping": 66
+      },
+      "docker": {
+        "cookeep-benchmark-app": {
+          "sampleCount": 2,
+          "cpuPercent": [
+            0.26,
+            0.32
+          ],
+          "memoryMiB": [
+            764.2,
+            766.8
+          ]
+        },
+        "cookeep-benchmark-mysql": {
+          "sampleCount": 2,
+          "cpuPercent": [
+            1.02,
+            6.43
+          ],
+          "memoryMiB": [
+            490.1,
+            492.8
+          ]
+        },
+        "cookeep-benchmark-redis": {
+          "sampleCount": 2,
+          "cpuPercent": [
+            2.27,
+            0.19
+          ],
+          "memoryMiB": [
+            7.449,
+            6.605
+          ]
+        }
+      }
+    },
+    {
+      "stage": "A",
+      "round": 2,
+      "attempt": 1,
+      "order": "B2-A2",
+      "commit": "b68c85c",
+      "completed": 46299,
+      "rps": 257.21666666666664,
+      "k6Rate": 257.06249160789673,
+      "errorRate": 0,
+      "latencyMs": {
+        "avg": 193.98658321564022,
+        "p50": 181.480334,
+        "p90": 285.4321714,
+        "p95": 336.61962479999994,
+        "p99": 475.8709629799991,
+        "max": 1373.26607
+      },
+      "mysql": {
+        "statementExecutions": 276037,
+        "userSessionSelects": 46198,
+        "userSelects": 0,
+        "userUpdates": 46230,
+        "connections": 826,
+        "maxUsedConnections": 11
+      },
+      "redis": {
+        "config|resetstat": 1,
+        "ping": 65
+      },
+      "docker": {
+        "cookeep-benchmark-app": {
+          "sampleCount": 2,
+          "cpuPercent": [
+            0.31,
+            0.32
+          ],
+          "memoryMiB": [
+            761.4,
+            767
+          ]
+        },
+        "cookeep-benchmark-mysql": {
+          "sampleCount": 2,
+          "cpuPercent": [
+            1.06,
+            23.41
+          ],
+          "memoryMiB": [
+            511.7,
+            513
+          ]
+        },
+        "cookeep-benchmark-redis": {
+          "sampleCount": 2,
+          "cpuPercent": [
+            0.21,
+            0.15
+          ],
+          "memoryMiB": [
+            7.52,
+            6.895
+          ]
+        }
+      }
+    },
+    {
+      "stage": "A",
+      "round": 3,
+      "attempt": 1,
+      "order": "A3-B3",
+      "commit": "b68c85c",
+      "completed": 49405,
+      "rps": 274.47222222222223,
+      "k6Rate": 274.2681152567274,
+      "errorRate": 0,
+      "latencyMs": {
+        "avg": 181.81000919054677,
+        "p50": 163.920602,
+        "p90": 277.6198166,
+        "p95": 334.9307075999999,
+        "p99": 584.4226600399998,
+        "max": 1430.62372
+      },
+      "mysql": {
+        "statementExecutions": 294954,
+        "userSessionSelects": 49324,
+        "userSelects": 0,
+        "userUpdates": 49335,
+        "connections": 957,
+        "maxUsedConnections": 11
+      },
+      "redis": {
+        "config|resetstat": 1,
+        "ping": 65
+      },
+      "docker": {
+        "cookeep-benchmark-app": {
+          "sampleCount": 2,
+          "cpuPercent": [
+            0.31,
+            0.47
+          ],
+          "memoryMiB": [
+            767.8,
+            766.8
+          ]
+        },
+        "cookeep-benchmark-mysql": {
+          "sampleCount": 2,
+          "cpuPercent": [
+            1.04,
+            9.86
+          ],
+          "memoryMiB": [
+            518.7,
+            522
+          ]
+        },
+        "cookeep-benchmark-redis": {
+          "sampleCount": 2,
+          "cpuPercent": [
+            2.74,
+            2.07
+          ],
+          "memoryMiB": [
+            7.605,
+            7.539
+          ]
+        }
+      }
+    },
+    {
+      "stage": "A",
+      "round": 4,
+      "attempt": 1,
+      "order": "B4-A4",
+      "commit": "b68c85c",
+      "completed": 41379,
+      "rps": 229.88333333333333,
+      "k6Rate": 229.70459346136875,
+      "errorRate": 0,
+      "latencyMs": {
+        "avg": 217.1135695451784,
+        "p50": 197.798737,
+        "p90": 335.8544582,
+        "p95": 406.004915,
+        "p99": 609.5760046400002,
+        "max": 1875.911841
+      },
+      "mysql": {
+        "statementExecutions": 246785,
+        "userSessionSelects": 41300,
+        "userSelects": 0,
+        "userUpdates": 41326,
+        "connections": 1496,
+        "maxUsedConnections": 11
+      },
+      "redis": {
+        "config|resetstat": 1,
+        "ping": 65
+      },
+      "docker": {
+        "cookeep-benchmark-app": {
+          "sampleCount": 2,
+          "cpuPercent": [
+            0.35,
+            0.62
+          ],
+          "memoryMiB": [
+            761.3,
+            767
+          ]
+        },
+        "cookeep-benchmark-mysql": {
+          "sampleCount": 2,
+          "cpuPercent": [
+            1,
+            1.35
+          ],
+          "memoryMiB": [
+            543.8,
+            543.9
+          ]
+        },
+        "cookeep-benchmark-redis": {
+          "sampleCount": 2,
+          "cpuPercent": [
+            0.16,
+            0.18
+          ],
+          "memoryMiB": [
+            7.465,
+            7.141
+          ]
+        }
+      }
+    },
+    {
+      "stage": "A",
+      "round": 5,
+      "attempt": 1,
+      "order": "A5-B5",
+      "commit": "b68c85c",
+      "completed": 38073,
+      "rps": 211.51666666666668,
+      "k6Rate": 211.33711439949423,
+      "errorRate": 0,
+      "latencyMs": {
+        "avg": 235.96258739487442,
+        "p50": 213.944892,
+        "p90": 375.2126626,
+        "p95": 455.4058208000007,
+        "p99": 670.0196329199999,
+        "max": 1241.669494
+      },
+      "mysql": {
+        "statementExecutions": 227221,
+        "userSessionSelects": 38004,
+        "userSelects": 0,
+        "userUpdates": 38029,
+        "connections": 1611,
+        "maxUsedConnections": 11
+      },
+      "redis": {
+        "config|resetstat": 1,
+        "ping": 65
+      },
+      "docker": {
+        "cookeep-benchmark-app": {
+          "sampleCount": 2,
+          "cpuPercent": [
+            0.4,
+            0.33
+          ],
+          "memoryMiB": [
+            760.1,
+            767
+          ]
+        },
+        "cookeep-benchmark-mysql": {
+          "sampleCount": 2,
+          "cpuPercent": [
+            1.06,
+            12.3
+          ],
+          "memoryMiB": [
+            546.2,
+            546.1
+          ]
+        },
+        "cookeep-benchmark-redis": {
+          "sampleCount": 2,
+          "cpuPercent": [
+            3.26,
+            0.2
+          ],
+          "memoryMiB": [
+            6.988,
+            6.918
+          ]
+        }
+      }
+    },
+    {
+      "stage": "B",
+      "round": 1,
+      "attempt": 1,
+      "order": "A1-B1",
+      "commit": "363fa0a",
+      "completed": 55514,
+      "rps": 308.4111111111111,
+      "k6Rate": 308.20569274289363,
+      "errorRate": 0,
+      "latencyMs": {
+        "avg": 161.7164993458568,
+        "p50": 154.29990850000002,
+        "p90": 240.1513530000001,
+        "p95": 279.6464017,
+        "p99": 371.98544913,
+        "max": 951.396156
+      },
+      "mysql": {
+        "statementExecutions": 274600,
+        "userSessionSelects": 0,
+        "userSelects": 0,
+        "userUpdates": 55354,
+        "connections": 568,
+        "maxUsedConnections": 11
+      },
+      "redis": {
+        "evalsha": 55514,
+        "config|resetstat": 1,
+        "ping": 66,
+        "set": 55514,
+        "get": 55514
+      },
+      "docker": {
+        "cookeep-benchmark-app": {
+          "sampleCount": 2,
+          "cpuPercent": [
+            0.51,
+            0.45
+          ],
+          "memoryMiB": [
+            761.7,
+            766.5
+          ]
+        },
+        "cookeep-benchmark-mysql": {
+          "sampleCount": 2,
+          "cpuPercent": [
+            1.09,
+            1.62
+          ],
+          "memoryMiB": [
+            499.1,
+            499.6
+          ]
+        },
+        "cookeep-benchmark-redis": {
+          "sampleCount": 2,
+          "cpuPercent": [
+            0.17,
+            0.18
+          ],
+          "memoryMiB": [
+            7.398,
+            6.957
+          ]
+        }
+      }
+    },
+    {
+      "stage": "B",
+      "round": 2,
+      "attempt": 1,
+      "order": "B2-A2",
+      "commit": "363fa0a",
+      "completed": 50959,
+      "rps": 283.10555555555555,
+      "k6Rate": 282.9297316496769,
+      "errorRate": 0,
+      "latencyMs": {
+        "avg": 176.0713542194315,
+        "p50": 162.251668,
+        "p90": 264.8878482000002,
+        "p95": 311.22017879999987,
+        "p99": 498.06807687999975,
+        "max": 1760.162691
+      },
+      "mysql": {
+        "statementExecutions": 252029,
+        "userSessionSelects": 0,
+        "userSelects": 0,
+        "userUpdates": 50796,
+        "connections": 683,
+        "maxUsedConnections": 11
+      },
+      "redis": {
+        "evalsha": 50959,
+        "config|resetstat": 1,
+        "ping": 66,
+        "set": 50959,
+        "get": 50959
+      },
+      "docker": {
+        "cookeep-benchmark-app": {
+          "sampleCount": 2,
+          "cpuPercent": [
+            0.24,
+            0.47
+          ],
+          "memoryMiB": [
+            753.6,
+            766.7
+          ]
+        },
+        "cookeep-benchmark-mysql": {
+          "sampleCount": 2,
+          "cpuPercent": [
+            1.08,
+            20.13
+          ],
+          "memoryMiB": [
+            505.7,
+            506.7
+          ]
+        },
+        "cookeep-benchmark-redis": {
+          "sampleCount": 2,
+          "cpuPercent": [
+            3.16,
+            0.2
+          ],
+          "memoryMiB": [
+            7.508,
+            6.957
+          ]
+        }
+      }
+    },
+    {
+      "stage": "B",
+      "round": 3,
+      "attempt": 1,
+      "order": "A3-B3",
+      "commit": "363fa0a",
+      "completed": 52641,
+      "rps": 292.45,
+      "k6Rate": 292.17035823460657,
+      "errorRate": 0,
+      "latencyMs": {
+        "avg": 170.59523798282734,
+        "p50": 160.21641,
+        "p90": 261.764422,
+        "p95": 301.988002,
+        "p99": 431.96907999999996,
+        "max": 953.87658
+      },
+      "mysql": {
+        "statementExecutions": 260568,
+        "userSessionSelects": 0,
+        "userSelects": 0,
+        "userUpdates": 52482,
+        "connections": 1071,
+        "maxUsedConnections": 11
+      },
+      "redis": {
+        "evalsha": 52641,
+        "config|resetstat": 1,
+        "ping": 66,
+        "set": 52641,
+        "get": 52641
+      },
+      "docker": {
+        "cookeep-benchmark-app": {
+          "sampleCount": 2,
+          "cpuPercent": [
+            0.54,
+            0.37
+          ],
+          "memoryMiB": [
+            762.7,
+            766.6
+          ]
+        },
+        "cookeep-benchmark-mysql": {
+          "sampleCount": 2,
+          "cpuPercent": [
+            1.28,
+            4.48
+          ],
+          "memoryMiB": [
+            524.6,
+            524.2
+          ]
+        },
+        "cookeep-benchmark-redis": {
+          "sampleCount": 2,
+          "cpuPercent": [
+            0.2,
+            0.18
+          ],
+          "memoryMiB": [
+            7.547,
+            7.031
+          ]
+        }
+      }
+    },
+    {
+      "stage": "B",
+      "round": 4,
+      "attempt": 2,
+      "order": "B4-A4",
+      "commit": "363fa0a",
+      "completed": 50655,
+      "rps": 281.4166666666667,
+      "k6Rate": 281.22617205391487,
+      "errorRate": 0,
+      "latencyMs": {
+        "avg": 176.85465215639192,
+        "p50": 149.717376,
+        "p90": 272.1125928,
+        "p95": 356.28980409999986,
+        "p99": 729.9087521799999,
+        "max": 3907.613963
+      },
+      "mysql": {
+        "statementExecutions": 251086,
+        "userSessionSelects": 0,
+        "userSelects": 0,
+        "userUpdates": 50505,
+        "connections": 1381,
+        "maxUsedConnections": 11
+      },
+      "redis": {
+        "evalsha": 50655,
+        "config|resetstat": 1,
+        "ping": 68,
+        "set": 50655,
+        "get": 50655
+      },
+      "docker": {
+        "cookeep-benchmark-app": {
+          "sampleCount": 2,
+          "cpuPercent": [
+            0.38,
+            0.4
+          ],
+          "memoryMiB": [
+            767.9,
+            758.3
+          ]
+        },
+        "cookeep-benchmark-mysql": {
+          "sampleCount": 2,
+          "cpuPercent": [
+            36.99,
+            2.3
+          ],
+          "memoryMiB": [
+            540.1,
+            539.6
+          ]
+        },
+        "cookeep-benchmark-redis": {
+          "sampleCount": 2,
+          "cpuPercent": [
+            0.41,
+            0.17
+          ],
+          "memoryMiB": [
+            6.871,
+            6.707
+          ]
+        }
+      }
+    },
+    {
+      "stage": "B",
+      "round": 5,
+      "attempt": 1,
+      "order": "A5-B5",
+      "commit": "363fa0a",
+      "completed": 55493,
+      "rps": 308.2944444444444,
+      "k6Rate": 308.0421352483728,
+      "errorRate": 0,
+      "latencyMs": {
+        "avg": 161.7827341467594,
+        "p50": 149.923657,
+        "p90": 250.94978600000002,
+        "p95": 289.0306039999998,
+        "p99": 424.8676678800005,
+        "max": 1044.110997
+      },
+      "mysql": {
+        "statementExecutions": 274717,
+        "userSessionSelects": 0,
+        "userSelects": 0,
+        "userUpdates": 55322,
+        "connections": 1728,
+        "maxUsedConnections": 11
+      },
+      "redis": {
+        "evalsha": 55493,
+        "config|resetstat": 1,
+        "ping": 66,
+        "set": 55493,
+        "get": 55493
+      },
+      "docker": {
+        "cookeep-benchmark-app": {
+          "sampleCount": 2,
+          "cpuPercent": [
+            0.31,
+            0.36
+          ],
+          "memoryMiB": [
+            759,
+            766.6
+          ]
+        },
+        "cookeep-benchmark-mysql": {
+          "sampleCount": 2,
+          "cpuPercent": [
+            1.01,
+            5.32
+          ],
+          "memoryMiB": [
+            546.9,
+            546.2
+          ]
+        },
+        "cookeep-benchmark-redis": {
+          "sampleCount": 2,
+          "cpuPercent": [
+            0.21,
+            0.22
+          ],
+          "memoryMiB": [
+            7.16,
+            6.711
+          ]
+        }
+      }
+    }
+  ],
+  "stageSummary": {
+    "A": {
+      "rps": {
+        "median": 257.22,
+        "q1": 229.88,
+        "q3": 274.47,
+        "iqr": 44.59,
+        "min": 211.52,
+        "max": 278.76
+      },
+      "avgMs": {
+        "median": 193.99,
+        "q1": 181.81,
+        "q3": 217.11,
+        "iqr": 35.3,
+        "min": 179,
+        "max": 235.96
+      },
+      "p50Ms": {
+        "median": 181.48,
+        "q1": 170.38,
+        "q3": 197.8,
+        "iqr": 27.42,
+        "min": 163.92,
+        "max": 213.94
+      },
+      "p90Ms": {
+        "median": 285.43,
+        "q1": 277.62,
+        "q3": 335.85,
+        "iqr": 58.23,
+        "min": 260.83,
+        "max": 375.21
+      },
+      "p95Ms": {
+        "median": 336.62,
+        "q1": 334.93,
+        "q3": 406,
+        "iqr": 71.07,
+        "min": 308.46,
+        "max": 455.41
+      },
+      "p99Ms": {
+        "median": 584.42,
+        "q1": 475.87,
+        "q3": 609.58,
+        "iqr": 133.71,
+        "min": 424.25,
+        "max": 670.02
+      },
+      "maxMs": {
+        "median": 1373.27,
+        "q1": 1241.67,
+        "q3": 1430.62,
+        "iqr": 188.95,
+        "min": 1021.54,
+        "max": 1875.91
+      },
+      "mysqlStatements": {
+        "median": 276037,
+        "q1": 246785,
+        "q3": 294954,
+        "iqr": 48169,
+        "min": 227221,
+        "max": 298946
+      },
+      "userSessionSelects": {
+        "median": 46198,
+        "q1": 41300,
+        "q3": 49324,
+        "iqr": 8024,
+        "min": 38004,
+        "max": 50051
+      },
+      "mysqlConnections": {
+        "median": 957,
+        "q1": 826,
+        "q3": 1496,
+        "iqr": 670,
+        "min": 439,
+        "max": 1611
+      },
+      "maxUsedConnections": {
+        "median": 11,
+        "q1": 11,
+        "q3": 11,
+        "iqr": 0,
+        "min": 11,
+        "max": 11
+      },
+      "redisEvalSha": {
+        "median": 0,
+        "q1": 0,
+        "q3": 0,
+        "iqr": 0,
+        "min": 0,
+        "max": 0
+      },
+      "redisGet": {
+        "median": 0,
+        "q1": 0,
+        "q3": 0,
+        "iqr": 0,
+        "min": 0,
+        "max": 0
+      },
+      "redisSet": {
+        "median": 0,
+        "q1": 0,
+        "q3": 0,
+        "iqr": 0,
+        "min": 0,
+        "max": 0
+      }
+    },
+    "B": {
+      "rps": {
+        "median": 292.45,
+        "q1": 283.11,
+        "q3": 308.29,
+        "iqr": 25.19,
+        "min": 281.42,
+        "max": 308.41
+      },
+      "avgMs": {
+        "median": 170.6,
+        "q1": 161.78,
+        "q3": 176.07,
+        "iqr": 14.29,
+        "min": 161.72,
+        "max": 176.85
+      },
+      "p50Ms": {
+        "median": 154.3,
+        "q1": 149.92,
+        "q3": 160.22,
+        "iqr": 10.29,
+        "min": 149.72,
+        "max": 162.25
+      },
+      "p90Ms": {
+        "median": 261.76,
+        "q1": 250.95,
+        "q3": 264.89,
+        "iqr": 13.94,
+        "min": 240.15,
+        "max": 272.11
+      },
+      "p95Ms": {
+        "median": 301.99,
+        "q1": 289.03,
+        "q3": 311.22,
+        "iqr": 22.19,
+        "min": 279.65,
+        "max": 356.29
+      },
+      "p99Ms": {
+        "median": 431.97,
+        "q1": 424.87,
+        "q3": 498.07,
+        "iqr": 73.2,
+        "min": 371.99,
+        "max": 729.91
+      },
+      "maxMs": {
+        "median": 1044.11,
+        "q1": 953.88,
+        "q3": 1760.16,
+        "iqr": 806.29,
+        "min": 951.4,
+        "max": 3907.61
+      },
+      "mysqlStatements": {
+        "median": 260568,
+        "q1": 252029,
+        "q3": 274600,
+        "iqr": 22571,
+        "min": 251086,
+        "max": 274717
+      },
+      "userSessionSelects": {
+        "median": 0,
+        "q1": 0,
+        "q3": 0,
+        "iqr": 0,
+        "min": 0,
+        "max": 0
+      },
+      "mysqlConnections": {
+        "median": 1071,
+        "q1": 683,
+        "q3": 1381,
+        "iqr": 698,
+        "min": 568,
+        "max": 1728
+      },
+      "maxUsedConnections": {
+        "median": 11,
+        "q1": 11,
+        "q3": 11,
+        "iqr": 0,
+        "min": 11,
+        "max": 11
+      },
+      "redisEvalSha": {
+        "median": 52641,
+        "q1": 50959,
+        "q3": 55493,
+        "iqr": 4534,
+        "min": 50655,
+        "max": 55514
+      },
+      "redisGet": {
+        "median": 52641,
+        "q1": 50959,
+        "q3": 55493,
+        "iqr": 4534,
+        "min": 50655,
+        "max": 55514
+      },
+      "redisSet": {
+        "median": 52641,
+        "q1": 50959,
+        "q3": 55493,
+        "iqr": 4534,
+        "min": 50655,
+        "max": 55514
+      }
+    }
+  },
+  "paired": [
+    {
+      "round": 1,
+      "order": "A1-B1",
+      "rpsChangePercent": 10.64,
+      "avgLatencyReductionPercent": 9.65,
+      "p95ReductionPercent": 9.34,
+      "p99ReductionPercent": 12.32
+    },
+    {
+      "round": 2,
+      "order": "B2-A2",
+      "rpsChangePercent": 10.07,
+      "avgLatencyReductionPercent": 9.24,
+      "p95ReductionPercent": 7.55,
+      "p99ReductionPercent": -4.66
+    },
+    {
+      "round": 3,
+      "order": "A3-B3",
+      "rpsChangePercent": 6.55,
+      "avgLatencyReductionPercent": 6.17,
+      "p95ReductionPercent": 9.84,
+      "p99ReductionPercent": 26.09
+    },
+    {
+      "round": 4,
+      "order": "B4-A4",
+      "rpsChangePercent": 22.42,
+      "avgLatencyReductionPercent": 18.54,
+      "p95ReductionPercent": 12.24,
+      "p99ReductionPercent": -19.74
+    },
+    {
+      "round": 5,
+      "order": "A5-B5",
+      "rpsChangePercent": 45.75,
+      "avgLatencyReductionPercent": 31.44,
+      "p95ReductionPercent": 36.53,
+      "p99ReductionPercent": 36.59
+    }
+  ],
+  "pairedSummary": {
+    "rpsChangePercent": {
+      "median": 10.64,
+      "q1": 10.07,
+      "q3": 22.42,
+      "iqr": 12.35,
+      "min": 6.55,
+      "max": 45.75
+    },
+    "avgLatencyReductionPercent": {
+      "median": 9.65,
+      "q1": 9.24,
+      "q3": 18.54,
+      "iqr": 9.3,
+      "min": 6.17,
+      "max": 31.44
+    },
+    "p95ReductionPercent": {
+      "median": 9.84,
+      "q1": 9.34,
+      "q3": 12.24,
+      "iqr": 2.9,
+      "min": 7.55,
+      "max": 36.53
+    },
+    "p99ReductionPercent": {
+      "median": 12.32,
+      "q1": -4.66,
+      "q3": 26.09,
+      "iqr": 30.75,
+      "min": -19.74,
+      "max": 36.59
+    }
+  },
+  "overall": {
+    "rpsChangePercent": 13.7,
+    "avgLatencyReductionPercent": 12.06,
+    "p95ReductionPercent": 10.29,
+    "p99ReductionPercent": 26.09
+  },
+  "limitations": [
+    "Docker CPU/memory sampler produced only two boundary samples per run because the synchronous k6 child process blocked the Node.js sampling timer.",
+    "Long sequential local runs showed host-performance drift; alternating order, medians, IQRs, and paired changes are reported.",
+    "The closed workload couples throughput to response latency."
+  ]
+}

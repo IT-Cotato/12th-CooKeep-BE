@@ -8,6 +8,7 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -31,16 +32,15 @@ import com.cookeep.cookeep.domain.cookie.application.CookieService;
 import com.cookeep.cookeep.domain.notification.dao.WebPushSubscriptionRepository;
 import com.cookeep.cookeep.domain.user.dao.UserAuthRepository;
 import com.cookeep.cookeep.domain.user.dao.UserRepository;
-import com.cookeep.cookeep.domain.user.dao.UserSessionRepository;
 import com.cookeep.cookeep.domain.user.dto.OAuthUserInfoDTO;
 import com.cookeep.cookeep.domain.user.entity.Provider;
 import com.cookeep.cookeep.domain.user.entity.User;
 import com.cookeep.cookeep.domain.user.entity.UserAuth;
-import com.cookeep.cookeep.domain.user.entity.UserSession;
 import com.cookeep.cookeep.domain.user.entity.UserStatus;
 import com.cookeep.cookeep.domain.verification.application.EmailVerificationService;
 import com.cookeep.cookeep.domain.verification.entity.VerificationPurpose;
 import com.cookeep.cookeep.security.JwtTokenProvider;
+import com.cookeep.cookeep.security.TokenClaims;
 
 @ExtendWith(MockitoExtension.class)
 class AuthServiceTest {
@@ -52,7 +52,7 @@ class AuthServiceTest {
 	private UserAuthRepository userAuthRepository;
 
 	@Mock
-	private UserSessionRepository userSessionRepository;
+	private AuthSessionStore authSessionStore;
 
 	@Mock
 	private JwtTokenProvider jwtTokenProvider;
@@ -88,7 +88,7 @@ class AuthServiceTest {
 		authService = new AuthService(
 			userRepository,
 			userAuthRepository,
-			userSessionRepository,
+			authSessionStore,
 			jwtTokenProvider,
 			userReader,
 			passwordEncoder,
@@ -119,10 +119,8 @@ class AuthServiceTest {
 		given(passwordEncoder.encode("password1")).willReturn("encoded-password");
 		given(nicknameGenerator.generateRandomNickname()).willReturn("nickname");
 		given(userRepository.saveAndFlush(any(User.class))).willReturn(savedUser);
-		given(jwtTokenProvider.createAccessToken(1L)).willReturn("access-token");
-		given(jwtTokenProvider.createRefreshToken(1L)).willReturn("refresh-token");
-		given(userSessionRepository.findByUser(savedUser)).willReturn(Optional.empty());
-		given(userSessionRepository.save(any(UserSession.class))).willAnswer(invocation -> invocation.getArgument(0));
+		given(jwtTokenProvider.createAccessToken(any(Long.class), any(String.class))).willReturn("access-token");
+		given(jwtTokenProvider.createRefreshToken(any(Long.class), any(String.class), any(Instant.class))).willReturn("refresh-token");
 		given(userAuthRepository.save(any(UserAuth.class))).willAnswer(invocation -> invocation.getArgument(0));
 
 		var authResult = authService.signUp(request);
@@ -133,6 +131,7 @@ class AuthServiceTest {
 		assertThat(authResult.refreshToken()).isEqualTo("refresh-token");
 		verify(emailVerificationService).assertVerified(email, VerificationPurpose.SIGNUP);
 		verify(userRepository).saveAndFlush(any(User.class));
+		verify(authSessionStore).create(any(), any(), any(), any());
 	}
 
 	@Test
@@ -236,10 +235,8 @@ class AuthServiceTest {
 
 		given(userRepository.findByEmail(user.getEmail())).willReturn(Optional.of(user));
 		given(passwordEncoder.matches("password1", user.getPassword())).willReturn(true);
-		given(jwtTokenProvider.createAccessToken(user.getUserId())).willReturn("access-token");
-		given(jwtTokenProvider.createRefreshToken(user.getUserId())).willReturn("refresh-token");
-		given(userSessionRepository.findByUser(user)).willReturn(Optional.empty());
-		given(userSessionRepository.save(any(UserSession.class))).willAnswer(invocation -> invocation.getArgument(0));
+		given(jwtTokenProvider.createAccessToken(any(Long.class), any(String.class))).willReturn("access-token");
+		given(jwtTokenProvider.createRefreshToken(any(Long.class), any(String.class), any(Instant.class))).willReturn("refresh-token");
 
 		var authResult = authService.login(new LoginRequestDTO(user.getEmail(), "password1"));
 		var response = authResult.response();
@@ -248,6 +245,7 @@ class AuthServiceTest {
 		assertThat(response.accessToken()).isEqualTo("access-token");
 		assertThat(authResult.refreshToken()).isEqualTo("refresh-token");
 		verify(loginPasswordFailureService, never()).increasePasswordFailCount(any());
+		verify(authSessionStore).create(any(), any(), any(), any());
 	}
 
 	@Test
@@ -428,15 +426,8 @@ class AuthServiceTest {
 
 	private void assertTokenRefreshBlocked(UserStatus userStatus, ErrorCode errorCode) {
 		User user = user("test@example.com", userStatus);
-		UserSession userSession = UserSession.builder()
-			.user(user)
-			.refreshToken("refresh-token")
-			.expiresAt(LocalDateTime.now().plusDays(1))
-			.build();
-
-		given(jwtTokenProvider.validateToken("refresh-token", true)).willReturn(true);
-		given(jwtTokenProvider.getUserId("refresh-token", true)).willReturn(user.getUserId());
-		given(userSessionRepository.findByUser_UserId(user.getUserId())).willReturn(Optional.of(userSession));
+		given(jwtTokenProvider.parseRefreshToken("refresh-token"))
+			.willReturn(new TokenClaims(user.getUserId(), "session-id", Instant.now().plusSeconds(3600)));
 		given(userReader.readById(user.getUserId())).willReturn(user);
 
 		assertThatThrownBy(() -> authService.tokenRefresh("refresh-token"))

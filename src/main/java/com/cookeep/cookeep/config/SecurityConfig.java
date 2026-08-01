@@ -13,10 +13,12 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import com.cookeep.cookeep.domain.user.application.AuthSessionStore;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import com.cookeep.cookeep.security.CustomAccessDeniedHandler;
 import com.cookeep.cookeep.security.CustomAuthenticationEntryPoint;
-import com.cookeep.cookeep.security.JwtAuthenticationFilter;
+import com.cookeep.cookeep.security.SessionJwtAuthenticationFilter;
 import com.cookeep.cookeep.security.JwtTokenProvider;
 
 @Configuration
@@ -24,6 +26,8 @@ import com.cookeep.cookeep.security.JwtTokenProvider;
 @RequiredArgsConstructor
 public class SecurityConfig {
 
+	private final AuthSessionStore authSessionStore;
+	private final ObjectMapper objectMapper;
 	private final JwtTokenProvider jwtTokenProvider;
 	private final CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
 	private final CustomAccessDeniedHandler customAccessDeniedHandler;
@@ -82,7 +86,7 @@ public class SecurityConfig {
 
 			// JWT 필터 먼저 실행
 			.addFilterBefore(
-				new JwtAuthenticationFilter(jwtTokenProvider),
+				new SessionJwtAuthenticationFilter(jwtTokenProvider, authSessionStore, objectMapper),
 				UsernamePasswordAuthenticationFilter.class
 			);
 

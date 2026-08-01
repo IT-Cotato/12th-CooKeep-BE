@@ -130,7 +130,7 @@ public class UserInfoController {
         @ApiResponse(responseCode = "400", description = "요청 파라미터 오류(@Valid 검증 실패, 기존 비밀번호와 동일 등)"),
         @ApiResponse(responseCode = "401", description = "Access Token 또는 Reauth Token 누락·무효"),
         @ApiResponse(responseCode = "403", description = "소셜 회원은 비밀번호 변경 불가"),
-        @ApiResponse(responseCode = "503", description = "Redis 재인증 서비스 사용 불가")
+        @ApiResponse(responseCode = "503", description = "Redis 재인증 또는 인증 세션 서비스 사용 불가")
     })
     @PatchMapping("/password")
     public ResponseEntity<DataResponse<Void>> updateMyPassword(

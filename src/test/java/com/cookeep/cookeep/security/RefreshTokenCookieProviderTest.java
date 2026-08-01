@@ -13,7 +13,7 @@ class RefreshTokenCookieProviderTest {
 	void create_buildsSecureHttpOnlyRefreshTokenCookie() {
 		RefreshTokenCookieProvider provider = new RefreshTokenCookieProvider(true);
 
-		ResponseCookie cookie = provider.create("refresh-token");
+		ResponseCookie cookie = provider.create("refresh-token", Duration.ofDays(14));
 
 		assertThat(cookie.getName()).isEqualTo(RefreshTokenCookieProvider.COOKIE_NAME);
 		assertThat(cookie.getValue()).isEqualTo("refresh-token");
@@ -29,7 +29,7 @@ class RefreshTokenCookieProviderTest {
 	void create_canDisableSecureForLocalHttpTools() {
 		RefreshTokenCookieProvider provider = new RefreshTokenCookieProvider(false);
 
-		ResponseCookie cookie = provider.create("refresh-token");
+		ResponseCookie cookie = provider.create("refresh-token", Duration.ofDays(14));
 
 		assertThat(cookie.isSecure()).isFalse();
 		assertThat(cookie.isHttpOnly()).isTrue();
