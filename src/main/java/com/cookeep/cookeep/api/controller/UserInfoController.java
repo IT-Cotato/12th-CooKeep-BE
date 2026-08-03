@@ -196,12 +196,31 @@ public class UserInfoController {
         return ResponseEntity.ok(DataResponse.ok());
     }
 
-    @Operation(summary = "프로필 이미지 수정", description = "프리셋 프로필 이미지 6종 중 하나로 프로필 이미지를 변경합니다.")
+    @Operation(summary = "프로필 이미지 수정", description = "프리셋 프로필 이미지 12종 중 하나로 프로필 이미지를 변경합니다.")
     @ApiErrorCodeExamples({
             ErrorCode.UNAUTHORIZED,
             ErrorCode.USER_NOT_FOUND,
             ErrorCode.INVALID_PROFILE_IMAGE_ID,
             ErrorCode.INTERNAL_SERVER_ERROR
+    })
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "프로필 이미지 수정 성공"),
+            @ApiResponse(responseCode = "400", description = """
+            요청이 잘못되었습니다.
+            - INVALID_PROFILE_IMAGE_ID: 유효하지 않은 프로필 이미지 ID입니다.
+            """, content = @Content),
+            @ApiResponse(responseCode = "401", description = """
+            인증 실패입니다.
+            - UNAUTHORIZED: 인증에 실패했습니다.
+            """, content = @Content),
+            @ApiResponse(responseCode = "404", description = """
+            리소스를 찾을 수 없습니다.
+            - USER_NOT_FOUND: 존재하지 않는 사용자입니다.
+            """, content = @Content),
+            @ApiResponse(responseCode = "500", description = """
+            서버 오류입니다.
+            - INTERNAL_SERVER_ERROR: 서버 내부에서 에러가 발생하였습니다.
+            """, content = @Content)
     })
     @PatchMapping("/profile-images")
     public ResponseEntity<DataResponse<Void>> updateProfileImage(

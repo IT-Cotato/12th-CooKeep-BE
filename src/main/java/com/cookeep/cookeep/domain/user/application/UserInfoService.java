@@ -258,7 +258,7 @@ public class UserInfoService {
     public void updateProfileImage(Long userId, ProfileImageUpdateRequestDto request) {
         User user = userReader.readById(userId);
 
-        // 유효한 imageId인지 검증 (1~6 범위 밖이면 예외)
+        // 유효한 imageId인지 검증 (1~12 범위 밖이면 예외)
         ProfileImages.fromId(request.imageId());
 
         user.updateProfileImage(request.imageId());

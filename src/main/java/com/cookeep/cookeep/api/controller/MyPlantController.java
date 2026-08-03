@@ -59,19 +59,19 @@ public class MyPlantController {
         return ResponseEntity.ok(DataResponse.from(response));
     }
 
-    @Operation(summary = "프로필 식물 지정", description = "내 보유 식물 ID를 경로에 전달하여 대표 프로필로 설정합니다.")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "지정 성공"),
-            @ApiResponse(responseCode = "403", description = "본인의 식물이 아님"),
-            @ApiResponse(responseCode = "404", description = "유저 또는 식물을 찾을 수 없음")
-    })
-    @PatchMapping("/{userPlantId}/profile") // /api/my-plants/{userPlantId}/profile
-    public ResponseEntity<DataResponse<Void>> updateProfilePlant(
-            @AuthenticationPrincipal(expression = "userId") Long userId,
-            @Parameter(description = "유저 보유 식물 ID (user_plant_id)") @PathVariable long userPlantId) {
-        userPlantService.updateProfilePlant(userId, userPlantId);
-        return ResponseEntity.ok(DataResponse.from(null));
-    }
+//    @Operation(summary = "프로필 식물 지정", description = "내 보유 식물 ID를 경로에 전달하여 대표 프로필로 설정합니다.")
+//    @ApiResponses(value = {
+//            @ApiResponse(responseCode = "200", description = "지정 성공"),
+//            @ApiResponse(responseCode = "403", description = "본인의 식물이 아님"),
+//            @ApiResponse(responseCode = "404", description = "유저 또는 식물을 찾을 수 없음")
+//    })
+//    @PatchMapping("/{userPlantId}/profile") // /api/my-plants/{userPlantId}/profile
+//    public ResponseEntity<DataResponse<Void>> updateProfilePlant(
+//            @AuthenticationPrincipal(expression = "userId") Long userId,
+//            @Parameter(description = "유저 보유 식물 ID (user_plant_id)") @PathVariable long userPlantId) {
+//        userPlantService.updateProfilePlant(userId, userPlantId);
+//        return ResponseEntity.ok(DataResponse.from(null));
+//    }
 
     @Operation(summary = "식물 키우기 포기", description = "성장이 정지된 식물을 포기하고 삭제합니다.")
     @ApiResponses(value = {

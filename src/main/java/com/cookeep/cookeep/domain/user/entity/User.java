@@ -94,13 +94,13 @@ public class User extends BaseEntity {
 	@Enumerated(EnumType.STRING)
 	private PlantStatus plantStatus = PlantStatus.NORMAL;
 
-	@OneToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "profile_plant_id")
-	private UserPlant profilePlant;
-
-	@Builder.Default
-	@Column(nullable = false)
-	private boolean isProfileAutoUpdate = true; // 프로필 식물 변경을 자동 or 수동 모드 관리
+//	@OneToOne(fetch = FetchType.LAZY)
+//	@JoinColumn(name = "profile_plant_id")
+//	private UserPlant profilePlant;
+//
+//	@Builder.Default
+//	@Column(nullable = false)
+//	private boolean isProfileAutoUpdate = true; // 프로필 식물 변경을 자동 or 수동 모드 관리
 
 	@Builder.Default
 	@Column(nullable = false)
@@ -124,18 +124,18 @@ public class User extends BaseEntity {
 	@Column(name = "profile_image_id", nullable = false)
 	private int profileImageId = 1; // 프로필 이미지 프리셋 ID (기본값 1)
 
-	// 유저가 API를 통해 직접 프로필을 변경할 때 호출
-	public void updateProfilePlant(UserPlant nesUserPlant) {
-		this.profilePlant = nesUserPlant;
-		this.isProfileAutoUpdate = false; // 수동으로 변경하면 자동 갱신 모드 해제
-	}
-
-	// 새로운 식물 등록 시 시스템에 의해 호출
-	public void setProfilePlantAuto(UserPlant userPlant) {
-		if (this.isProfileAutoUpdate) {
-			this.profilePlant = userPlant;
-		}
-	}
+//	// 유저가 API를 통해 직접 프로필을 변경할 때 호출
+//	public void updateProfilePlant(UserPlant nesUserPlant) {
+//		this.profilePlant = nesUserPlant;
+//		this.isProfileAutoUpdate = false; // 수동으로 변경하면 자동 갱신 모드 해제
+//	}
+//
+//	// 새로운 식물 등록 시 시스템에 의해 호출
+//	public void setProfilePlantAuto(UserPlant userPlant) {
+//		if (this.isProfileAutoUpdate) {
+//			this.profilePlant = userPlant;
+//		}
+//	}
 
 	public void updateCookieCnt(int amount) {
 		this.cookieCnt += amount;

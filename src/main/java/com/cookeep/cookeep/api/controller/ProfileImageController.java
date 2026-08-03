@@ -9,6 +9,10 @@ import com.cookeep.cookeep.domain.user.application.ProfileImageService;
 import com.cookeep.cookeep.domain.user.application.UserInfoService;
 import com.cookeep.cookeep.security.UserPrincipal;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -26,11 +30,26 @@ public class ProfileImageController {
     private final UserInfoService userInfoService;
     private final ProfileImageService profileImageService;
 
-    @Operation(summary = "프로필 이미지 목록 조회", description = "선택 가능한 프리셋 프로필 이미지 6종을 조회합니다.")
+    @Operation(summary = "프로필 이미지 목록 조회", description = "선택 가능한 프로필 이미지 12종을 S3에서 조회합니다.")
     @ApiErrorCodeExamples({
             ErrorCode.UNAUTHORIZED,
             ErrorCode.USER_NOT_FOUND,
             ErrorCode.INTERNAL_SERVER_ERROR
+    })
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "조회 성공"),
+            @ApiResponse(responseCode = "401", description = """
+            인증 실패입니다.
+            - UNAUTHORIZED: 인증에 실패했습니다.
+            """, content = @Content),
+            @ApiResponse(responseCode = "404", description = """
+            리소스를 찾을 수 없습니다.
+            - USER_NOT_FOUND: 존재하지 않는 사용자입니다.
+            """, content = @Content),
+            @ApiResponse(responseCode = "500", description = """
+            서버 오류입니다.
+            - INTERNAL_SERVER_ERROR: 서버 내부에서 에러가 발생하였습니다.
+            """, content = @Content)
     })
     @GetMapping("/profile-images")
     public ResponseEntity<DataResponse<ProfileImageListResponseDto>> getProfileImages(
