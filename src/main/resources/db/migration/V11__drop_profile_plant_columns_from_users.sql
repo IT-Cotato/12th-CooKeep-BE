@@ -1,4 +1,4 @@
--- src/main/resources/db/migration/V10__drop_profile_plant_columns_from_users.sql
+-- src/main/resources/db/migration/V11__drop_profile_plant_columns_from_users.sql
 
 -- FK 제약조건 먼저 제거 (컬럼/인덱스보다 선행되어야 함)
 -- UNIQUE 인덱스 제거
