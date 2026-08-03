@@ -24,6 +24,7 @@ import java.net.URI;
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -42,109 +43,112 @@ public class GeminiService {
     private static final int RANDOM_MIN_SELECT_COUNT = RandomRecipePolicy.RANDOM_MIN_SELECT_COUNT;
 
     // 공통 WebClient 호출 로직
-    private GeminiRecipeResponseDto callGeminiApi(String prompt, GeminiRecipeRequestDto requestBody) {
-        try {
+    private Mono<GeminiRecipeResponseDto> callGeminiApi(String prompt, GeminiRecipeRequestDto requestBody) {
+        log.info("========== Gemini 요청 시작 ==========");
+        log.info("Gemini model = {}", model);
+        log.info("Prompt length = {}", prompt.length());
+        log.debug("Prompt 내용 = \n{}", prompt);
 
-            log.info("========== Gemini 요청 시작 ==========");
-            log.info("Gemini model = {}", model);
-            log.info("Prompt length = {}", prompt.length());
-            log.debug("Prompt 내용 = \n{}", prompt);
+        log.info("Gemini requestBody 생성 완료");
 
-            log.info("Gemini requestBody 생성 완료");
-            log.debug("Gemini requestBody JSON = {}", objectMapper.writeValueAsString(requestBody));
+        return webClient.post()
+                .uri(uriBuilder -> uriBuilder
+                        .scheme("https")
+                        .host("generativelanguage.googleapis.com")
+                        .path("/v1beta/models/{model}:generateContent")
+                        .queryParam("key", apiKey)
+                        .build(model)
+                )
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(requestBody)
+                .retrieve()
+                .onStatus(
+                        status -> status.is5xxServerError(),
+                        clientResponse -> clientResponse.bodyToMono(String.class)
+                                .flatMap(body -> Mono.error(
+                                        new WebClientResponseException(
+                                                clientResponse.statusCode().value(),
+                                                "Gemini 5xx error: " + body,
+                                                null, null, null
+                                        )
+                                ))
+                )
+                .bodyToMono(String.class)
+                .timeout(Duration.ofSeconds(120))
+                .retryWhen(
+                        Retry.backoff(3, Duration.ofSeconds(2))
+                                .maxBackoff(Duration.ofSeconds(5))
+                                .filter(this::isRetryableError)
+                                .doBeforeRetry(retrySignal ->
+                                        log.warn("Gemini 재시도 중... attempt={}, cause={}",
+                                                retrySignal.totalRetries() + 1,
+                                                retrySignal.failure().getMessage())
+                                )
+                ).doOnNext(response -> {
+                    log.info("Gemini API 응답 수신 완료");
+                    log.info("Gemini raw response = {}", response);
+                })
+                .map(this::parseResponse) // 여기서 AppException(파싱/검증 실패)이 던져지면 그대로 아래 onErrorMap을 타지 않고 통과함
+                .onErrorMap(WebClientResponseException.class, this::mapWebClientError)
+                .onErrorMap(
+                        ex -> !(ex instanceof AppException), // 이미 AppException으로 매핑된 건 다시 감싸지 않음
+                        ex -> {
+                            log.error("Gemini API 호출 실패", ex);
+                            return new AppException(ErrorCode.AI_SERVER_FAILED);
+                        }
+                );
+    }
 
-            log.info("Gemini API 호출 시작");
-
-            String response = webClient.post()
-                    .uri(uriBuilder -> uriBuilder
-                            .scheme("https")
-                            .host("generativelanguage.googleapis.com")
-                            .path("/v1beta/models/{model}:generateContent")
-                            .queryParam("key", apiKey)
-                            .build(model)
-                    )
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .bodyValue(requestBody)
-                    .retrieve()
-                    .onStatus(
-                            status -> status.is5xxServerError(),
-                            clientResponse -> clientResponse.bodyToMono(String.class)
-                                    .flatMap(body -> Mono.error(
-                                            new WebClientResponseException(
-                                                    clientResponse.statusCode().value(),
-                                                    "Gemini 5xx error: " + body,
-                                                    null, null, null
-                                            )
-                                    ))
-                    )
-                    .bodyToMono(String.class)
-                    .timeout(Duration.ofSeconds(120))
-                    .retryWhen(
-                            Retry.backoff(3, Duration.ofSeconds(2))
-                                    .maxBackoff(Duration.ofSeconds(5))
-                                    .filter(this::isRetryableError)
-                                    .doBeforeRetry(retrySignal ->
-                                            log.warn("Gemini 재시도 중... attempt={}, cause={}",
-                                                    retrySignal.totalRetries() + 1,
-                                                    retrySignal.failure().getMessage())
-                                    )
-                    )
-                    .block();
-
-            log.info("Gemini API 응답 수신 완료");
-            log.info("Gemini raw response = {}", response);
-
-            return parseResponse(response);
-
-        } catch (WebClientResponseException e) {
-
-            if (e.getStatusCode() == HttpStatus.TOO_MANY_REQUESTS) {
-                log.error("Gemini 429 Rate Limit 발생 - 응답 바디: {}", e.getResponseBodyAsString());
-                throw new AppException(ErrorCode.AI_RATE_LIMIT_EXCEEDED);
-            }
-
-            log.error("Gemini API 호출 실패 - status={}", e.getStatusCode(), e);
-            throw new AppException(ErrorCode.AI_SERVER_FAILED);
-
-        } catch (Exception e) {
-            log.error("Gemini API 호출 실패", e);
-            throw new AppException(ErrorCode.AI_SERVER_FAILED);
+    private Throwable mapWebClientError(WebClientResponseException e) {
+        if (e.getStatusCode() == HttpStatus.TOO_MANY_REQUESTS) {
+            log.error("Gemini 429 Rate Limit 발생 - 응답 바디: {}", e.getResponseBodyAsString());
+            return new AppException(ErrorCode.AI_RATE_LIMIT_EXCEEDED);
         }
+        log.error("Gemini API 호출 실패 - status={}", e.getStatusCode(), e);
+        return new AppException(ErrorCode.AI_SERVER_FAILED);
     }
 
     // 일반 신규
-    public GeminiRecipeResponseDto generateRecipe(
+    public CompletableFuture<GeminiRecipeResponseDto> generateRecipe(
             List<IngredientDetailDto> ingredients,
             Feature feature,
             List<String> dislikedIngredients) {
-        return generateRecipeByPrompt(buildPrompt(ingredients, feature, List.of(), dislikedIngredients));
+        return generateRecipeByPromptAsync(buildPrompt(ingredients, feature, List.of(), dislikedIngredients));
+    }
+
+    private CompletableFuture<GeminiRecipeResponseDto> generateRecipeByPromptAsync(String prompt) {
+        return callGeminiApi(prompt, GeminiRecipeRequestDto.from(prompt)).toFuture();
+    }
+
+    private CompletableFuture<GeminiRecipeResponseDto> generateRecipeByPromptAsync(String prompt, Integer minUserIngredients) {
+        return callGeminiApi(prompt, GeminiRecipeRequestDto.from(prompt, minUserIngredients)).toFuture();
     }
 
     // 일반 재요청
-    public GeminiRecipeResponseDto generateRecipeWithExclusion(
+    public CompletableFuture<GeminiRecipeResponseDto> generateRecipeWithExclusion(
             List<IngredientDetailDto> ingredients,
             Feature feature,
             List<String> excludedTitles,
             List<String> dislikedIngredients
     ) {
-        return generateRecipeByPrompt(buildPrompt(ingredients, feature, excludedTitles, dislikedIngredients));
+        return generateRecipeByPromptAsync(buildPrompt(ingredients, feature, excludedTitles, dislikedIngredients));
     }
 
     // 랜덤 신규
-    public GeminiRecipeResponseDto generateRandomRecipe(
+    public CompletableFuture<GeminiRecipeResponseDto> generateRandomRecipe(
             List<IngredientDetailDto> allIngredients,
             List<String> dislikedIngredients) {
         String prompt = buildRandomPrompt(allIngredients, dislikedIngredients, List.of());
-        return generateRecipeByPrompt(prompt, RANDOM_MIN_SELECT_COUNT);
+        return generateRecipeByPromptAsync(prompt, RANDOM_MIN_SELECT_COUNT);
     }
 
     // 랜덤 재요청
-    public GeminiRecipeResponseDto generateRandomRecipeWithExclusion(
+    public CompletableFuture<GeminiRecipeResponseDto> generateRandomRecipeWithExclusion(
             List<IngredientDetailDto> allIngredients,
             List<String> dislikedIngredients,
             List<String> excludedTitles) {
         String prompt = buildRandomPrompt(allIngredients, dislikedIngredients, excludedTitles);
-        return generateRecipeByPrompt(prompt, RANDOM_MIN_SELECT_COUNT);
+        return generateRecipeByPromptAsync(prompt, RANDOM_MIN_SELECT_COUNT);
     }
 
     // 레시피 생성

@@ -11,6 +11,7 @@ import com.cookeep.cookeep.domain.recipe.application.AiRecipeService;
 import com.cookeep.cookeep.api.dto.response.AiRecipeAdoptResponseDto;
 import com.cookeep.cookeep.api.dto.request.AiRecipeRequestDto;
 import com.cookeep.cookeep.api.dto.response.AiRecipeResponseDto;
+import com.cookeep.cookeep.domain.recipe.application.GenerationCancellationRegistry;
 import com.cookeep.cookeep.security.JwtTokenProvider;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -25,6 +26,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.UUID;
+
 @Tag(
         name = "(MAIN05, 06, 07) AI 레시피",
         description = "AI를 이용한 레시피 생성/채택/조회 API"
@@ -35,6 +38,7 @@ import org.springframework.web.bind.annotation.*;
 public class AiRecipeController {
 
     private final AiRecipeService aiRecipeService;
+    private final GenerationCancellationRegistry cancellationRegistry;
 
     @Operation(
             summary = "(MAIN05-01)AI 레시피 생성",
@@ -83,11 +87,13 @@ public class AiRecipeController {
     @PostMapping
     public ResponseEntity<AiRecipeResponseDto> generateRecipe(
             @AuthenticationPrincipal(expression = "userId") Long userId,
-            @Valid @RequestBody AiRecipeRequestDto request
+            @Valid @RequestBody AiRecipeRequestDto request,
+            @RequestHeader(value = "X-Request-Id", required = false) String requestId
     ) {
+        String effectiveRequestId = (requestId != null) ? requestId : UUID.randomUUID().toString();
 
         AiRecipeResponseDto response =
-                aiRecipeService.generateRecipe(userId, request);
+                aiRecipeService.generateRecipe(userId, request, effectiveRequestId);
 
         return ResponseEntity.ok(response);
     }
@@ -145,10 +151,14 @@ public class AiRecipeController {
     @PostMapping("/retry")
     public ResponseEntity<AiRecipeResponseDto> regenerateRecipe(
             @AuthenticationPrincipal(expression = "userId") Long userId,
-            @Valid @RequestBody AiRecipeRetryDto request
+            @Valid @RequestBody AiRecipeRetryDto request,
+            @RequestHeader(value = "X-Request-Id", required = false) String requestId
     ) {
+
+        String effectiveRequestId = (requestId != null) ? requestId : UUID.randomUUID().toString();
+
         return ResponseEntity.ok(
-                aiRecipeService.regenerateRecipe(userId, request.getSessionId())
+                aiRecipeService.regenerateRecipe(userId, request.getSessionId(), effectiveRequestId)
         );
     }
 
@@ -390,8 +400,13 @@ public class AiRecipeController {
     })
     @PostMapping("/random")
     public ResponseEntity<AiRecipeResponseDto> generateRandomRecipe(
-            @AuthenticationPrincipal(expression = "userId") Long userId) {
-        return ResponseEntity.ok(aiRecipeService.generateRandomRecipe(userId));
+            @AuthenticationPrincipal(expression = "userId") Long userId,
+            @RequestHeader(value = "X-Request-Id", required = false) String requestId
+    ) {
+
+        String effectiveRequestId = (requestId != null) ? requestId : UUID.randomUUID().toString();
+
+        return ResponseEntity.ok(aiRecipeService.generateRandomRecipe(userId, effectiveRequestId));
     }
 
     @Operation(
@@ -459,7 +474,25 @@ public class AiRecipeController {
     @PostMapping("/random/retry")
     public ResponseEntity<AiRecipeResponseDto> regenerateRandomRecipe(
             @AuthenticationPrincipal(expression = "userId") Long userId,
-            @Valid @RequestBody AiRecipeRetryDto request) {
-        return ResponseEntity.ok(aiRecipeService.regenerateRandomRecipe(userId, request.getSessionId()));
+            @Valid @RequestBody AiRecipeRetryDto request,
+            @RequestHeader(value = "X-Request-Id", required = false) String requestId
+    ) {
+
+        String effectiveRequestId = (requestId != null) ? requestId : UUID.randomUUID().toString();
+
+        return ResponseEntity.ok(aiRecipeService.regenerateRandomRecipe(userId, request.getSessionId(), effectiveRequestId));
+    }
+
+    @Operation(
+            summary = "(MAIN05-06) AI 레시피 생성 취소",
+            description = "진행 중인 레시피 생성(일반/랜덤, 신규/재요청 공통)을 즉시 중단합니다."
+    )
+    @PostMapping("/cancel/{requestId}")
+    public ResponseEntity<DataResponse<Void>> cancelGeneration(
+            @AuthenticationPrincipal(expression = "userId") Long userId,
+            @PathVariable String requestId
+    ) {
+        cancellationRegistry.cancel(requestId);
+        return ResponseEntity.ok(DataResponse.ok());
     }
 }

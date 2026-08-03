@@ -70,22 +70,23 @@ public class AiRecipeService {
     private final UserReader userReader;
     private final AiRecipeCacheService aiRecipeCacheService;
     private final GeminiQueueService geminiQueueService;
+    private final GenerationCancellationRegistry cancellationRegistry;
 
     // sessionId 유무에 따라 신규/재요청 로직 분기
-    public AiRecipeResponseDto generateRecipe(Long userId, AiRecipeRequestDto request) {
+    public AiRecipeResponseDto generateRecipe(Long userId, AiRecipeRequestDto request, String requestId) {
         validateRequest(request);
 
         // sessionId가 null이면 신규 생성 (INITIAL_REQUEST)
         if (request.getSessionId() == null) {
-            return generateInitialRecipe(userId, request);
+            return generateInitialRecipe(userId, request, requestId);
         }
 
         // sessionId가 있으면 재요청 (RETRY_REQUEST)
-        return regenerateRecipe(userId, request.getSessionId());
+        return regenerateRecipe(userId, request.getSessionId(), requestId);
     }
 
     // 1. 새 레시피 요청
-    private AiRecipeResponseDto generateInitialRecipe(Long userId, AiRecipeRequestDto request) {
+    private AiRecipeResponseDto generateInitialRecipe(Long userId, AiRecipeRequestDto request, String requestId) {
 
         // 0. 필수 입력 필드 검증
         if (request == null || request.getIngredientIds() == null || request.getIngredientIds().isEmpty()) {
@@ -133,8 +134,13 @@ public class AiRecipeService {
             log.info("AI 레시피 캐시 히트. key={}", cacheKey);
         } else {
             aiResponse = geminiQueueService.generateRecipe(
-                    enrichedIngredients, request.getFeature(), dislikedIngredients);
+                    requestId, enrichedIngredients, request.getFeature(), dislikedIngredients);
             aiRecipeCacheService.put(cacheKey, aiResponse);
+        }
+
+        // 체크포인트 1: AI 응답 직후, 세션 저장 전
+        if (cancellationRegistry.isCancelled(requestId)) {
+            throw new AppException(ErrorCode.AI_GENERATION_CANCELLED);
         }
 
         // 5. 세션 생성
@@ -159,6 +165,11 @@ public class AiRecipeService {
         List<YoutubeReferenceDto> youtubeReferences =
                 youtubeSearchService.searchVideos(aiResponse.getYoutubeSearchQueries());
 
+        // 체크포인트 2: 유튜브 검색 직후, 최종 메시지 저장 전
+        if (cancellationRegistry.isCancelled(requestId)) {
+            throw new AppException(ErrorCode.AI_GENERATION_CANCELLED);
+        }
+
         // 7. 레시피 저장
         saveAiMessageWithYoutubeReferences(session, aiResponse, youtubeReferences, MessageType.INITIAL_REQUEST, dislikedIngredients);
 
@@ -174,7 +185,7 @@ public class AiRecipeService {
     }
 
     // 2. 레시피 재요청
-    public AiRecipeResponseDto regenerateRecipe(Long userId, Long sessionId) {
+    public AiRecipeResponseDto regenerateRecipe(Long userId, Long sessionId, String requestId) {
         // 1. 세션 조회 및 검증
         if (sessionId == null) {
             throw new AppException(ErrorCode.RECIPE_SESSIONID_REQUIRED);
@@ -215,12 +226,18 @@ public class AiRecipeService {
 
         // 5. AI 호출 (제외 리스트 포함)
         GeminiRecipeResponseDto aiResponse = geminiQueueService.generateRecipeWithExclusion(
+                requestId,
                 ingredients,
                 //session.getDifficulty(),
                 session.getFeature(),
                 excludedTitles,
                 dislikedIngredients
         );
+
+        // 체크포인트 1: AI 응답 직후, 세션 저장 전
+        if (cancellationRegistry.isCancelled(requestId)) {
+            throw new AppException(ErrorCode.AI_GENERATION_CANCELLED);
+        }
 
         // 6. 시도 횟수 증가 및 저장
         session.increaseAttempt();
@@ -232,6 +249,11 @@ public class AiRecipeService {
         // 8. 유튜브 검색어로 실제 영상 조회
         List<YoutubeReferenceDto> youtubeReferences =
                 youtubeSearchService.searchVideos(aiResponse.getYoutubeSearchQueries());
+
+        // 체크포인트 2: 유튜브 검색 직후, 최종 메시지 저장 전
+        if (cancellationRegistry.isCancelled(requestId)) {
+            throw new AppException(ErrorCode.AI_GENERATION_CANCELLED);
+        }
 
         // 9. 재요청 레시피 저장
         saveAiMessageWithYoutubeReferences(session, aiResponse, youtubeReferences, MessageType.RETRY_REQUEST, dislikedIngredients);
@@ -459,7 +481,7 @@ public class AiRecipeService {
     }
 
     // 랜덤레시피 생성
-    public AiRecipeResponseDto generateRandomRecipe(Long userId) {
+    public AiRecipeResponseDto generateRandomRecipe(Long userId, String requestId) {
 
         // 1. RateLimit (기존 재사용)
         rateLimitService.validate(userId);
@@ -479,11 +501,17 @@ public class AiRecipeService {
 
         // 4~5. AI 호출 + 검증 (개수 부족 시 자동 재시도)
         RandomRecipeResult result = generateAndValidateRandomRecipe(
-                () -> geminiQueueService.generateRandomRecipe(enrichedAll, dislikedIngredients),
+                requestId,
+                () -> geminiQueueService.generateRandomRecipe(requestId, enrichedAll, dislikedIngredients),
                 allUserIngredients
         );
         GeminiRecipeResponseDto aiResponse = result.aiResponse();
         List<Long> selectedIds = result.selectedIds();
+
+        // ✅ 체크포인트 1: AI 응답 직후, 세션 저장 전
+        if (cancellationRegistry.isCancelled(requestId)) {
+            throw new AppException(ErrorCode.AI_GENERATION_CANCELLED);
+        }
 
         // 6. 세션 생성 (feature=ANY 고정)
         AiSession session = AiSession.builder()
@@ -509,6 +537,11 @@ public class AiRecipeService {
         List<YoutubeReferenceDto> youtubeReferences =
                 youtubeSearchService.searchVideos(aiResponse.getYoutubeSearchQueries());
 
+        // ✅ 체크포인트2: 유튜브 검색 직후
+        if (cancellationRegistry.isCancelled(requestId)) {
+            throw new AppException(ErrorCode.AI_GENERATION_CANCELLED);
+        }
+
         // 11. AI 메시지 저장 (기존 saveAiMessageWithYoutubeReferences 재사용 — validateAiResponse 포함)
         saveAiMessageWithYoutubeReferences(session, aiResponse, youtubeReferences,
                 MessageType.RANDOM_INITIAL_REQUEST, dislikedIngredients);
@@ -524,7 +557,7 @@ public class AiRecipeService {
     }
 
     // 랜덤레시피 재요청
-    public AiRecipeResponseDto regenerateRandomRecipe(Long userId, Long sessionId) {
+    public AiRecipeResponseDto regenerateRandomRecipe(Long userId, Long sessionId, String requestId) {
         if (sessionId == null) {
             throw new AppException(ErrorCode.RECIPE_SESSIONID_REQUIRED);
         }
@@ -556,11 +589,17 @@ public class AiRecipeService {
         List<String> dislikedIngredients = getDislikedIngredients(userId);
 
         RandomRecipeResult result = generateAndValidateRandomRecipe(
-                () -> geminiQueueService.generateRandomRecipeWithExclusion(enrichedAll, dislikedIngredients, excludedTitles),
+                requestId,
+                () -> geminiQueueService.generateRandomRecipeWithExclusion(requestId, enrichedAll, dislikedIngredients, excludedTitles),
                 allUserIngredients
         );
         GeminiRecipeResponseDto aiResponse = result.aiResponse();
         List<Long> selectedIds = result.selectedIds();
+
+        // ✅ 체크포인트 1: AI 응답 직후, 세션 저장 전
+        if (cancellationRegistry.isCancelled(requestId)) {
+            throw new AppException(ErrorCode.AI_GENERATION_CANCELLED);
+        }
 
         saveRandomUserMessage(session, MessageType.RANDOM_RETRY_REQUEST,
                 allUserIngredients.stream().map(UserIngredient::getIngredientId).toList());
@@ -574,6 +613,11 @@ public class AiRecipeService {
 
         List<YoutubeReferenceDto> youtubeReferences =
                 youtubeSearchService.searchVideos(aiResponse.getYoutubeSearchQueries());
+
+        // ✅ 체크포인트2: 유튜브 검색 직후
+        if (cancellationRegistry.isCancelled(requestId)) {
+            throw new AppException(ErrorCode.AI_GENERATION_CANCELLED);
+        }
 
         saveAiMessageWithYoutubeReferences(session, aiResponse, youtubeReferences,
                 MessageType.RANDOM_RETRY_REQUEST, dislikedIngredients);
@@ -1099,10 +1143,16 @@ public class AiRecipeService {
     실제 모니터링 기준 검토 필요
      */
     private RandomRecipeResult generateAndValidateRandomRecipe(
+            String requestId,
             java.util.function.Supplier<GeminiRecipeResponseDto> aiCallSupplier,
             List<UserIngredient> allUserIngredients) {
 
         for (int attempt = 1; attempt <= RANDOM_SELECTION_MAX_ATTEMPTS; attempt++) {
+
+            // 매 시도 진입 전 체크 (재시도 중간에 취소된 경우 바로 빠져나감)
+            if (cancellationRegistry.isCancelled(requestId)) {
+                throw new AppException(ErrorCode.AI_GENERATION_CANCELLED);
+            }
 
             GeminiRecipeResponseDto aiResponse = aiCallSupplier.get();
             List<Long> selectedIds = extractSelectedIngredientIds(aiResponse);

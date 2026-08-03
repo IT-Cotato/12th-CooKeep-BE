@@ -9,6 +9,8 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public enum ErrorCode {
 
+	AI_GENERATION_CANCELLED(HttpStatus.OK, "레시피 요청 취소", "RECIPE-032"),
+
 	// ==============================
 	// 400 BAD_REQUEST
 	// ==============================
