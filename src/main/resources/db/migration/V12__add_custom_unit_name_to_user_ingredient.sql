@@ -1,4 +1,4 @@
--- src/main/resources/db/migration/V11__drop_add_custom_unit_name_to_user_ingredient.sql
+-- src/main/resources/db/migration/V12__drop_add_custom_unit_name_to_user_ingredient.sql
 
 -- Unit ENUM에 CUSTOM 추가
 ALTER TABLE user_ingredients
