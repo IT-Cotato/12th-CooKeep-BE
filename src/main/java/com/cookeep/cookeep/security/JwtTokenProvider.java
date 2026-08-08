@@ -9,6 +9,7 @@ import org.springframework.stereotype.Component;
 import java.nio.charset.StandardCharsets;
 import java.security.Key;
 import java.util.Date;
+import java.time.Instant;
 
 @Component
 public class JwtTokenProvider {
@@ -61,6 +62,45 @@ public class JwtTokenProvider {
 			.compact();
 	}
 
+	public String createAccessToken(Long userId, String sessionId) {
+		Date now = new Date();
+		Date exp = new Date(now.getTime() + ACCESS_TTL);
+
+		return Jwts.builder()
+			.setHeaderParam(Header.TYPE, Header.JWT_TYPE)
+			.setSubject(String.valueOf(userId))
+			.setIssuedAt(now)
+			.setExpiration(exp)
+			.claim("typ", "access")
+			.claim("sid", sessionId)
+			.claim("jti", generateJti())
+			.signWith(accessKey, SignatureAlgorithm.HS256)
+			.compact();
+	}
+
+	public String createRefreshToken(Long userId, String sessionId, Instant expiresAt) {
+		Date now = new Date();
+
+		return Jwts.builder()
+			.setHeaderParam(Header.TYPE, Header.JWT_TYPE)
+			.setSubject(String.valueOf(userId))
+			.setIssuedAt(now)
+			.setExpiration(Date.from(expiresAt))
+			.claim("typ", "refresh")
+			.claim("sid", sessionId)
+			.claim("jti", generateJti())
+			.signWith(refreshKey, SignatureAlgorithm.HS256)
+			.compact();
+	}
+
+	public TokenClaims parseAccessToken(String token) {
+		return parseToken(token, accessKey, "access");
+	}
+
+	public TokenClaims parseRefreshToken(String token) {
+		return parseToken(token, refreshKey, "refresh");
+	}
+
 	// 토큰 유효성 검사
 	public boolean validateToken(String token, boolean refresh) {
 		try {
@@ -90,5 +130,25 @@ public class JwtTokenProvider {
 
 	private String generateJti() {
 		return java.util.UUID.randomUUID().toString();
+	}
+	private TokenClaims parseToken(String token, Key signingKey, String expectedType) {
+		Claims claims = Jwts.parserBuilder()
+			.setSigningKey(signingKey)
+			.setAllowedClockSkewSeconds(60)
+			.build()
+			.parseClaimsJws(token)
+			.getBody();
+
+		String tokenType = claims.get("typ", String.class);
+		String sessionId = claims.get("sid", String.class);
+		if (!expectedType.equals(tokenType) || sessionId == null || sessionId.isBlank()) {
+			throw new JwtException("Invalid token type or missing session id");
+		}
+
+		return new TokenClaims(
+			Long.valueOf(claims.getSubject()),
+			sessionId,
+			claims.getExpiration().toInstant()
+		);
 	}
 }

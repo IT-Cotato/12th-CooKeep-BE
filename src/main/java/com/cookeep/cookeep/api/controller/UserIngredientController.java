@@ -76,13 +76,19 @@ public class UserIngredientController {
             ErrorCode.USER_NOT_FOUND,
             ErrorCode.INGREDIENT_REFERENCE_NOT_FOUND,
             ErrorCode.INTERNAL_SERVER_ERROR,
-            ErrorCode.INVALID_INGREDIENT_REQUEST
+            ErrorCode.INVALID_INGREDIENT_REQUEST,
+            ErrorCode.CUSTOM_UNIT_NAME_REQUIRED,
+            ErrorCode.CUSTOM_UNIT_NAME_NOT_ALLOWED,
+            ErrorCode.CUSTOM_UNIT_NAME_TOO_LONG
     })
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "식재료 등록 성공"),
             @ApiResponse(responseCode = "400", description = """
                     잘못된 요청입니다.
                     - INVALID_INGREDIENT_REQUEST: 필수값 누락 또는 ENUM 값 오류
+                    - CUSTOM_UNIT_NAME_REQUIRED: "직접입력" 시 사용할 custom_unit_name 입력 필요
+                    - CUSTOM_UNIT_NAME_NOT_ALLOWED: "직접입력"이 아닌 기본 단위 사용 시 custom_unit_name 입력 불가
+                    - CUSTOM_UNIT_NAME_TOO_LONG: custom_unit_name 길이 초과 (VARCHAR(500)
                     """, content = @Content),
             @ApiResponse(responseCode = "401", description = "인증 실패", content = @Content),
             @ApiResponse(responseCode = "404", description = """

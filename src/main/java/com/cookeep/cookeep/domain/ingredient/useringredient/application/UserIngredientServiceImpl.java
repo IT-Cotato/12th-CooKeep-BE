@@ -36,6 +36,7 @@ public class UserIngredientServiceImpl implements UserIngredientService {
 
     private static final int DEFAULT_QUANTITY = 1;
     private static final Unit DEFAULT_CUSTOM_UNIT = Unit.PIECE;
+    private static final int CUSTOM_UNIT_NAME_MAX_LENGTH = 255;
 
     private final UserIngredientRepository userIngredientRepository;
     private final DefaultIngredientRepository defaultIngredientRepository;
@@ -125,6 +126,7 @@ public class UserIngredientServiceImpl implements UserIngredientService {
 
         int quantity = req.getQuantity()!= null ? req.getQuantity():DEFAULT_QUANTITY;
         Unit unit = req.getUnit()!= null ? req.getUnit():ref.getUnit();
+        String customUnitName = resolveCustomUnitName(unit, req.getCustomUnitName());
         Storage storage = req.getStorage()!= null ? req.getStorage():ref.getDefaultStorage();
         LocalDate expiration = req.getExpirationDate()!= null ? req.getExpirationDate():calcExpiration(ref.getDefaultExpirationDays());
         String memo = req.getMemo();
@@ -135,6 +137,7 @@ public class UserIngredientServiceImpl implements UserIngredientService {
                 .referenceId(ref.getId())
                 .quantity(quantity)
                 .unit(unit)
+                .customUnitName(customUnitName)
                 .storage(storage)
                 .expirationDate(expiration)
                 .memo(memo)
@@ -161,6 +164,7 @@ public class UserIngredientServiceImpl implements UserIngredientService {
 
         int quantity = req.getQuantity()!= null ? req.getQuantity():DEFAULT_QUANTITY;
         Unit unit = req.getUnit()!= null ? req.getUnit():DEFAULT_CUSTOM_UNIT;
+        String customUnitName = resolveCustomUnitName(unit, req.getCustomUnitName());
         Storage storage = req.getStorage()!= null ? req.getStorage():ref.getStorage();
         LocalDate expiration = req.getExpirationDate() != null ? req.getExpirationDate():calcExpiration(ref.getExpirationDays());
         String memo = req.getMemo();
@@ -171,6 +175,7 @@ public class UserIngredientServiceImpl implements UserIngredientService {
                 .referenceId(ref.getId())
                 .quantity(quantity)
                 .unit(unit)
+                .customUnitName(customUnitName)
                 .storage(storage)
                 .expirationDate(expiration)
                 .memo(memo)
@@ -200,4 +205,26 @@ public class UserIngredientServiceImpl implements UserIngredientService {
         return false;
     }
 
+    // [직접입력] 선택 시 단위 입력
+    private String resolveCustomUnitName(Unit unit, String customUnitName) {
+        if (unit == Unit.CUSTOM) {
+            if (customUnitName == null || customUnitName.isBlank()) {
+                throw new AppException(ErrorCode.CUSTOM_UNIT_NAME_REQUIRED);
+            }
+            String trimmed = customUnitName.trim();
+
+            if (trimmed.length() > CUSTOM_UNIT_NAME_MAX_LENGTH) {
+                throw new AppException(ErrorCode.CUSTOM_UNIT_NAME_TOO_LONG);
+            }
+
+            return trimmed;
+        }
+
+        // CUSTOM이 아닌데 값이 들어온 경우 명시적으로 거부
+        if (customUnitName != null && !customUnitName.isBlank()) {
+            throw new AppException(ErrorCode.CUSTOM_UNIT_NAME_NOT_ALLOWED);
+        }
+
+        return null; // CUSTOM이 아니면 항상 null
+    }
 }

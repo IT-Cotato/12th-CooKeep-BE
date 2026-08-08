@@ -15,7 +15,6 @@ import com.cookeep.cookeep.common.exception.AppException;
 import com.cookeep.cookeep.common.exception.ErrorCode;
 import com.cookeep.cookeep.domain.user.dao.UserAuthRepository;
 import com.cookeep.cookeep.domain.user.dao.UserRepository;
-import com.cookeep.cookeep.domain.user.dao.UserSessionRepository;
 import com.cookeep.cookeep.domain.user.entity.ProfileImages;
 import com.cookeep.cookeep.domain.user.entity.Provider;
 import com.cookeep.cookeep.domain.user.entity.User;
@@ -41,7 +40,7 @@ public class UserInfoService {
     private final UserAuthRepository userAuthRepository;
     private final PasswordEncoder passwordEncoder;
     private final ProfileImageService profileImageService;
-    private final UserSessionRepository userSessionRepository;
+    private final AuthSessionStore authSessionStore;
     private final ReauthenticationService reauthenticationService;
 
     // 비밀번호 입력 최대 시도 횟수
@@ -214,7 +213,7 @@ public class UserInfoService {
         String encodedPassword = passwordEncoder.encode(updatePasswordRequestDTO.password());
         user.updatePassword(encodedPassword);
         user.updatePasswordCnt(0);
-        userSessionRepository.deleteByUser_UserId(userId);
+        authSessionStore.revoke(userId);
     }
 
     private void assertLocalPasswordUser(Long userId) {
@@ -259,7 +258,7 @@ public class UserInfoService {
     public void updateProfileImage(Long userId, ProfileImageUpdateRequestDto request) {
         User user = userReader.readById(userId);
 
-        // 유효한 imageId인지 검증 (1~6 범위 밖이면 예외)
+        // 유효한 imageId인지 검증 (1~12 범위 밖이면 예외)
         ProfileImages.fromId(request.imageId());
 
         user.updateProfileImage(request.imageId());

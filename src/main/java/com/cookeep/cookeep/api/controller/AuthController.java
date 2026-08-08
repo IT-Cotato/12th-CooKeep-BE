@@ -1,5 +1,6 @@
 package com.cookeep.cookeep.api.controller;
 
+import java.time.Duration;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -64,13 +65,27 @@ public class AuthController {
 	@Operation(
 		summary = "액세스 토큰 재발급 API",
 		description = """
-			request body 없이 refreshToken HttpOnly Cookie로 액세스 토큰 재발급됨
-			쿠키 누락, 빈 값, 위조, 만료, DB 불일치는 401 AUTH-002로 처리됨
+			request body 없이 refreshToken HttpOnly Cookie로 Access Token과 Refresh Token을 재발급합니다.
+			성공 시 회전된 Refresh Token을 Set-Cookie 헤더로 전달하며 최초 로그인 기준 절대 만료시간은 연장하지 않습니다.
+			쿠키 누락·위조·만료·세션 없음·다른 로그인 세션은 401 AUTH-002로 처리합니다.
+			이미 회전된 Refresh Token의 재사용은 401 AUTH-015로 처리하고 현재 인증 세션을 폐기합니다.
 			"""
 	)
 	@ApiResponses(value = {
-		@ApiResponse(responseCode = "200", description = "액세스 토큰 갱신 성공"),
-		@ApiResponse(responseCode = "401", description = "유효하지 않은 리프레시 토큰 (AUTH-002)")
+		@ApiResponse(
+			responseCode = "200",
+			description = "Access Token 및 Refresh Token 갱신 성공",
+			headers = @Header(
+				name = HttpHeaders.SET_COOKIE,
+				description = "회전된 Refresh Token HttpOnly Cookie",
+				schema = @Schema(type = "string")
+			)
+		),
+		@ApiResponse(
+			responseCode = "401",
+			description = "유효하지 않은 Refresh Token(AUTH-002) 또는 재사용 탐지(AUTH-015)"
+		),
+		@ApiResponse(responseCode = "503", description = "Redis 인증 세션 서비스 사용 불가(AUTH-016)")
 	})
 	@PostMapping("/refresh")
 	public ResponseEntity<DataResponse<TokenRefreshResponseDTO>> tokenRefresh(
@@ -82,7 +97,7 @@ public class AuthController {
 			example = "eyJhbGciOiJIUzI1NiJ9..."
 		)
 		@CookieValue(value = RefreshTokenCookieProvider.COOKIE_NAME, required = false) String refreshToken) {
-		return ResponseEntity.ok(DataResponse.from(authService.tokenRefresh(refreshToken)));
+		return createAuthResponse(authService.tokenRefresh(refreshToken));
 	}
 
 	@Operation(summary = "카카오 로그인 API", description = REFRESH_COOKIE_ISSUE_DESCRIPTION)
@@ -164,15 +179,24 @@ public class AuthController {
 
 	@Operation(summary = "비밀번호 초기화 API")
 	@ApiResponses(value = {
-		@ApiResponse(responseCode = "200", description = "비밀번호 초기화 성공"),
-		@ApiResponse(responseCode = "400", description = "요청 파라미터 오류")
+		@ApiResponse(
+			responseCode = "200",
+			description = "비밀번호 초기화 및 Refresh Cookie 만료 성공",
+			headers = @Header(
+				name = HttpHeaders.SET_COOKIE,
+				description = REFRESH_COOKIE_DELETE_HEADER,
+				schema = @Schema(type = "string")
+			)
+		),
+		@ApiResponse(responseCode = "400", description = "요청 파라미터 오류"),
+		@ApiResponse(responseCode = "503", description = "Redis 인증 세션 서비스 사용 불가(AUTH-016)")
 	})
 	@PatchMapping("/password/reset")
 	public ResponseEntity<DataResponse<Void>> resetPassword(
 		@Valid @RequestBody ResetPasswordRequestDTO resetPasswordRequestDTO
 	) {
 		authService.resetPassword(resetPasswordRequestDTO);
-		return ResponseEntity.ok(DataResponse.ok());
+		return createLogoutResponse();
 	}
 
 	@Operation(summary = "로그아웃 API", description = REFRESH_COOKIE_DELETE_DESCRIPTION)
@@ -223,7 +247,13 @@ public class AuthController {
 	private <T> ResponseEntity<DataResponse<T>> createAuthResponse(AuthResult<T> authResult) {
 		// refresh token은 응답 body에 노출하지 않고 브라우저의 HttpOnly cookie로만 전달한다.
 		return ResponseEntity.ok()
-			.header(HttpHeaders.SET_COOKIE, refreshTokenCookieProvider.create(authResult.refreshToken()).toString())
+			.header(
+				HttpHeaders.SET_COOKIE,
+				refreshTokenCookieProvider.create(
+					authResult.refreshToken(),
+					Duration.ofSeconds(authResult.refreshExpiresInSeconds())
+				).toString()
+			)
 			.body(DataResponse.from(authResult.response()));
 	}
 

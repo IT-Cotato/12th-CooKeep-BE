@@ -34,6 +34,9 @@ public enum ErrorCode {
 	MEMO_TOO_LONG(HttpStatus.BAD_REQUEST, "식재료 메모는 최대 100자까지 입력 가능합니다.", "INGREDIENT_009"),
 	INVALID_DELETE_REQUEST(HttpStatus.BAD_REQUEST, "삭제할 식재료를 입력해주세요.", "INGREDIENT_010"),
 	INVALID_INGREDIENT_REQUEST(HttpStatus.BAD_REQUEST, "type과 referenceId는 필수 입력입니다.", "INGREDIENT-011"),
+	CUSTOM_UNIT_NAME_REQUIRED(HttpStatus.BAD_REQUEST, "직접입력 시 사용할 단위명을 입력하세요.", "INGREDIENT-012"),
+	CUSTOM_UNIT_NAME_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "CUSTOM unit 사용 시에만 단위명을 입력하세요.", "INGREDIENT-013"),
+	CUSTOM_UNIT_NAME_TOO_LONG(HttpStatus.BAD_REQUEST, "직접 입력 단위명은 최대 255자까지 입력 가능합니다.", "INGREDIENT-014"),
 
 	// COOKIE
 	NOT_ENOUGH_COOKIES(HttpStatus.BAD_REQUEST, "보유한 쿠키가 부족합니다.", "COOKIE-001"),
@@ -109,6 +112,7 @@ public enum ErrorCode {
 	AUTH_PASSWORD_MISMATCH (HttpStatus.UNAUTHORIZED, "비밀번호가 올바르지 않습니다.", "AUTH-003"),
 	REAUTH_TOKEN_REQUIRED(HttpStatus.UNAUTHORIZED, "비밀번호 변경을 위한 재인증 토큰이 필요합니다.", "AUTH-011"),
 	INVALID_REAUTH_TOKEN(HttpStatus.UNAUTHORIZED, "재인증 토큰이 유효하지 않거나 만료되었습니다.", "AUTH-012"),
+	REFRESH_TOKEN_REUSE_DETECTED(HttpStatus.UNAUTHORIZED, "리프레시 토큰 재사용이 감지되어 인증 세션을 폐기했습니다.", "AUTH-015"),
 
 	// ==============================
 	// 403 FORBIDDEN
@@ -245,6 +249,7 @@ public enum ErrorCode {
 	// RECIPE
 	AI_SERVER_FAILED(HttpStatus.SERVICE_UNAVAILABLE, "AI 서비스가 일시적으로 불안정합니다. 잠시 후 다시 시도해주세요.", "RECIPE-028"),
 	REAUTHENTICATION_UNAVAILABLE(HttpStatus.SERVICE_UNAVAILABLE, "재인증 서비스를 일시적으로 사용할 수 없습니다.", "AUTH-014"),
+	AUTH_SESSION_UNAVAILABLE(HttpStatus.SERVICE_UNAVAILABLE, "인증 세션 서비스를 일시적으로 사용할 수 없습니다.", "AUTH-016"),
 	;
 
 	private final HttpStatus httpStatus;

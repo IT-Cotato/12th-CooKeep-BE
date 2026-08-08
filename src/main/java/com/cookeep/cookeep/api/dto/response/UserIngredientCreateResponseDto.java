@@ -33,6 +33,9 @@ public class UserIngredientCreateResponseDto {
     @Schema(description = "단위", example = "PIECE")
     private String unit;
 
+    @Schema(description = "직접 입력한 단위명 (unit이 CUSTOM일 때만 값 존재)", example = "상자")
+    private String customUnitName;
+
     @Schema(description = "보관 장소", example = "FRIDGE")
     private String storage;
 
@@ -63,6 +66,7 @@ public class UserIngredientCreateResponseDto {
                 ingredientName,
                 userIngredient.getQuantity(),
                 userIngredient.getUnit().name(),
+                userIngredient.getCustomUnitName(),
                 userIngredient.getStorage().name(),
                 userIngredient.getExpirationDate(),
                 userIngredient.getLeftDays(),

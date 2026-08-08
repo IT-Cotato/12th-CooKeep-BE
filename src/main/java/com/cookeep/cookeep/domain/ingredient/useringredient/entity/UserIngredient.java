@@ -59,12 +59,16 @@ public class UserIngredient extends BaseEntity {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
+    @Column(name = "custom_unit_name", nullable = true)
+    private String customUnitName;
+
     @Builder
     public UserIngredient(
             Type type,
             Long referenceId,
             Integer quantity,
             Unit unit, Storage storage,
+            String customUnitName,
             LocalDate expirationDate,
             String memo,
             User user,
@@ -75,6 +79,7 @@ public class UserIngredient extends BaseEntity {
         this.quantity = quantity;
         this.unit = unit;
         this.storage = storage;
+        this.customUnitName = customUnitName;
         this.expirationDate = expirationDate;
         this.memo = memo;
         this.user = user;

@@ -1,0 +1,8 @@
+75846	21.2609	SET `autocommit` = ?
+38048	18.6351	SELECT `u1_0` . `user_id` , `u1_0` . `cookie_cnt` , `u1_0` . `created_at` , `u1_0` . `disliked_ingredients` , `u1_0` . `email` , `u1_0` . `is_cookeeps_onboarded` , `u1_0` . `is_first_ingredient_reward` , `u1_0` . `is_first_recipe_reward` , `u1_0` . `is_profile_auto_update` , `u1_0` . `last_access_at
+38029	31.9580	UPDATE `users` SET `cookie_cnt` = ? , `disliked_ingredients` = ? , `email` = ? , `is_cookeeps_onboarded` = ? , `is_first_ingredient_reward` = ? , `is_first_recipe_reward` = ? , `is_profile_auto_update` = ? , `last_access_at` = ? , `marketing_consent` = ? , `marketing_push` = ? , `nickname` = ? , PAS
+38004	18.3032	SELECT `us1_0` . `session_id` , `us1_0` . `created_at` , `us1_0` . `expires_at` , `us1_0` . `refresh_token` , `us1_0` . `user_id` FROM `user_sessions` `us1_0` WHERE `us1_0` . `user_id` = ?
+37291	1160.4800	COMMIT
+1	0.0435	TRUNCATE TABLE `performance_schema` . `events_statements_summary_by_digest`
+1	0.0089	FLUSH STATUS
+1	0.0010	SELECT @@`version_comment` LIMIT ?

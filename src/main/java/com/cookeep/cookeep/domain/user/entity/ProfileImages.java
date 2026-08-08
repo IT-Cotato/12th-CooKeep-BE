@@ -14,7 +14,13 @@ public enum ProfileImages {
     IMAGE_3(3, "3.png"),
     IMAGE_4(4, "4.png"),
     IMAGE_5(5, "5.png"),
-    IMAGE_6(6, "6.png");
+    IMAGE_6(6, "6.png"),
+    IMAGE_7(7, "7.png"),
+    IMAGE_8(8, "8.png"),
+    IMAGE_9(9, "9.png"),
+    IMAGE_10(10, "10.png"),
+    IMAGE_11(11, "11.png"),
+    IMAGE_12(12, "12.png");
 
     private final int imageId;
     private final String fileName;

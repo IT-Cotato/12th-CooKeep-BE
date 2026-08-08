@@ -1,0 +1,68 @@
+{
+  "generatedAt": "2026-07-31T15:39:51.955Z",
+  "target": {
+    "stage": "B",
+    "commit": "0d5d992",
+    "baseUrl": "http://localhost:8080",
+    "redisContainer": "cookeep-benchmark-redis"
+  },
+  "checks": [
+    {
+      "name": "login creates Redis session",
+      "passed": true,
+      "details": "status=200, cookie=true"
+    },
+    {
+      "name": "Redis stores sessionId and SHA-256 digest, not raw token",
+      "passed": true,
+      "details": "key=auth:session:90, valuePattern=true, rawStored=false"
+    },
+    {
+      "name": "rotation keeps the original absolute expiration",
+      "passed": true,
+      "details": "status=200, expiresAtBeforeMs=1786721863000, expiresAtAfterMs=1786721863000, ttlBeforeMs=1209597143, ttlAfterMs=1209595527, elapsedMs=1449, ttlDecreaseMs=1616, toleranceMs=500"
+    },
+    {
+      "name": "rotated token reuse is detected and cookie is expired",
+      "passed": true,
+      "details": "first=200, reuse=401/AUTH-015, expiredCookie=true"
+    },
+    {
+      "name": "reuse detection revokes the winner refresh token too",
+      "passed": true,
+      "details": "winnerAfterReuse=401/AUTH-002"
+    },
+    {
+      "name": "concurrent refresh allows one rotation and rejects one reuse",
+      "passed": true,
+      "details": "statuses=200,401, rejectedCode=AUTH-015"
+    },
+    {
+      "name": "concurrent reuse revokes the rotated refresh token",
+      "passed": true,
+      "details": "winnerAfterDetection=401/AUTH-002"
+    },
+    {
+      "name": "an older login session cannot revoke the current login session",
+      "passed": true,
+      "details": "old=401/AUTH-002, current=200"
+    },
+    {
+      "name": "expired Redis session rejects refresh and expires the cookie",
+      "passed": true,
+      "details": "status=401/AUTH-002, expiredCookie=true"
+    },
+    {
+      "name": "Redis outage fails refresh closed",
+      "passed": true,
+      "details": "status=503/AUTH-016"
+    },
+    {
+      "name": "Redis outage fails session issuance closed",
+      "passed": true,
+      "details": "status=503/AUTH-016, cookie=false"
+    }
+  ],
+  "fatalError": null,
+  "passed": true
+}

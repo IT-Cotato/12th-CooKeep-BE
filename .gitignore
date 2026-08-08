@@ -45,8 +45,26 @@ application-secret.yml
 
 # Environment Variables
 .env
+.env.*
+!.env.example
 .env.local
 .env.*.local
+
+# Benchmark runtime artifacts
+performance/refresh-session/results/logs/
+performance/refresh-session/runtime/
+performance/refresh-session/results/execution-log.txt
+
+# Non-final benchmark runs
+performance/refresh-session/results/raw/*-warmup.json
+performance/refresh-session/results/raw/preflight-*.json
+performance/refresh-session/results/raw/smoke-*.json
+performance/refresh-session/results/redis-run*.json
+
+# Unusable monitoring samples
+performance/refresh-session/results/metrics/*-docker-stats.json
+performance/refresh-session/results/metrics/*-redis-cpu.txt
+performance/refresh-session/results/metrics/*-redis-memory.txt
 
 # OS 시스템 파일
 .DS_Store
