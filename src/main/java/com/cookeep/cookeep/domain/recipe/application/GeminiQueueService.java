@@ -72,7 +72,6 @@ public class GeminiQueueService {
                 semaphore.release();
                 log.info("Gemini 슬롯 반환. 남은 슬롯={}", semaphore.availablePermits());
             }
-            cancellationRegistry.clear(requestId);
         }
     }
 
@@ -112,7 +111,6 @@ public class GeminiQueueService {
             if (acquired) {
                 semaphore.release();
             }
-            cancellationRegistry.clear(requestId);
         }
     }
 
@@ -152,7 +150,6 @@ public class GeminiQueueService {
                 semaphore.release();
                 log.info("Gemini 슬롯 반환(랜덤). 남은 슬롯={}", semaphore.availablePermits());
             }
-            cancellationRegistry.clear(requestId);
         }
     }
 
@@ -192,7 +189,6 @@ public class GeminiQueueService {
             if (acquired) {
                 semaphore.release();
             }
-            cancellationRegistry.clear(requestId);
         }
     }
 

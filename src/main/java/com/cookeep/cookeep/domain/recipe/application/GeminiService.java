@@ -151,16 +151,16 @@ public class GeminiService {
         return generateRecipeByPromptAsync(prompt, RANDOM_MIN_SELECT_COUNT);
     }
 
-    // 레시피 생성
-    public GeminiRecipeResponseDto generateRecipeByPrompt(String prompt) {
-        return callGeminiApi(prompt, GeminiRecipeRequestDto.from(prompt));
-    }
-
-    // 랜덤레시피 프롬프트
-    public GeminiRecipeResponseDto generateRecipeByPrompt(String prompt, Integer minUserIngredients) {
-
-        return callGeminiApi(prompt, GeminiRecipeRequestDto.from(prompt, minUserIngredients));
-    }
+//    // 레시피 생성
+//    public GeminiRecipeResponseDto generateRecipeByPrompt(String prompt) {
+//        return callGeminiApi(prompt, GeminiRecipeRequestDto.from(prompt));
+//    }
+//
+//    // 랜덤레시피 프롬프트
+//    public GeminiRecipeResponseDto generateRecipeByPrompt(String prompt, Integer minUserIngredients) {
+//
+//        return callGeminiApi(prompt, GeminiRecipeRequestDto.from(prompt, minUserIngredients));
+//    }
 
     // Gemini 응답 파싱 (DTO에 맞게)
     private GeminiRecipeResponseDto parseResponse(String responseBody) {

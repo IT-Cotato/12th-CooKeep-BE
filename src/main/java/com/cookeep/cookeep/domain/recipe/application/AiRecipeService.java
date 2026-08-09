@@ -37,6 +37,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
+import java.util.concurrent.CancellationException;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -162,8 +165,24 @@ public class AiRecipeService {
         updateSessionTitle(session, aiResponse);
 
         // 6. 유튜브 검색어로 실제 영상 조회
-        List<YoutubeReferenceDto> youtubeReferences =
-                youtubeSearchService.searchVideos(aiResponse.getYoutubeSearchQueries());
+//        List<YoutubeReferenceDto> youtubeReferences =
+//                youtubeSearchService.searchVideos(aiResponse.getYoutubeSearchQueries());
+        CompletableFuture<List<YoutubeReferenceDto>> youtubeFuture =
+                youtubeSearchService.searchVideosAsync(aiResponse.getYoutubeSearchQueries());
+        cancellationRegistry.register(requestId, youtubeFuture);
+
+        List<YoutubeReferenceDto> youtubeReferences;
+        try {
+            youtubeReferences = youtubeFuture.get();
+        } catch (CancellationException e) {
+            throw new AppException(ErrorCode.AI_GENERATION_CANCELLED);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new AppException(ErrorCode.AI_GENERATION_CANCELLED);
+        } catch (ExecutionException e) {
+            log.error("유튜브 검색 중 예상치 못한 오류", e);
+            youtubeReferences = new ArrayList<>();
+        }
 
         // 체크포인트 2: 유튜브 검색 직후, 최종 메시지 저장 전
         if (cancellationRegistry.isCancelled(requestId)) {
