@@ -507,6 +507,16 @@ public class AiRecipeController {
             summary = "(MAIN05-06) AI 레시피 생성 취소",
             description = "진행 중인 레시피 생성(일반/랜덤, 신규/재요청 공통)을 즉시 중단합니다."
     )
+    @ApiErrorCodeExamples({
+            ErrorCode.UNAUTHORIZED
+    })
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "성공"),
+            @ApiResponse(responseCode = "401", description = """
+            인증 실패입니다.
+            - UNAUTHORIZED: 인증에 실패했습니다.
+            """, content = @Content)
+    })
     @PostMapping("/cancel/{requestId}")
     public ResponseEntity<DataResponse<Void>> cancelGeneration(
             @AuthenticationPrincipal(expression = "userId") Long userId,
