@@ -45,6 +45,7 @@ public class AiRecipeController {
             description = "유저의 식재료 및 조건을 기반으로 AI에게 레시피를 요청합니다."
     )
     @ApiErrorCodeExamples({
+            ErrorCode.AI_GENERATION_CANCELLED,
             ErrorCode.RECIPE_INGREDIENTS_REQUIRED,
             ErrorCode.INVALID_FEATURE,
             ErrorCode.INVALID_INGREDIENT_TYPE,
@@ -57,7 +58,11 @@ public class AiRecipeController {
             ErrorCode.AI_RATE_LIMIT_EXCEEDED
     })
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "AI 레시피 생성 성공"),
+            @ApiResponse(responseCode = "200", description = """
+                AI 레시피 생성 성공
+                - 레시피 생성 성공
+                - AI_GENERATION_CANCELLED: 사용자의 요청에 의해 레시피 생성이 정상적으로 중단되었습니다.
+                """, content = @Content),
             @ApiResponse(responseCode = "400", description = """
                     잘못된 요청입니다. 다음 오류가 발생할 수 있습니다:
                     - RECIPE_INGREDIENTS_REQUIRED: 레시피 생성을 위한 재료가 필요합니다.
@@ -103,6 +108,7 @@ public class AiRecipeController {
             description = "기존 세션의 식재료 및 조건을 기반으로 AI에게 레시피를 재요청합니다."
     )
     @ApiErrorCodeExamples({
+            ErrorCode.AI_GENERATION_CANCELLED,
             ErrorCode.RECIPE_SESSIONID_REQUIRED,
             ErrorCode.AI_SESSION_NOT_FOUND,
             ErrorCode.SESSION_ALREADY_COMPLETED,
@@ -118,7 +124,11 @@ public class AiRecipeController {
             ErrorCode.AI_RATE_LIMIT_EXCEEDED
     })
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "AI 레시피 재생성 성공"),
+            @ApiResponse(responseCode = "200", description = """
+                AI 레시피 재생성 성공
+                - 레시피 생성 성공
+                - AI_GENERATION_CANCELLED: 사용자의 요청에 의해 레시피 생성이 정상적으로 중단되었습니다.
+                """, content = @Content),
             @ApiResponse(responseCode = "400", description = """
                     잘못된 요청입니다. 다음 오류가 발생할 수 있습니다:
                     - RECIPE_SESSIONID_REQUIRED: 레시피 요청에 필요한 값이 누락되었습니다.
@@ -351,6 +361,7 @@ public class AiRecipeController {
             description = "유저의 냉장고에 있는 전체 식재료를 기반으로 AI가 재료를 직접 선택하여 레시피를 생성합니다. (feature는 ANY로 고정)"
     )
     @ApiErrorCodeExamples({
+            ErrorCode.AI_GENERATION_CANCELLED,
             ErrorCode.RANDOM_RECIPE_INGREDIENT_NOT_ENOUGH,
             ErrorCode.INVALID_INGREDIENT_TYPE,
             ErrorCode.INGREDIENT_NOT_FOUND,
@@ -367,7 +378,11 @@ public class AiRecipeController {
             ErrorCode.AI_RATE_LIMIT_EXCEEDED
     })
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "AI 랜덤 레시피 생성 성공"),
+            @ApiResponse(responseCode = "200", description = """
+                AI 랜덤 레시피 생성 성공
+                - 레시피 생성 성공
+                - AI_GENERATION_CANCELLED: 사용자의 요청에 의해 레시피 생성이 정상적으로 중단되었습니다.
+                """, content = @Content),
             @ApiResponse(responseCode = "400", description = """
                 잘못된 요청입니다. 다음 오류가 발생할 수 있습니다:
                 - RANDOM_RECIPE_INGREDIENT_NOT_ENOUGH: 랜덤 레시피 생성을 위해 재료가 최소 3개 이상 필요합니다.
@@ -414,6 +429,7 @@ public class AiRecipeController {
             description = "기존 랜덤 레시피 세션의 냉장고 식재료를 다시 조회하여 AI에게 새로운 랜덤 레시피를 재요청합니다. (최대 5회)"
     )
     @ApiErrorCodeExamples({
+            ErrorCode.AI_GENERATION_CANCELLED,
             ErrorCode.RECIPE_SESSIONID_REQUIRED,
             ErrorCode.AI_SESSION_NOT_FOUND,
             ErrorCode.SESSION_ALREADY_COMPLETED,
@@ -435,7 +451,11 @@ public class AiRecipeController {
             ErrorCode.AI_RATE_LIMIT_EXCEEDED
     })
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "AI 랜덤 레시피 재생성 성공"),
+            @ApiResponse(responseCode = "200", description = """
+                AI 랜덤 레시피 재생성 성공
+                - 레시피 생성 성공
+                - AI_GENERATION_CANCELLED: 사용자의 요청에 의해 레시피 생성이 정상적으로 중단되었습니다.
+                """, content = @Content),
             @ApiResponse(responseCode = "400", description = """
                 잘못된 요청입니다. 다음 오류가 발생할 수 있습니다:
                 - RECIPE_SESSIONID_REQUIRED: 레시피 요청에 필요한 값이 누락되었습니다.
