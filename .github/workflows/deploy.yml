@@ -168,5 +168,6 @@ jobs:
               -e "EMAIL_USERNAME=${{ secrets.EMAIL_USERNAME }}" \
               -e "EMAIL_PASSWORD=${{ secrets.EMAIL_PASSWORD }}" \
               -e "REFRESH_COOKIE_SECURE=true" \
+              -e "REFRESH_COOKIE_SAMESITE=None" \
               ${{ secrets.DOCKER_USERNAME }}/cookeep:dev
             docker image prune -f

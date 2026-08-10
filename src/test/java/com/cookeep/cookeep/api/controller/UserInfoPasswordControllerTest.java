@@ -32,7 +32,7 @@ class UserInfoPasswordControllerTest {
 	void setUp() {
 		controller = new UserInfoController(
 			userInfoService,
-			new RefreshTokenCookieProvider(true)
+			new RefreshTokenCookieProvider(true, "Lax")
 		);
 	}
 

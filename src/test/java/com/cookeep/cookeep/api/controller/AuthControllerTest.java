@@ -51,9 +51,9 @@ class AuthControllerTest {
 
 	@BeforeEach
 	void setUp() {
-		authController = new AuthController(authService, new RefreshTokenCookieProvider(true));
+		authController = new AuthController(authService, new RefreshTokenCookieProvider(true, "Lax"));
 		mockMvc = MockMvcBuilders.standaloneSetup(authController)
-			.setControllerAdvice(new GlobalExceptionHandler(new RefreshTokenCookieProvider(true)))
+			.setControllerAdvice(new GlobalExceptionHandler(new RefreshTokenCookieProvider(true, "Lax")))
 			.build();
 	}
 
