@@ -11,7 +11,7 @@ class RefreshTokenCookieProviderTest {
 
 	@Test
 	void create_buildsSecureHttpOnlyRefreshTokenCookie() {
-		RefreshTokenCookieProvider provider = new RefreshTokenCookieProvider(true);
+		RefreshTokenCookieProvider provider = new RefreshTokenCookieProvider(true, "Lax");
 
 		ResponseCookie cookie = provider.create("refresh-token", Duration.ofDays(14));
 
@@ -27,7 +27,7 @@ class RefreshTokenCookieProviderTest {
 
 	@Test
 	void create_canDisableSecureForLocalHttpTools() {
-		RefreshTokenCookieProvider provider = new RefreshTokenCookieProvider(false);
+		RefreshTokenCookieProvider provider = new RefreshTokenCookieProvider(false, "Lax");
 
 		ResponseCookie cookie = provider.create("refresh-token", Duration.ofDays(14));
 
@@ -37,7 +37,7 @@ class RefreshTokenCookieProviderTest {
 
 	@Test
 	void delete_expiresCookieWithSameScope() {
-		RefreshTokenCookieProvider provider = new RefreshTokenCookieProvider(true);
+		RefreshTokenCookieProvider provider = new RefreshTokenCookieProvider(true, "Lax");
 
 		ResponseCookie cookie = provider.delete();
 

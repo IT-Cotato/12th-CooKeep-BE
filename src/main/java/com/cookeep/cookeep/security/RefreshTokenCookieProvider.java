@@ -13,18 +13,21 @@ public class RefreshTokenCookieProvider {
 	private static final String COOKIE_PATH = "/api/auth/refresh";
 
 	private final boolean secure;
+	private final String sameSite;
 
 	public RefreshTokenCookieProvider(
-		@Value("${REFRESH_COOKIE_SECURE:true}") boolean secure
+		@Value("${REFRESH_COOKIE_SECURE:true}") boolean secure,
+		@Value("${REFRESH_COOKIE_SAMESITE:Lax}") String sameSite
 	) {
 		this.secure = secure;
+		this.sameSite = sameSite;
 	}
 
 	public ResponseCookie create(String refreshToken, Duration maxAge) {
 		return baseCookie(refreshToken)
 			.httpOnly(true)
 			.secure(secure)
-			.sameSite("Lax")
+			.sameSite(sameSite)
 			.path(COOKIE_PATH)
 			.maxAge(maxAge)
 			.build();
@@ -34,7 +37,7 @@ public class RefreshTokenCookieProvider {
 		return baseCookie("")
 			.httpOnly(true)
 			.secure(secure)
-			.sameSite("Lax")
+			.sameSite(sameSite)
 			// 브라우저가 기존 쿠키를 찾아 삭제하려면 발급할 때와 이름 및 Path가 같아야 한다.
 			.path(COOKIE_PATH)
 			.maxAge(Duration.ZERO)
