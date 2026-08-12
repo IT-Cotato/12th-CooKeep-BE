@@ -47,7 +47,7 @@ public class CustomIngredientCreateRequestDto {
     @Schema(
             description = "식재료 카테고리",
             example = "PROCESSED",
-            allowableValues = {"VEGETABLE", "FRUIT", "MEAT", "SEAFOOD", "DAIRY_EGG", "GRAIN_RICE_NOODLE", "BAKERY", "SEASONING_SAUCE", "READY_MEAL", "SNACK_DESSERT", "BEVERAGE", "FERMENTED"},
+            allowableValues = {"VEGETABLE", "FRUIT", "MEAT", "SEAFOOD", "DAIRY_EGG", "GRAIN_RICE_NOODLE", "BAKERY", "SEASONING_SAUCE", "READY_MEAL", "SNACK_DESSERT", "BEVERAGE", "FERMENTED", "BEAN", "ETC"},
             requiredMode = Schema.RequiredMode.REQUIRED
     )
     private Category category;
