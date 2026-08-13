@@ -1,5 +1,7 @@
 package com.cookeep.cookeep.domain.ingredient.common.domain;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+
 public enum Category {
 
     VEGETABLE("채소"),
@@ -25,6 +27,23 @@ public enum Category {
 
     public String getDisplayName() {
         return displayName;
+    }
+
+    @JsonCreator
+    public static Category from(String value) {
+        if (value == null) {
+            return null;
+        }
+        String normalized = value.trim().toUpperCase();
+        // 별칭 매핑
+        if (normalized.equals("BEANS")) {
+            normalized = "BEAN";
+        }
+        try {
+            return Category.valueOf(normalized);
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("알 수 없는 카테고리 값: " + value);
+        }
     }
 
 }
