@@ -70,4 +70,11 @@ public class UserIngredientCreateRequestDto {
             requiredMode = Schema.RequiredMode.NOT_REQUIRED
     )
     private String memo;
+
+    @Schema(
+            description = "직접 입력한 단위명. unit == CUSTOM일 때만 사용, 필수",
+            example = "상자",
+            requiredMode = Schema.RequiredMode.NOT_REQUIRED
+    )
+    private String customUnitName;
 }
