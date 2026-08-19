@@ -40,7 +40,8 @@ public class SecurityConfig {
 				"https://12th-coo-keep-fe.vercel.app",
 				"https://cookeep.kr",
 				"https://api.cookeep.kr",
-				"https://cookeep.vercel.app"
+				"https://cookeep.vercel.app",
+				"https://dev-api.cookeep.kr"
 		));
 		config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
 		config.setAllowedHeaders(List.of("*"));
