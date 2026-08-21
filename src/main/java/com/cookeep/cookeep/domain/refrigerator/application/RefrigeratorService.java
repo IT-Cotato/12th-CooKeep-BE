@@ -130,6 +130,7 @@ public class RefrigeratorService {
                 .expirationDate(userIngredient.getExpirationDate())
                 .quantity(userIngredient.getQuantity())
                 .unit(userIngredient.getUnit())
+                .customUnitName(userIngredient.getCustomUnitName())
                 .leftDays(userIngredient.getLeftDays())
                 .memo(userIngredient.getMemo())
                 .aiTip(aiTip)
@@ -196,6 +197,7 @@ public class RefrigeratorService {
                             .expirationDate(ui.getExpirationDate())
                             .quantity(ui.getQuantity())
                             .unit(ui.getUnit())
+                            .customUnitName(ui.getCustomUnitName())
                             .build();
                 })
                 .collect(Collectors.toList());

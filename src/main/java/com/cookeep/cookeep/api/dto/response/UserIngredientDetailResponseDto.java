@@ -70,6 +70,13 @@ public class UserIngredientDetailResponseDto {
     private Unit unit;
 
     @Schema(
+            description = "직접 입력한 단위명 (unit이 CUSTOM일 때만 값 존재)",
+            example = "상자",
+            requiredMode = Schema.RequiredMode.NOT_REQUIRED
+    )
+    private String customUnitName;
+
+    @Schema(
             description = "메모",
             example = "샐러드용",
             requiredMode = Schema.RequiredMode.NOT_REQUIRED
