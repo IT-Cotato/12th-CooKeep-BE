@@ -11,6 +11,7 @@ import com.cookeep.cookeep.domain.recipe.application.AiRecipeService;
 import com.cookeep.cookeep.api.dto.response.AiRecipeAdoptResponseDto;
 import com.cookeep.cookeep.api.dto.request.AiRecipeRequestDto;
 import com.cookeep.cookeep.api.dto.response.AiRecipeResponseDto;
+import com.cookeep.cookeep.domain.recipe.application.GenerationCancellationRegistry;
 import com.cookeep.cookeep.security.JwtTokenProvider;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -25,6 +26,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.UUID;
+
 @Tag(
         name = "(MAIN05, 06, 07) AI 레시피",
         description = "AI를 이용한 레시피 생성/채택/조회 API"
@@ -35,12 +38,14 @@ import org.springframework.web.bind.annotation.*;
 public class AiRecipeController {
 
     private final AiRecipeService aiRecipeService;
+    private final GenerationCancellationRegistry cancellationRegistry;
 
     @Operation(
             summary = "(MAIN05-01)AI 레시피 생성",
             description = "유저의 식재료 및 조건을 기반으로 AI에게 레시피를 요청합니다."
     )
     @ApiErrorCodeExamples({
+            ErrorCode.AI_GENERATION_CANCELLED,
             ErrorCode.RECIPE_INGREDIENTS_REQUIRED,
             ErrorCode.INVALID_FEATURE,
             ErrorCode.INVALID_INGREDIENT_TYPE,
@@ -53,7 +58,11 @@ public class AiRecipeController {
             ErrorCode.AI_RATE_LIMIT_EXCEEDED
     })
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "AI 레시피 생성 성공"),
+            @ApiResponse(responseCode = "200", description = """
+                AI 레시피 생성 성공
+                - 레시피 생성 성공
+                - AI_GENERATION_CANCELLED: 사용자의 요청에 의해 레시피 생성이 정상적으로 중단되었습니다.
+                """, content = @Content),
             @ApiResponse(responseCode = "400", description = """
                     잘못된 요청입니다. 다음 오류가 발생할 수 있습니다:
                     - RECIPE_INGREDIENTS_REQUIRED: 레시피 생성을 위한 재료가 필요합니다.
@@ -83,11 +92,13 @@ public class AiRecipeController {
     @PostMapping
     public ResponseEntity<AiRecipeResponseDto> generateRecipe(
             @AuthenticationPrincipal(expression = "userId") Long userId,
-            @Valid @RequestBody AiRecipeRequestDto request
+            @Valid @RequestBody AiRecipeRequestDto request,
+            @RequestHeader(value = "X-Request-Id", required = false) String requestId
     ) {
+        String effectiveRequestId = (requestId != null) ? requestId : UUID.randomUUID().toString();
 
         AiRecipeResponseDto response =
-                aiRecipeService.generateRecipe(userId, request);
+                aiRecipeService.generateRecipe(userId, request, effectiveRequestId);
 
         return ResponseEntity.ok(response);
     }
@@ -97,6 +108,7 @@ public class AiRecipeController {
             description = "기존 세션의 식재료 및 조건을 기반으로 AI에게 레시피를 재요청합니다."
     )
     @ApiErrorCodeExamples({
+            ErrorCode.AI_GENERATION_CANCELLED,
             ErrorCode.RECIPE_SESSIONID_REQUIRED,
             ErrorCode.AI_SESSION_NOT_FOUND,
             ErrorCode.SESSION_ALREADY_COMPLETED,
@@ -112,7 +124,11 @@ public class AiRecipeController {
             ErrorCode.AI_RATE_LIMIT_EXCEEDED
     })
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "AI 레시피 재생성 성공"),
+            @ApiResponse(responseCode = "200", description = """
+                AI 레시피 재생성 성공
+                - 레시피 생성 성공
+                - AI_GENERATION_CANCELLED: 사용자의 요청에 의해 레시피 생성이 정상적으로 중단되었습니다.
+                """, content = @Content),
             @ApiResponse(responseCode = "400", description = """
                     잘못된 요청입니다. 다음 오류가 발생할 수 있습니다:
                     - RECIPE_SESSIONID_REQUIRED: 레시피 요청에 필요한 값이 누락되었습니다.
@@ -145,10 +161,14 @@ public class AiRecipeController {
     @PostMapping("/retry")
     public ResponseEntity<AiRecipeResponseDto> regenerateRecipe(
             @AuthenticationPrincipal(expression = "userId") Long userId,
-            @Valid @RequestBody AiRecipeRetryDto request
+            @Valid @RequestBody AiRecipeRetryDto request,
+            @RequestHeader(value = "X-Request-Id", required = false) String requestId
     ) {
+
+        String effectiveRequestId = (requestId != null) ? requestId : UUID.randomUUID().toString();
+
         return ResponseEntity.ok(
-                aiRecipeService.regenerateRecipe(userId, request.getSessionId())
+                aiRecipeService.regenerateRecipe(userId, request.getSessionId(), effectiveRequestId)
         );
     }
 
@@ -341,6 +361,7 @@ public class AiRecipeController {
             description = "유저의 냉장고에 있는 전체 식재료를 기반으로 AI가 재료를 직접 선택하여 레시피를 생성합니다. (feature는 ANY로 고정)"
     )
     @ApiErrorCodeExamples({
+            ErrorCode.AI_GENERATION_CANCELLED,
             ErrorCode.RANDOM_RECIPE_INGREDIENT_NOT_ENOUGH,
             ErrorCode.INVALID_INGREDIENT_TYPE,
             ErrorCode.INGREDIENT_NOT_FOUND,
@@ -357,7 +378,11 @@ public class AiRecipeController {
             ErrorCode.AI_RATE_LIMIT_EXCEEDED
     })
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "AI 랜덤 레시피 생성 성공"),
+            @ApiResponse(responseCode = "200", description = """
+                AI 랜덤 레시피 생성 성공
+                - 레시피 생성 성공
+                - AI_GENERATION_CANCELLED: 사용자의 요청에 의해 레시피 생성이 정상적으로 중단되었습니다.
+                """, content = @Content),
             @ApiResponse(responseCode = "400", description = """
                 잘못된 요청입니다. 다음 오류가 발생할 수 있습니다:
                 - RANDOM_RECIPE_INGREDIENT_NOT_ENOUGH: 랜덤 레시피 생성을 위해 재료가 최소 3개 이상 필요합니다.
@@ -390,8 +415,13 @@ public class AiRecipeController {
     })
     @PostMapping("/random")
     public ResponseEntity<AiRecipeResponseDto> generateRandomRecipe(
-            @AuthenticationPrincipal(expression = "userId") Long userId) {
-        return ResponseEntity.ok(aiRecipeService.generateRandomRecipe(userId));
+            @AuthenticationPrincipal(expression = "userId") Long userId,
+            @RequestHeader(value = "X-Request-Id", required = false) String requestId
+    ) {
+
+        String effectiveRequestId = (requestId != null) ? requestId : UUID.randomUUID().toString();
+
+        return ResponseEntity.ok(aiRecipeService.generateRandomRecipe(userId, effectiveRequestId));
     }
 
     @Operation(
@@ -399,6 +429,7 @@ public class AiRecipeController {
             description = "기존 랜덤 레시피 세션의 냉장고 식재료를 다시 조회하여 AI에게 새로운 랜덤 레시피를 재요청합니다. (최대 5회)"
     )
     @ApiErrorCodeExamples({
+            ErrorCode.AI_GENERATION_CANCELLED,
             ErrorCode.RECIPE_SESSIONID_REQUIRED,
             ErrorCode.AI_SESSION_NOT_FOUND,
             ErrorCode.SESSION_ALREADY_COMPLETED,
@@ -420,7 +451,11 @@ public class AiRecipeController {
             ErrorCode.AI_RATE_LIMIT_EXCEEDED
     })
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "AI 랜덤 레시피 재생성 성공"),
+            @ApiResponse(responseCode = "200", description = """
+                AI 랜덤 레시피 재생성 성공
+                - 레시피 생성 성공
+                - AI_GENERATION_CANCELLED: 사용자의 요청에 의해 레시피 생성이 정상적으로 중단되었습니다.
+                """, content = @Content),
             @ApiResponse(responseCode = "400", description = """
                 잘못된 요청입니다. 다음 오류가 발생할 수 있습니다:
                 - RECIPE_SESSIONID_REQUIRED: 레시피 요청에 필요한 값이 누락되었습니다.
@@ -459,7 +494,35 @@ public class AiRecipeController {
     @PostMapping("/random/retry")
     public ResponseEntity<AiRecipeResponseDto> regenerateRandomRecipe(
             @AuthenticationPrincipal(expression = "userId") Long userId,
-            @Valid @RequestBody AiRecipeRetryDto request) {
-        return ResponseEntity.ok(aiRecipeService.regenerateRandomRecipe(userId, request.getSessionId()));
+            @Valid @RequestBody AiRecipeRetryDto request,
+            @RequestHeader(value = "X-Request-Id", required = false) String requestId
+    ) {
+
+        String effectiveRequestId = (requestId != null) ? requestId : UUID.randomUUID().toString();
+
+        return ResponseEntity.ok(aiRecipeService.regenerateRandomRecipe(userId, request.getSessionId(), effectiveRequestId));
+    }
+
+    @Operation(
+            summary = "(MAIN05-06) AI 레시피 생성 취소",
+            description = "진행 중인 레시피 생성(일반/랜덤, 신규/재요청 공통)을 즉시 중단합니다."
+    )
+    @ApiErrorCodeExamples({
+            ErrorCode.UNAUTHORIZED
+    })
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "성공"),
+            @ApiResponse(responseCode = "401", description = """
+            인증 실패입니다.
+            - UNAUTHORIZED: 인증에 실패했습니다.
+            """, content = @Content)
+    })
+    @PostMapping("/cancel/{requestId}")
+    public ResponseEntity<DataResponse<Void>> cancelGeneration(
+            @AuthenticationPrincipal(expression = "userId") Long userId,
+            @PathVariable String requestId
+    ) {
+        cancellationRegistry.cancel(requestId);
+        return ResponseEntity.ok(DataResponse.ok());
     }
 }
