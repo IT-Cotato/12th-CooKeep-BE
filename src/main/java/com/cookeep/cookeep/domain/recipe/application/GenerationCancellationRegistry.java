@@ -61,5 +61,6 @@ public class GenerationCancellationRegistry {
     public void clear(String requestId) {
         futures.remove(requestId);
         cancelledFlags.remove(requestId);
+        owners.remove(requestId);
     }
 }
