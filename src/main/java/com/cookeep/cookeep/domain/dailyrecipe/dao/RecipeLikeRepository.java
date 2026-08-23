@@ -35,8 +35,10 @@ public interface RecipeLikeRepository extends JpaRepository<RecipeLike, Long> {
 	boolean existsByDailyRecipeAndUser(DailyRecipe dailyRecipe, User user);
 
 	// RecipeLike 테이블을 거쳐서 내가 좋아요를 누른 레시피들 조회
-	@Query("SELECT rl.dailyRecipe FROM RecipeLike rl " +
+	@Query("SELECT dr FROM RecipeLike rl " +
+			"JOIN rl.dailyRecipe dr " +
+			"JOIN FETCH dr.user " +
 			"WHERE rl.user = :user " +
-			"ORDER BY rl.dailyRecipe.likeCount DESC, rl.dailyRecipe.createdAt DESC")
+			"ORDER BY dr.likeCount DESC, dr.createdAt DESC")
 	Slice<DailyRecipe> findMyLikedRecipes(@Param("user") User user, Pageable pageable);
 }
