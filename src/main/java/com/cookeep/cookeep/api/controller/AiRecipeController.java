@@ -522,7 +522,7 @@ public class AiRecipeController {
             @AuthenticationPrincipal(expression = "userId") Long userId,
             @PathVariable String requestId
     ) {
-        cancellationRegistry.cancel(requestId);
+        cancellationRegistry.cancel(requestId, userId);
         return ResponseEntity.ok(DataResponse.ok());
     }
 }

@@ -18,6 +18,12 @@ public class GenerationCancellationRegistry {
 
     private final Map<String, CompletableFuture<?>> futures = new ConcurrentHashMap<>();
     private final Map<String, AtomicBoolean> cancelledFlags = new ConcurrentHashMap<>();
+    private final Map<String, Long> owners = new ConcurrentHashMap<>();
+
+    // 레시피 생성 진입점에 호출해서 소유자를 기록
+    public void registerOwner(String requestId, Long userId) {
+        owners.put(requestId, userId);
+    }
 
     // 작업 시작 시 호출. 아직 취소 플래그가 없으면 false로 초기화.
     public void register(String requestId, CompletableFuture<?> future) {
@@ -26,7 +32,15 @@ public class GenerationCancellationRegistry {
     }
 
     // 앱의 취소 요청이 도착했을 때 호출.
-    public boolean cancel(String requestId) {
+    public boolean cancel(String requestId, Long userId) {
+        Long ownerId = owners.get(requestId);
+
+        // 소유자가 이미 기록돼 있는데 호출자와 다르면 거부
+        if (ownerId != null && !ownerId.equals(userId)) {
+            log.warn("취소 권한 없음. requestId={}, ownerId={}, userId={}", requestId, ownerId, userId);
+            return false;
+        }
+
         cancelledFlags.computeIfAbsent(requestId, k -> new AtomicBoolean()).set(true);
         CompletableFuture<?> future = futures.get(requestId);
         if (future != null) {
