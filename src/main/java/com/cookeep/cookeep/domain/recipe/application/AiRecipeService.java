@@ -276,8 +276,22 @@ public class AiRecipeService {
             updateSessionTitle(session, aiResponse);
 
             // 8. 유튜브 검색어로 실제 영상 조회
-            List<YoutubeReferenceDto> youtubeReferences =
-                    youtubeSearchService.searchVideos(aiResponse.getYoutubeSearchQueries());
+            CompletableFuture<List<YoutubeReferenceDto>> youtubeFuture =
+                    youtubeSearchService.searchVideosAsync(aiResponse.getYoutubeSearchQueries());
+            cancellationRegistry.register(requestId, youtubeFuture);
+
+            List<YoutubeReferenceDto> youtubeReferences;
+            try {
+                youtubeReferences = youtubeFuture.get();
+            } catch (CancellationException e) {
+                throw new AppException(ErrorCode.AI_GENERATION_CANCELLED);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw new AppException(ErrorCode.AI_GENERATION_CANCELLED);
+            } catch (ExecutionException e) {
+                log.error("유튜브 검색 중 예상치 못한 오류", e);
+                youtubeReferences = new ArrayList<>();
+            }
 
             // 체크포인트 2: 유튜브 검색 직후, 최종 메시지 저장 전
             if (cancellationRegistry.isCancelled(requestId)) {
@@ -569,8 +583,22 @@ public class AiRecipeService {
             updateSessionTitle(session, aiResponse);
 
             // 10. 유튜브 검색 (기존 재사용)
-            List<YoutubeReferenceDto> youtubeReferences =
-                    youtubeSearchService.searchVideos(aiResponse.getYoutubeSearchQueries());
+            CompletableFuture<List<YoutubeReferenceDto>> youtubeFuture =
+                    youtubeSearchService.searchVideosAsync(aiResponse.getYoutubeSearchQueries());
+            cancellationRegistry.register(requestId, youtubeFuture);
+
+            List<YoutubeReferenceDto> youtubeReferences;
+            try {
+                youtubeReferences = youtubeFuture.get();
+            } catch (CancellationException e) {
+                throw new AppException(ErrorCode.AI_GENERATION_CANCELLED);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw new AppException(ErrorCode.AI_GENERATION_CANCELLED);
+            } catch (ExecutionException e) {
+                log.error("유튜브 검색 중 예상치 못한 오류", e);
+                youtubeReferences = new ArrayList<>();
+            }
 
             // ✅ 체크포인트2: 유튜브 검색 직후
             if (cancellationRegistry.isCancelled(requestId)) {
@@ -653,8 +681,23 @@ public class AiRecipeService {
 
             updateSessionTitle(session, aiResponse);
 
-            List<YoutubeReferenceDto> youtubeReferences =
-                    youtubeSearchService.searchVideos(aiResponse.getYoutubeSearchQueries());
+            // 유튜브 검색
+            CompletableFuture<List<YoutubeReferenceDto>> youtubeFuture =
+                    youtubeSearchService.searchVideosAsync(aiResponse.getYoutubeSearchQueries());
+            cancellationRegistry.register(requestId, youtubeFuture);
+
+            List<YoutubeReferenceDto> youtubeReferences;
+            try {
+                youtubeReferences = youtubeFuture.get();
+            } catch (CancellationException e) {
+                throw new AppException(ErrorCode.AI_GENERATION_CANCELLED);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw new AppException(ErrorCode.AI_GENERATION_CANCELLED);
+            } catch (ExecutionException e) {
+                log.error("유튜브 검색 중 예상치 못한 오류", e);
+                youtubeReferences = new ArrayList<>();
+            }
 
             // ✅ 체크포인트2: 유튜브 검색 직후
             if (cancellationRegistry.isCancelled(requestId)) {
