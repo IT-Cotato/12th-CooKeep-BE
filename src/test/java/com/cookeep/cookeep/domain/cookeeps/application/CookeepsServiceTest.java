@@ -367,6 +367,7 @@ class CookeepsServiceTest {
 
             CookeepsFeedResponseDto dto = result.getContent().get(0);
             assertThat(dto.getDailyRecipeId()).isEqualTo(42L);
+            assertThat(dto.getNickname()).isEqualTo("테스터");
             assertThat(dto.getTitle()).isEqualTo("된장찌개");
             assertThat(dto.getLikeCount()).isEqualTo(15);
             assertThat(dto.getRecipeImageUrl()).isEqualTo("https://example.com/img.jpg");

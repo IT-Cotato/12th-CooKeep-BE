@@ -61,6 +61,7 @@ class RecipeBookmarkServiceTest {
         recipeOwner = mock(User.class);
         given(bookmarker.getUserId()).willReturn(1L);
         given(recipeOwner.getUserId()).willReturn(2L);
+        given(recipeOwner.getNickname()).willReturn("레시피작성자");
 
         recipe = DailyRecipe.builder()
                 .title("테스트 레시피")
@@ -194,6 +195,7 @@ class RecipeBookmarkServiceTest {
             assertThat(result.getContent()).hasSize(1);
             CookeepsFeedResponseDto dto = result.getContent().get(0);
             assertThat(dto.getDailyRecipeId()).isEqualTo(20L);
+            assertThat(dto.getNickname()).isEqualTo("레시피작성자");
             assertThat(dto.getTitle()).isEqualTo("북마크한 레시피");
             assertThat(dto.getLikeCount()).isEqualTo(3);
             assertThat(dto.getRecipeImageUrl()).isEqualTo("http://image.url");

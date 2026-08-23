@@ -76,6 +76,7 @@ class RecipeLikeServiceTest {
         recipeOwner = mock(User.class);
         given(liker.getUserId()).willReturn(1L);
         given(recipeOwner.getUserId()).willReturn(2L);
+        given(recipeOwner.getNickname()).willReturn("레시피작성자");
 
         recipe = DailyRecipe.builder()
                 .title("테스트 레시피")
@@ -250,6 +251,7 @@ class RecipeLikeServiceTest {
             assertThat(result.getContent()).hasSize(1);
             CookeepsFeedResponseDto dto = result.getContent().get(0);
             assertThat(dto.getDailyRecipeId()).isEqualTo(10L);
+            assertThat(dto.getNickname()).isEqualTo("레시피작성자");
             assertThat(dto.getTitle()).isEqualTo("좋아요한 레시피");
             assertThat(dto.getLikeCount()).isEqualTo(5);
             assertThat(dto.getRecipeImageUrl()).isEqualTo("http://image.url");
