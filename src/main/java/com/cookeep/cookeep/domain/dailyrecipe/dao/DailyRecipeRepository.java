@@ -36,7 +36,7 @@ public interface DailyRecipeRepository extends JpaRepository<DailyRecipe, Long> 
             @Param("end") LocalDateTime end);
 
     // 전체 공개 레시피 조회 (Slice 기반 - COUNT 쿼리 없음)
-    @Query("SELECT dr FROM DailyRecipe dr WHERE dr.isPublic = true")
+    @Query("SELECT dr FROM DailyRecipe dr JOIN FETCH dr.user WHERE dr.isPublic = true")
     Slice<DailyRecipe> findAllPublicRecipes(Pageable pageable);
 
     boolean existsByAiRecipe_Session_Id(Long sessionId);

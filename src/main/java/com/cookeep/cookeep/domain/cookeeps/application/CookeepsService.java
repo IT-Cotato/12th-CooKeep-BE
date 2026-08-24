@@ -78,6 +78,7 @@ public class CookeepsService {
 
 		return recipes.map(recipe -> CookeepsFeedResponseDto.builder()
 				.dailyRecipeId(recipe.getId())
+				.nickname(recipe.getUser().getNickname())
 				.title(recipe.getTitle())
 				.likeCount(recipe.getLikeCount())
 				.recipeImageUrl(recipe.getRecipeImageUrl())

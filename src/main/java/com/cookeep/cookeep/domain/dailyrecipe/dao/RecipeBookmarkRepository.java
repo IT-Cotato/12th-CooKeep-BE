@@ -15,7 +15,9 @@ public interface RecipeBookmarkRepository extends JpaRepository<RecipeBookmark, 
     Optional<RecipeBookmark> findByDailyRecipeAndUser(DailyRecipe dailyRecipe, User user);
     boolean existsByDailyRecipeAndUser(DailyRecipe dailyRecipe, User user);
 
-    @Query("SELECT rb.dailyRecipe FROM RecipeBookmark rb " +
+    @Query("SELECT dr FROM RecipeBookmark rb " +
+            "JOIN rb.dailyRecipe dr " +
+            "JOIN FETCH dr.user " +
             "WHERE rb.user = :user " +
             "ORDER BY rb.createdAt DESC")
     Slice<DailyRecipe> findMyBookmarkedRecipes(@Param("user") User user, Pageable pageable);

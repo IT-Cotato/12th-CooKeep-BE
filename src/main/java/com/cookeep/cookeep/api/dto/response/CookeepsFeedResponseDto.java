@@ -9,6 +9,7 @@ import java.time.LocalDateTime;
 @Builder
 public class CookeepsFeedResponseDto {
     private Long dailyRecipeId;
+    private String nickname;
     private String title;
     private Integer likeCount;
     private String recipeImageUrl;
