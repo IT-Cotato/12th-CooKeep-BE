@@ -17,6 +17,7 @@ import reactor.util.retry.Retry;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeoutException;
 
 @Slf4j
@@ -68,6 +69,24 @@ public class YoutubeSearchService {
                 )
                 .collectList()
                 .block();
+    }
+
+    // 실제 AiRecipeService에서 사용. Future 형태
+    public CompletableFuture<List<YoutubeReferenceDto>> searchVideosAsync(List<String> searchQueries) {
+        if (searchQueries == null || searchQueries.isEmpty()) {
+            return CompletableFuture.completedFuture(new ArrayList<>());
+        }
+
+        return Flux.fromIterable(searchQueries)
+                .flatMap(query ->
+                        searchSingleVideo(query)
+                                .onErrorResume(e -> {
+                                    log.warn("유튜브 검색 실패 (검색어: '{}', 원인: {})", query, describeError(e));
+                                    return Mono.empty();
+                                })
+                )
+                .collectList()
+                .toFuture();
     }
 
     // --- 내부 메서드 ---
