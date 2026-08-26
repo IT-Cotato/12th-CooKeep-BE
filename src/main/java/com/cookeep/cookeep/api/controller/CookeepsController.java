@@ -2,7 +2,8 @@ package com.cookeep.cookeep.api.controller;
 
 import com.cookeep.cookeep.api.dto.response.CookeepsOnboardingResponseDto;
 import com.cookeep.cookeep.api.dto.response.CookeepsRecipeDetailResponseDto;
-import com.cookeep.cookeep.api.dto.response.RankingResponseDto;
+import com.cookeep.cookeep.api.dto.response.RecipeRankingResponseDto;
+import com.cookeep.cookeep.api.dto.response.WateringRankingResponseDto;
 import com.cookeep.cookeep.api.dto.response.CookeepsFeedResponseDto;
 import com.cookeep.cookeep.common.dto.DataResponse;
 import com.cookeep.cookeep.common.dto.SliceResponse;
@@ -25,14 +26,23 @@ public class CookeepsController {
 
 	private final CookeepsService cookeepsService;
 
-	@Operation(summary = "쿠킵스 랭킹 조회", description = "이번 달 물주기 횟수 Top 3 유저와 이번주 좋아요 Top 3 레시피를 조회합니다.")
+	@Operation(summary = "물주기 랭킹 조회", description = "이번 달 물주기 횟수 Top 3 유저와 나의 이번 달 물주기 횟수를 조회합니다.")
 	@ApiResponses(value = {
 		@ApiResponse(responseCode = "200", description = "조회 성공")
 	})
-	@GetMapping("/ranking")
-	public ResponseEntity<DataResponse<RankingResponseDto>> getRanking(
+	@GetMapping("/ranking/watering")
+	public ResponseEntity<DataResponse<WateringRankingResponseDto>> getWateringRanking(
 			@AuthenticationPrincipal(expression = "userId") Long userId) {
-		return ResponseEntity.ok(DataResponse.from(cookeepsService.getRanking(userId)));
+		return ResponseEntity.ok(DataResponse.from(cookeepsService.getWateringRanking(userId)));
+	}
+
+	@Operation(summary = "이번주 인기 레시피 랭킹 조회", description = "이번 주 좋아요 Top 3 레시피를 조회합니다.")
+	@ApiResponses(value = {
+		@ApiResponse(responseCode = "200", description = "조회 성공")
+	})
+	@GetMapping("/ranking/recipes")
+	public ResponseEntity<DataResponse<RecipeRankingResponseDto>> getRecipeRanking() {
+		return ResponseEntity.ok(DataResponse.from(cookeepsService.getRecipeRanking()));
 	}
 
 	@Operation(summary = "쿠킵스 온보딩 완료 여부 조회", description = "유저의 쿠킵스 온보딩 모달 확인 여부를 조회합니다.")

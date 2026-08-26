@@ -1,7 +1,7 @@
 package com.cookeep.cookeep.domain.cookeeps.application;
 
-import com.cookeep.cookeep.api.dto.response.RankingResponseDto.RecipeRankDto;
-import com.cookeep.cookeep.api.dto.response.RankingResponseDto.WateringRankDto;
+import com.cookeep.cookeep.api.dto.response.RecipeRankingResponseDto.RecipeRankDto;
+import com.cookeep.cookeep.api.dto.response.WateringRankingResponseDto.WateringRankDto;
 import com.cookeep.cookeep.domain.dailyrecipe.dao.DailyRecipeRepository;
 import com.cookeep.cookeep.domain.dailyrecipe.entity.DailyRecipe;
 import com.cookeep.cookeep.domain.plant.dao.WateringLogRepository;
@@ -69,6 +69,7 @@ public class RankingCacheService {
                     .title(recipe.getTitle())
                     .likeCount(recipe.getLikeCount().longValue())
                     .recipeImageUrl(recipe.getRecipeImageUrl())
+                    .description(recipe.getDescription())
                     .build();
             })
             .collect(Collectors.toList());

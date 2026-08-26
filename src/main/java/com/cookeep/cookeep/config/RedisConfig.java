@@ -1,7 +1,7 @@
 package com.cookeep.cookeep.config;
 
-import com.cookeep.cookeep.api.dto.response.RankingResponseDto.RecipeRankDto;
-import com.cookeep.cookeep.api.dto.response.RankingResponseDto.WateringRankDto;
+import com.cookeep.cookeep.api.dto.response.RecipeRankingResponseDto.RecipeRankDto;
+import com.cookeep.cookeep.api.dto.response.WateringRankingResponseDto.WateringRankDto;
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
