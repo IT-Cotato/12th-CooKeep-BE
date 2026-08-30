@@ -9,18 +9,18 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public enum ProfileImages {
 
-    IMAGE_1(1, "1.png"),
-    IMAGE_2(2, "2.png"),
-    IMAGE_3(3, "3.png"),
-    IMAGE_4(4, "4.png"),
-    IMAGE_5(5, "5.png"),
-    IMAGE_6(6, "6.png"),
-    IMAGE_7(7, "7.png"),
-    IMAGE_8(8, "8.png"),
-    IMAGE_9(9, "9.png"),
-    IMAGE_10(10, "10.png"),
-    IMAGE_11(11, "11.png"),
-    IMAGE_12(12, "12.png");
+    IMAGE_1(1, "1_v2.png"),
+    IMAGE_2(2, "2_v2.png"),
+    IMAGE_3(3, "3_v2.png"),
+    IMAGE_4(4, "4_v2.png"),
+    IMAGE_5(5, "5_v2.png"),
+    IMAGE_6(6, "6_v2.png"),
+    IMAGE_7(7, "7_v2.png"),
+    IMAGE_8(8, "8_v2.png"),
+    IMAGE_9(9, "9_v2.png"),
+    IMAGE_10(10, "10_v2.png"),
+    IMAGE_11(11, "11_v2.png"),
+    IMAGE_12(12, "12_v2.png");
 
     private final int imageId;
     private final String fileName;
