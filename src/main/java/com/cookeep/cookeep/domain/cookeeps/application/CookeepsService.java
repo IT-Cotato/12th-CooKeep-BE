@@ -2,9 +2,10 @@ package com.cookeep.cookeep.domain.cookeeps.application;
 
 import com.cookeep.cookeep.api.dto.response.CookeepsOnboardingResponseDto;
 import com.cookeep.cookeep.api.dto.response.CookeepsRecipeDetailResponseDto;
-import com.cookeep.cookeep.api.dto.response.RankingResponseDto;
-import com.cookeep.cookeep.api.dto.response.RankingResponseDto.RecipeRankDto;
-import com.cookeep.cookeep.api.dto.response.RankingResponseDto.WateringRankDto;
+import com.cookeep.cookeep.api.dto.response.RecipeRankingResponseDto;
+import com.cookeep.cookeep.api.dto.response.RecipeRankingResponseDto.RecipeRankDto;
+import com.cookeep.cookeep.api.dto.response.WateringRankingResponseDto;
+import com.cookeep.cookeep.api.dto.response.WateringRankingResponseDto.WateringRankDto;
 import com.cookeep.cookeep.api.dto.response.CookeepsFeedResponseDto;
 import com.cookeep.cookeep.common.exception.AppException;
 import com.cookeep.cookeep.common.exception.ErrorCode;
@@ -40,23 +41,30 @@ public class CookeepsService {
 	private final RankingCacheService rankingCacheService;
 
 	@Transactional(readOnly = true)
-	public RankingResponseDto getRanking(Long userId) {
+	public WateringRankingResponseDto getWateringRanking(Long userId) {
 		LocalDateTime monthStart = LocalDate.now().withDayOfMonth(1).atStartOfDay();
 		LocalDateTime monthEnd = monthStart.plusMonths(1);
 
+		List<WateringRankDto> wateringRanking = rankingCacheService.getWateringRanking(monthStart, monthEnd);
+		Long myWateringCount = wateringLogRepository.countByUserAndMonth(userId, monthStart, monthEnd);
+
+		return WateringRankingResponseDto.builder()
+			.wateringRanking(wateringRanking)
+			.myWateringCount(myWateringCount)
+			.build();
+	}
+
+	@Transactional(readOnly = true)
+	public RecipeRankingResponseDto getRecipeRanking() {
 		LocalDateTime weekStart = LocalDate.now()
 			.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
 			.atStartOfDay();
 		LocalDateTime weekEnd = weekStart.plusDays(7);
 
-		List<WateringRankDto> wateringRanking = rankingCacheService.getWateringRanking(monthStart, monthEnd);
 		List<RecipeRankDto> recipeRanking = rankingCacheService.getRecipeRanking(weekStart, weekEnd);
-		Long myWateringCount = wateringLogRepository.countByUserAndMonth(userId, monthStart, monthEnd);
 
-		return RankingResponseDto.builder()
-			.wateringRanking(wateringRanking)
+		return RecipeRankingResponseDto.builder()
 			.recipeRanking(recipeRanking)
-			.myWateringCount(myWateringCount)
 			.build();
 	}
 

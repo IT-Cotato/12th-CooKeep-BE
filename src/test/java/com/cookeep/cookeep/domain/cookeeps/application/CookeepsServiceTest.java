@@ -2,7 +2,10 @@ package com.cookeep.cookeep.domain.cookeeps.application;
 
 import com.cookeep.cookeep.api.dto.response.CookeepsFeedResponseDto;
 import com.cookeep.cookeep.api.dto.response.CookeepsOnboardingResponseDto;
-import com.cookeep.cookeep.api.dto.response.RankingResponseDto;
+import com.cookeep.cookeep.api.dto.response.RecipeRankingResponseDto;
+import com.cookeep.cookeep.api.dto.response.RecipeRankingResponseDto.RecipeRankDto;
+import com.cookeep.cookeep.api.dto.response.WateringRankingResponseDto;
+import com.cookeep.cookeep.api.dto.response.WateringRankingResponseDto.WateringRankDto;
 import com.cookeep.cookeep.domain.dailyrecipe.dao.DailyRecipeRepository;
 import com.cookeep.cookeep.domain.dailyrecipe.entity.DailyRecipe;
 import com.cookeep.cookeep.domain.plant.dao.WateringLogRepository;
@@ -29,7 +32,6 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -45,6 +47,7 @@ class CookeepsServiceTest {
     @Mock private UserRepository userRepository;
     @Mock private WateringLogRepository wateringLogRepository;
     @Mock private DailyRecipeRepository dailyRecipeRepository;
+    @Mock private RankingCacheService rankingCacheService;
 
     @InjectMocks
     private CookeepsService cookeepsService;
@@ -53,24 +56,23 @@ class CookeepsServiceTest {
 
     @BeforeEach
     void setUp() {
-        given(wateringLogRepository.findTopWateringUsers(any(), any(), any())).willReturn(List.of());
+        given(rankingCacheService.getWateringRanking(any(), any())).willReturn(List.of());
         given(wateringLogRepository.countByUserAndMonth(any(), any(), any())).willReturn(0L);
-        given(dailyRecipeRepository.findTopRankedRecipes(any(), any(), any())).willReturn(List.of());
+        given(rankingCacheService.getRecipeRanking(any(), any())).willReturn(List.of());
     }
 
     @Nested
-    @DisplayName("getRanking - 물주기 랭킹 월별 기준")
-    class WateringRanking {
+    @DisplayName("getWateringRanking - 물주기 랭킹 월별 기준")
+    class GetWateringRanking {
 
         @Test
         @DisplayName("물주기 랭킹 조회 시 이번 달 1일 00:00:00부터 다음 달 1일 00:00:00 범위로 조회한다")
         void 물주기_랭킹_이번달_범위로_조회() {
-            cookeepsService.getRanking(USER_ID);
+            cookeepsService.getWateringRanking(USER_ID);
 
             ArgumentCaptor<LocalDateTime> startCaptor = ArgumentCaptor.forClass(LocalDateTime.class);
             ArgumentCaptor<LocalDateTime> endCaptor = ArgumentCaptor.forClass(LocalDateTime.class);
-            verify(wateringLogRepository).findTopWateringUsers(
-                    startCaptor.capture(), endCaptor.capture(), any(Pageable.class));
+            verify(rankingCacheService).getWateringRanking(startCaptor.capture(), endCaptor.capture());
 
             LocalDateTime expectedStart = LocalDate.now().withDayOfMonth(1).atStartOfDay();
             LocalDateTime expectedEnd = expectedStart.plusMonths(1);
@@ -80,56 +82,31 @@ class CookeepsServiceTest {
         }
 
         @Test
-        @DisplayName("물주기 랭킹은 상위 3명을 1~3위 순위와 함께 반환한다")
-        void 물주기_랭킹_상위3명_순위반환() {
-            User user1 = User.builder().nickname("유저1").build();
-            User user2 = User.builder().nickname("유저2").build();
-            User user3 = User.builder().nickname("유저3").build();
+        @DisplayName("rankingCacheService가 반환한 순위를 그대로 전달한다")
+        void 물주기_랭킹_결과_그대로_전달() {
+            List<WateringRankDto> ranking = List.of(
+                    WateringRankDto.builder().rank(1).nickname("유저1").wateringCount(10L).build(),
+                    WateringRankDto.builder().rank(2).nickname("유저2").wateringCount(7L).build(),
+                    WateringRankDto.builder().rank(3).nickname("유저3").wateringCount(5L).build()
+            );
+            given(rankingCacheService.getWateringRanking(any(), any())).willReturn(ranking);
 
-            List<Object[]> rows = new ArrayList<>();
-            rows.add(new Object[]{user1, 10L});
-            rows.add(new Object[]{user2, 7L});
-            rows.add(new Object[]{user3, 5L});
-            given(wateringLogRepository.findTopWateringUsers(any(), any(), any())).willReturn(rows);
+            WateringRankingResponseDto result = cookeepsService.getWateringRanking(USER_ID);
 
-            RankingResponseDto result = cookeepsService.getRanking(USER_ID);
-
-            List<RankingResponseDto.WateringRankDto> ranking = result.getWateringRanking();
-            assertThat(ranking).hasSize(3);
-            assertThat(ranking.get(0).getRank()).isEqualTo(1);
-            assertThat(ranking.get(0).getNickname()).isEqualTo("유저1");
-            assertThat(ranking.get(0).getWateringCount()).isEqualTo(10L);
-            assertThat(ranking.get(1).getRank()).isEqualTo(2);
-            assertThat(ranking.get(1).getNickname()).isEqualTo("유저2");
-            assertThat(ranking.get(2).getRank()).isEqualTo(3);
-            assertThat(ranking.get(2).getNickname()).isEqualTo("유저3");
+            assertThat(result.getWateringRanking()).isEqualTo(ranking);
         }
 
         @Test
         @DisplayName("이번 달 물주기 기록이 없으면 빈 리스트를 반환한다")
         void 물주기_없는경우_빈리스트_반환() {
-            RankingResponseDto result = cookeepsService.getRanking(USER_ID);
+            WateringRankingResponseDto result = cookeepsService.getWateringRanking(USER_ID);
 
             assertThat(result.getWateringRanking()).isEmpty();
-        }
-
-        @Test
-        @DisplayName("프로필 식물이 없는 유저는 profileImageUrl이 null로 반환된다")
-        void 프로필식물_없는유저_profileImageUrl_null() {
-            User user = User.builder().nickname("유저").build();
-
-            List<Object[]> rows = new ArrayList<>();
-            rows.add(new Object[]{user, 5L});
-            given(wateringLogRepository.findTopWateringUsers(any(), any(), any())).willReturn(rows);
-
-            RankingResponseDto result = cookeepsService.getRanking(USER_ID);
-
-            assertThat(result.getWateringRanking().get(0).getProfileImageUrl()).isNull();
         }
     }
 
     @Nested
-    @DisplayName("getRanking - 나의 이번달 물주기 횟수")
+    @DisplayName("getWateringRanking - 나의 이번달 물주기 횟수")
     class MyWateringCount {
 
         @Test
@@ -137,7 +114,7 @@ class CookeepsServiceTest {
         void 나의_이번달_물주기_횟수_반환() {
             given(wateringLogRepository.countByUserAndMonth(any(), any(), any())).willReturn(12L);
 
-            RankingResponseDto result = cookeepsService.getRanking(USER_ID);
+            WateringRankingResponseDto result = cookeepsService.getWateringRanking(USER_ID);
 
             assertThat(result.getMyWateringCount()).isEqualTo(12L);
         }
@@ -145,7 +122,7 @@ class CookeepsServiceTest {
         @Test
         @DisplayName("나의 물주기 횟수 조회 시 이번 달 1일 00:00:00부터 다음 달 1일 00:00:00 범위와 userId로 조회한다")
         void 나의_물주기_횟수_이번달_범위_및_userId로_조회() {
-            cookeepsService.getRanking(USER_ID);
+            cookeepsService.getWateringRanking(USER_ID);
 
             ArgumentCaptor<Long> userIdCaptor = ArgumentCaptor.forClass(Long.class);
             ArgumentCaptor<LocalDateTime> startCaptor = ArgumentCaptor.forClass(LocalDateTime.class);
@@ -163,27 +140,40 @@ class CookeepsServiceTest {
         @Test
         @DisplayName("이번 달 물주기 기록이 없으면 0을 반환한다")
         void 이번달_물주기_없으면_0_반환() {
-            RankingResponseDto result = cookeepsService.getRanking(USER_ID);
+            WateringRankingResponseDto result = cookeepsService.getWateringRanking(USER_ID);
 
             assertThat(result.getMyWateringCount()).isEqualTo(0L);
         }
     }
 
     @Nested
-    @DisplayName("getRanking - 레시피 랭킹 주별 기준 유지")
-    class RecipeRanking {
+    @DisplayName("getRecipeRanking - 레시피 랭킹 주별 기준")
+    class GetRecipeRanking {
 
         @Test
         @DisplayName("레시피 랭킹 조회 시 이번 주 월요일 00:00:00부터 정확히 7일 범위로 조회한다")
         void 레시피_랭킹_이번주_7일_범위로_조회() {
-            cookeepsService.getRanking(USER_ID);
+            cookeepsService.getRecipeRanking();
 
             ArgumentCaptor<LocalDateTime> startCaptor = ArgumentCaptor.forClass(LocalDateTime.class);
             ArgumentCaptor<LocalDateTime> endCaptor = ArgumentCaptor.forClass(LocalDateTime.class);
-            verify(dailyRecipeRepository).findTopRankedRecipes(
-                    startCaptor.capture(), endCaptor.capture(), any(Pageable.class));
+            verify(rankingCacheService).getRecipeRanking(startCaptor.capture(), endCaptor.capture());
 
             assertThat(endCaptor.getValue()).isEqualTo(startCaptor.getValue().plusDays(7));
+        }
+
+        @Test
+        @DisplayName("rankingCacheService가 반환한 레시피 순위를 그대로 전달한다")
+        void 레시피_랭킹_결과_그대로_전달() {
+            List<RecipeRankDto> ranking = List.of(
+                    RecipeRankDto.builder().dailyRecipeId(1L).rank(1).nickname("유저1")
+                            .title("된장찌개").likeCount(10L).description("맛있어요").build()
+            );
+            given(rankingCacheService.getRecipeRanking(any(), any())).willReturn(ranking);
+
+            RecipeRankingResponseDto result = cookeepsService.getRecipeRanking();
+
+            assertThat(result.getRecipeRanking()).isEqualTo(ranking);
         }
     }
 

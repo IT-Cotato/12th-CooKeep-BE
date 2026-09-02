@@ -11,9 +11,8 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class RankingResponseDto {
+public class WateringRankingResponseDto {
 	private List<WateringRankDto> wateringRanking;
-	private List<RecipeRankDto> recipeRanking;
 	private Long myWateringCount;
 
 	@Getter
@@ -25,18 +24,5 @@ public class RankingResponseDto {
 		private String nickname;
 		private String profileImageUrl;
 		private Long wateringCount;
-	}
-
-	@Getter
-	@Builder
-	@NoArgsConstructor
-	@AllArgsConstructor
-	public static class RecipeRankDto {
-		private Long dailyRecipeId;
-		private Integer rank;
-		private String nickname;
-		private String title;
-		private Long likeCount;
-		private String recipeImageUrl;
 	}
 }
