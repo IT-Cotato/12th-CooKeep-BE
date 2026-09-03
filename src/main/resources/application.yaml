@@ -40,6 +40,10 @@ spring:
         jdbc:
           time_zone: Asia/Seoul
 
+  flyway:
+    baseline-on-migrate: true
+    baseline-version: 3
+
 kakao:
   auth:
     client: ${KAKAO_CLIENT_ID}
