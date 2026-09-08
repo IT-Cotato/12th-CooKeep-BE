@@ -2,6 +2,7 @@ package com.cookeep.cookeep.domain.dailyrecipe.entity;
 
 import com.cookeep.cookeep.common.entity.BaseEntity;
 import com.cookeep.cookeep.domain.recipe.entity.AiRecipe;
+import com.cookeep.cookeep.domain.recipe.entity.Feature;
 import com.cookeep.cookeep.domain.user.entity.User;
 
 import jakarta.persistence.*;
@@ -91,5 +92,12 @@ public class DailyRecipe extends BaseEntity {
         if (this.likeCount > 0) {
             this.likeCount--;
         }
+    }
+
+    public Feature getFeature() {
+        if (aiRecipe == null || aiRecipe.getSession() == null) {
+            return null;
+        }
+        return aiRecipe.getSession().getFeature();
     }
 }
