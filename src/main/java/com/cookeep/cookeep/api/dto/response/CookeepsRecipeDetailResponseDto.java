@@ -32,6 +32,9 @@ public class CookeepsRecipeDetailResponseDto {
     @Schema(description = "요리 사진 URL")
     private String recipeImageUrl;
 
+    @Schema(description = "크롭된 미리보기 사진 URL")
+    private String croppedImageUrl;
+
     @Schema(description = "좋아요 수")
     private Integer likeCount;
 
@@ -52,6 +55,7 @@ public class CookeepsRecipeDetailResponseDto {
                 .description(dailyRecipe.getDescription())
                 .content(dailyRecipe.getContent())
                 .recipeImageUrl(dailyRecipe.getRecipeImageUrl())
+                .croppedImageUrl(dailyRecipe.getCroppedImageUrl())
                 .likeCount(dailyRecipe.getLikeCount())
                 .feature(dailyRecipe.getFeature())
                 .featureName(dailyRecipe.getFeature() != null ? dailyRecipe.getFeature().getDisplayName() : null)
