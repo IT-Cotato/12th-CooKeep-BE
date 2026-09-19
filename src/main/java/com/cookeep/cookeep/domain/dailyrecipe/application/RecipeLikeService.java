@@ -88,15 +88,6 @@ public class RecipeLikeService {
 		return recipeLikeRepository.countByDailyRecipe(dailyRecipe);
 	}
 
-	// 특정 사용자가 특정 레시피에 좋아요를 눌렀는지 확인
-	@Transactional(readOnly = true)
-	public boolean isLiked(Long userId, Long dailyRecipeId) {
-		User user = userReader.readById(userId);
-		DailyRecipe dailyRecipe = dailyRecipeRepository.findById(dailyRecipeId)
-			.orElseThrow(() -> new AppException(ErrorCode.DAILY_RECIPE_NOT_FOUND));
-		return recipeLikeRepository.existsByDailyRecipeAndUser(dailyRecipe, user);
-	}
-
 	@Transactional(readOnly = true)
 	public Slice<CookeepsFeedResponseDto> getMyLikedRecipes(Long userId, Pageable pageable) {
 		User user = userReader.readById(userId);

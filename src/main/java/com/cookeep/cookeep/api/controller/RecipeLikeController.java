@@ -63,38 +63,6 @@ public class RecipeLikeController {
 	}
 
 	@Operation(
-		summary = "레시피 좋아요 여부 조회",
-		description = "현재 사용자가 특정 레시피에 좋아요를 눌렀는지 확인합니다."
-	)
-	@ApiErrorCodeExamples({
-			ErrorCode.UNAUTHORIZED,
-			ErrorCode.DAILY_RECIPE_NOT_FOUND,
-			ErrorCode.CANNOT_LIKE_OWN_RECIPE
-	})
-	@ApiResponses(value = {
-		@ApiResponse(responseCode = "200", description = "좋아요 여부 조회 성공"),
-		@ApiResponse(responseCode = "401", description = "인증 실패", content = @Content),
-		@ApiResponse(responseCode = "404", description = "레시피를 찾을 수 없음", content = @Content)
-	})
-	@GetMapping("/{dailyRecipeId}/check")
-	public ResponseEntity<DataResponse<RecipeLikeResponseDto>> checkLike(
-		@AuthenticationPrincipal(expression = "userId") Long userId,
-		@Parameter(description = "데일리 레시피 ID", required = true)
-		@PathVariable Long dailyRecipeId
-	) {
-		boolean isLiked = recipeLikeService.isLiked(userId, dailyRecipeId);
-		long likeCount = recipeLikeService.getLikeCount(dailyRecipeId);
-
-		RecipeLikeResponseDto response = RecipeLikeResponseDto.from(
-			dailyRecipeId,
-			isLiked,
-			(int) likeCount
-		);
-
-		return ResponseEntity.ok(DataResponse.from(response));
-	}
-
-	@Operation(
 			summary = "내가 좋아요 누른 레시피 목록 조회",
 			description = "사용자가 좋아요를 누른 레시피들을 좋아요가 많은 순서대로 페이징 조회합니다."
 	)@ApiErrorCodeExamples({

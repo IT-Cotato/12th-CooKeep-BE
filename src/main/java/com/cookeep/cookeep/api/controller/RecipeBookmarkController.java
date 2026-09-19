@@ -52,29 +52,6 @@ public class RecipeBookmarkController {
     }
 
     @Operation(
-            summary = "레시피 북마크 여부 조회",
-            description = "현재 로그인한 사용자가 이 레시피를 북마크했는지 여부를 조회합니다."
-    )
-    @ApiErrorCodeExamples({
-            ErrorCode.UNAUTHORIZED,
-            ErrorCode.DAILY_RECIPE_NOT_FOUND
-    })
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "조회 성공"),
-            @ApiResponse(responseCode = "401", description = "인증되지 않은 사용자", content = @Content),
-            @ApiResponse(responseCode = "404", description = "해당 레시피가 존재하지 않음", content = @Content)
-    })
-    @GetMapping("/{dailyRecipeId}/check")
-    public ResponseEntity<DataResponse<RecipeBookmarkResponseDto>> checkBookmark(
-            @AuthenticationPrincipal(expression = "userId") Long userId,
-            @Parameter(description = "데일리 레시피 ID", required = true)
-            @PathVariable Long dailyRecipeId
-    ) {
-        boolean isBookmarked = recipeBookmarkService.isBookmarked(userId, dailyRecipeId);
-        return ResponseEntity.ok(DataResponse.from(RecipeBookmarkResponseDto.from(dailyRecipeId, isBookmarked)));
-    }
-
-    @Operation(
             summary = "내가 북마크한 레시피 목록 조회",
             description = "사용자가 북마크한 레시피들을 북마크 등록일 최신순으로 페이징 조회합니다."
     )
