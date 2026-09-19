@@ -2,11 +2,16 @@ package com.cookeep.cookeep.domain.cookeeps.application;
 
 import com.cookeep.cookeep.api.dto.response.CookeepsFeedResponseDto;
 import com.cookeep.cookeep.api.dto.response.CookeepsOnboardingResponseDto;
+import com.cookeep.cookeep.api.dto.response.CookeepsRecipeDetailResponseDto;
 import com.cookeep.cookeep.api.dto.response.RecipeRankingResponseDto;
 import com.cookeep.cookeep.api.dto.response.RecipeRankingResponseDto.RecipeRankDto;
 import com.cookeep.cookeep.api.dto.response.WateringRankingResponseDto;
 import com.cookeep.cookeep.api.dto.response.WateringRankingResponseDto.WateringRankDto;
+import com.cookeep.cookeep.common.exception.AppException;
+import com.cookeep.cookeep.common.exception.ErrorCode;
 import com.cookeep.cookeep.domain.dailyrecipe.dao.DailyRecipeRepository;
+import com.cookeep.cookeep.domain.dailyrecipe.dao.RecipeBookmarkRepository;
+import com.cookeep.cookeep.domain.dailyrecipe.dao.RecipeLikeRepository;
 import com.cookeep.cookeep.domain.dailyrecipe.entity.DailyRecipe;
 import com.cookeep.cookeep.domain.plant.dao.WateringLogRepository;
 import com.cookeep.cookeep.domain.user.application.UserReader;
@@ -33,8 +38,10 @@ import org.springframework.test.util.ReflectionTestUtils;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
@@ -47,6 +54,8 @@ class CookeepsServiceTest {
     @Mock private UserRepository userRepository;
     @Mock private WateringLogRepository wateringLogRepository;
     @Mock private DailyRecipeRepository dailyRecipeRepository;
+    @Mock private RecipeLikeRepository recipeLikeRepository;
+    @Mock private RecipeBookmarkRepository recipeBookmarkRepository;
     @Mock private RankingCacheService rankingCacheService;
 
     @InjectMocks
@@ -374,6 +383,102 @@ class CookeepsServiceTest {
             Slice<CookeepsFeedResponseDto> result = cookeepsService.getAllRecipes("latest", PageRequest.of(0, 10));
 
             assertThat(result.getContent().get(0).getRecipeImageUrl()).isNull();
+        }
+    }
+
+    @Nested
+    @DisplayName("getCookeepsRecipeDetail - 쿠킵스 레시피 상세 조회 (viewer 상태)")
+    class GetCookeepsRecipeDetail {
+
+        private static final Long AUTHOR_ID = 10L;
+        private static final Long RECIPE_ID = 100L;
+
+        private User viewer;
+        private User author;
+
+        @BeforeEach
+        void setUp() {
+            viewer = User.builder().userId(USER_ID).nickname("조회자").build();
+            author = User.builder().userId(AUTHOR_ID).nickname("작성자").build();
+            given(userReader.readById(USER_ID)).willReturn(viewer);
+        }
+
+        private DailyRecipe buildRecipe(User writer, boolean isPublic) {
+            return DailyRecipe.builder()
+                    .id(RECIPE_ID)
+                    .title("된장찌개")
+                    .content("{}")
+                    .isPublic(isPublic)
+                    .likeCount(3)
+                    .user(writer)
+                    .build();
+        }
+
+        @Test
+        @DisplayName("타인의 공개 레시피에 좋아요/북마크를 하지 않았다면 isLiked, isBookmarked는 false이고 canLike, canBookmark는 true이다")
+        void 타인_레시피_상태없음() {
+            DailyRecipe recipe = buildRecipe(author, true);
+            given(dailyRecipeRepository.findById(RECIPE_ID)).willReturn(Optional.of(recipe));
+            given(recipeLikeRepository.existsByDailyRecipeAndUser(recipe, viewer)).willReturn(false);
+            given(recipeBookmarkRepository.existsByDailyRecipeAndUser(recipe, viewer)).willReturn(false);
+
+            CookeepsRecipeDetailResponseDto dto = cookeepsService.getCookeepsRecipeDetail(RECIPE_ID, USER_ID);
+
+            assertThat(dto.getIsLiked()).isFalse();
+            assertThat(dto.getIsBookmarked()).isFalse();
+            assertThat(dto.getCanLike()).isTrue();
+            assertThat(dto.getCanBookmark()).isTrue();
+        }
+
+        @Test
+        @DisplayName("타인의 공개 레시피에 이미 좋아요/북마크를 했다면 isLiked, isBookmarked는 true이고 canLike, canBookmark도 true이다")
+        void 타인_레시피_이미_좋아요_북마크() {
+            DailyRecipe recipe = buildRecipe(author, true);
+            given(dailyRecipeRepository.findById(RECIPE_ID)).willReturn(Optional.of(recipe));
+            given(recipeLikeRepository.existsByDailyRecipeAndUser(recipe, viewer)).willReturn(true);
+            given(recipeBookmarkRepository.existsByDailyRecipeAndUser(recipe, viewer)).willReturn(true);
+
+            CookeepsRecipeDetailResponseDto dto = cookeepsService.getCookeepsRecipeDetail(RECIPE_ID, USER_ID);
+
+            assertThat(dto.getIsLiked()).isTrue();
+            assertThat(dto.getIsBookmarked()).isTrue();
+            assertThat(dto.getCanLike()).isTrue();
+            assertThat(dto.getCanBookmark()).isTrue();
+        }
+
+        @Test
+        @DisplayName("본인 레시피는 canLike, canBookmark가 false이다")
+        void 본인_레시피는_누를_수_없다() {
+            DailyRecipe recipe = buildRecipe(viewer, true);
+            given(dailyRecipeRepository.findById(RECIPE_ID)).willReturn(Optional.of(recipe));
+
+            CookeepsRecipeDetailResponseDto dto = cookeepsService.getCookeepsRecipeDetail(RECIPE_ID, USER_ID);
+
+            assertThat(dto.getIsLiked()).isFalse();
+            assertThat(dto.getIsBookmarked()).isFalse();
+            assertThat(dto.getCanLike()).isFalse();
+            assertThat(dto.getCanBookmark()).isFalse();
+        }
+
+        @Test
+        @DisplayName("비공개 레시피는 DAILY_RECIPE_NOT_FOUND 예외가 발생한다")
+        void 비공개_레시피_예외() {
+            DailyRecipe recipe = buildRecipe(author, false);
+            given(dailyRecipeRepository.findById(RECIPE_ID)).willReturn(Optional.of(recipe));
+
+            assertThatThrownBy(() -> cookeepsService.getCookeepsRecipeDetail(RECIPE_ID, USER_ID))
+                    .isInstanceOf(AppException.class)
+                    .hasMessageContaining(ErrorCode.DAILY_RECIPE_NOT_FOUND.getMessage());
+        }
+
+        @Test
+        @DisplayName("존재하지 않는 레시피는 DAILY_RECIPE_NOT_FOUND 예외가 발생한다")
+        void 존재하지_않는_레시피_예외() {
+            given(dailyRecipeRepository.findById(RECIPE_ID)).willReturn(Optional.empty());
+
+            assertThatThrownBy(() -> cookeepsService.getCookeepsRecipeDetail(RECIPE_ID, USER_ID))
+                    .isInstanceOf(AppException.class)
+                    .hasMessageContaining(ErrorCode.DAILY_RECIPE_NOT_FOUND.getMessage());
         }
     }
 }
