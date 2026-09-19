@@ -47,7 +47,19 @@ public class CookeepsRecipeDetailResponseDto {
     @Schema(description = "등록 시각")
     private LocalDateTime createdAt;
 
-    public static CookeepsRecipeDetailResponseDto from(DailyRecipe dailyRecipe) {
+    @Schema(description = "내가 이 레시피에 좋아요를 눌렀는지 여부")
+    private Boolean isLiked;
+
+    @Schema(description = "내가 이 레시피를 북마크했는지 여부")
+    private Boolean isBookmarked;
+
+    @Schema(description = "내가 이 레시피에 좋아요를 누를 수 있는지 여부 (본인 레시피면 false)")
+    private Boolean canLike;
+
+    @Schema(description = "내가 이 레시피를 북마크할 수 있는지 여부 (본인 레시피면 false)")
+    private Boolean canBookmark;
+
+    public static CookeepsRecipeDetailResponseDto from(DailyRecipe dailyRecipe, boolean isLiked, boolean isBookmarked, boolean isMine) {
         return CookeepsRecipeDetailResponseDto.builder()
                 .dailyRecipeId(dailyRecipe.getId())
                 .nickname(dailyRecipe.getUser().getNickname())
@@ -60,6 +72,10 @@ public class CookeepsRecipeDetailResponseDto {
                 .feature(dailyRecipe.getFeature())
                 .featureName(dailyRecipe.getFeature() != null ? dailyRecipe.getFeature().getDisplayName() : null)
                 .createdAt(dailyRecipe.getCreatedAt())
+                .isLiked(isLiked)
+                .isBookmarked(isBookmarked)
+                .canLike(!isMine)
+                .canBookmark(!isMine)
                 .build();
     }
 }

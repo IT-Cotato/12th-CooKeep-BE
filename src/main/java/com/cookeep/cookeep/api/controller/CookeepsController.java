@@ -82,8 +82,9 @@ public class CookeepsController {
 	})
 	@GetMapping("/recipes/{dailyRecipeId}")
 	public ResponseEntity<DataResponse<CookeepsRecipeDetailResponseDto>> getCommunityRecipeDetail(
-			@PathVariable Long dailyRecipeId
+			@PathVariable Long dailyRecipeId,
+			@AuthenticationPrincipal(expression = "userId") Long userId
 	) {
-		return ResponseEntity.ok(DataResponse.from(cookeepsService.getCookeepsRecipeDetail(dailyRecipeId)));
+		return ResponseEntity.ok(DataResponse.from(cookeepsService.getCookeepsRecipeDetail(dailyRecipeId, userId)));
 	}
 }
