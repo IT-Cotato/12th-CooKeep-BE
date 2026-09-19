@@ -5,6 +5,7 @@ import com.cookeep.cookeep.common.exception.AppException;
 import com.cookeep.cookeep.common.exception.ErrorCode;
 import com.cookeep.cookeep.domain.notification.dao.NotificationRepository;
 import com.cookeep.cookeep.domain.notification.entity.Notification;
+import com.cookeep.cookeep.domain.user.application.UserReader;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -23,10 +24,14 @@ public class NotificationService {
     // 유효기간 - 30일
     private static final int RETENTION_DAYS = 30;
 
+    private final UserReader userReader;
     private final NotificationRepository notificationRepository;
 
     // 서비스 알림 목록 조회 (최근 30일, 최신순)
     public List<GetNotificationResponseDto> getNotifications(Long userId) {
+
+        userReader.readById(userId);
+
         LocalDateTime after = LocalDateTime.now().minusDays(RETENTION_DAYS);
 
         return notificationRepository
