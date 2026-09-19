@@ -6,7 +6,6 @@ import com.cookeep.cookeep.common.dto.DataResponse;
 import com.cookeep.cookeep.common.dto.SliceResponse;
 import com.cookeep.cookeep.common.exception.ErrorCode;
 import com.cookeep.cookeep.config.ApiErrorCodeExamples;
-import com.cookeep.cookeep.domain.dailyrecipe.application.RecipeBookmarkService;
 import com.cookeep.cookeep.domain.dailyrecipe.application.RecipeLikeService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
