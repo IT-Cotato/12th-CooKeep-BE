@@ -37,14 +37,7 @@ public class NotificationService {
         return notificationRepository
                 .findAllByUser_UserIdAndCreatedAtAfterOrderByCreatedAtDesc(userId, after)
                 .stream()
-                .map(n -> new GetNotificationResponseDto(
-                        n.getNotificationId(),
-                        n.getType(),
-                        n.getTitle(),
-                        n.getBody(),
-                        n.getUrl(),
-                        n.isRead(),
-                        n.getCreatedAt()))
+                .map(GetNotificationResponseDto::from)
                 .toList();
     }
 

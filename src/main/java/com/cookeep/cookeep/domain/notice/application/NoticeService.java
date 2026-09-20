@@ -33,7 +33,8 @@ public class NoticeService {
 	public GetNoticeInboxResponseDto getNoticeInbox() {
 		LocalDateTime after = LocalDateTime.now().minusDays(RETENTION_DAYS);
 
-		List<GetNoticeInboxResponseDto.NoticeItem> notices = noticeRepository.findAllByCreatedAtAfterOrderByCreatedAtDesc(after).stream()
+		List<GetNoticeInboxResponseDto.NoticeItem> notices = noticeRepository.findAllByCreatedAtAfterOrderByCreatedAtDesc(after)
+				.stream()
 				.map(GetNoticeInboxResponseDto.NoticeItem::from)
 				.toList();
 

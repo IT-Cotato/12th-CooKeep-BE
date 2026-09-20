@@ -1,6 +1,7 @@
 package com.cookeep.cookeep.api.dto.response;
 
 
+import com.cookeep.cookeep.common.util.NotificationDateTimeUtils;
 import com.cookeep.cookeep.domain.notice.entity.Notice;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
@@ -43,12 +44,16 @@ public class GetNoticeInboxResponseDto {
         @Schema(description = "공지사항 등록 시각", example = "2026-09-08T09:26:00")
         private LocalDateTime createdAt;
 
+        @Schema(description = "생성 시각으로부터 경과 시간 (방금 전 / n분 전 / n시간 전 / n일 전)", example = "방금 전")
+        private String elapsedTime;
+
         public static NoticeItem from(Notice notice) {
             return NoticeItem.builder()
                     .noticeId(notice.getNoticeId())
                     .title(notice.getTitle())
                     .content(notice.getContent())
                     .createdAt(notice.getCreatedAt())
+                    .elapsedTime(NotificationDateTimeUtils.getElapsedTimeText(notice.getCreatedAt()))
                     .build();
         }
     }
