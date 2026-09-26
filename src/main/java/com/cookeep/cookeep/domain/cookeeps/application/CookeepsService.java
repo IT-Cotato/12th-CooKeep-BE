@@ -10,6 +10,8 @@ import com.cookeep.cookeep.api.dto.response.CookeepsFeedResponseDto;
 import com.cookeep.cookeep.common.exception.AppException;
 import com.cookeep.cookeep.common.exception.ErrorCode;
 import com.cookeep.cookeep.domain.dailyrecipe.dao.DailyRecipeRepository;
+import com.cookeep.cookeep.domain.dailyrecipe.dao.RecipeBookmarkRepository;
+import com.cookeep.cookeep.domain.dailyrecipe.dao.RecipeLikeRepository;
 
 import com.cookeep.cookeep.domain.dailyrecipe.entity.DailyRecipe;
 import com.cookeep.cookeep.domain.plant.dao.WateringLogRepository;
@@ -38,6 +40,8 @@ public class CookeepsService {
 	private final UserReader userReader;
 	private final WateringLogRepository wateringLogRepository;
 	private final DailyRecipeRepository dailyRecipeRepository;
+	private final RecipeLikeRepository recipeLikeRepository;
+	private final RecipeBookmarkRepository recipeBookmarkRepository;
 	private final RankingCacheService rankingCacheService;
 
 	@Transactional(readOnly = true)
@@ -110,7 +114,7 @@ public class CookeepsService {
 	}
 
 	@Transactional(readOnly = true)
-	public CookeepsRecipeDetailResponseDto getCookeepsRecipeDetail(Long dailyRecipeId) {
+	public CookeepsRecipeDetailResponseDto getCookeepsRecipeDetail(Long dailyRecipeId, Long userId) {
 		DailyRecipe dailyRecipe = dailyRecipeRepository.findById(dailyRecipeId)
 				.orElseThrow(() -> new AppException(ErrorCode.DAILY_RECIPE_NOT_FOUND));
 
@@ -119,6 +123,11 @@ public class CookeepsService {
 			throw new AppException(ErrorCode.DAILY_RECIPE_NOT_FOUND); // 혹은 권한 에러
 		}
 
-		return CookeepsRecipeDetailResponseDto.from(dailyRecipe);
+		User user = userReader.readById(userId);
+		boolean isMine = dailyRecipe.getUser().getUserId().equals(userId);
+		boolean isLiked = recipeLikeRepository.existsByDailyRecipeAndUser(dailyRecipe, user);
+		boolean isBookmarked = recipeBookmarkRepository.existsByDailyRecipeAndUser(dailyRecipe, user);
+
+		return CookeepsRecipeDetailResponseDto.from(dailyRecipe, isLiked, isBookmarked, isMine);
 	}
 }

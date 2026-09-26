@@ -50,13 +50,6 @@ public class RecipeBookmarkService {
     }
 
     @Transactional(readOnly = true)
-    public boolean isBookmarked(Long userId, Long dailyRecipeId) {
-        User user = userReader.readById(userId);
-        return recipeBookmarkRepository.existsByDailyRecipeAndUser(
-                dailyRecipeRepository.getReferenceById(dailyRecipeId), user);
-    }
-
-    @Transactional(readOnly = true)
     public Slice<CookeepsFeedResponseDto> getMyBookmarkedRecipes(Long userId, Pageable pageable) {
         User user = userReader.readById(userId);
 
