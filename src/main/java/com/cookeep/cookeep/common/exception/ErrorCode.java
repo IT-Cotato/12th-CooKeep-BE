@@ -170,6 +170,7 @@ public enum ErrorCode {
 
 	// NOTIFICATION
 	SUBSCRIPTION_NOT_FOUND(HttpStatus.NOT_FOUND, "해당 subscription을 찾을 수 없습니다.", "NOTIFICATION-003"),
+	NOTIFICATION_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 알림입니다.", "NOTIFICATION-004"),
 
 	// ==============================
 	// 409 CONFLICT
