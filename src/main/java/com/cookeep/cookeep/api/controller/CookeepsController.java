@@ -67,6 +67,10 @@ public class CookeepsController {
 	}
 
 	@Operation(summary = "쿠킵스 공개 레시피 목록 전체 조회", description = "모든 유저의 공개 레시피를 정렬 필터와 함께 조회합니다. filter: latest(기본, 최신순), likes(좋아요 많은 순), oldest(오래된 순)")
+	@ApiResponses(value = {
+		@ApiResponse(responseCode = "200", description = "조회 성공"),
+		@ApiResponse(responseCode = "401", description = "인증되지 않은 사용자")
+	})
 	@GetMapping("/recipes")
 	public ResponseEntity<DataResponse<SliceResponse<CookeepsFeedResponseDto>>> getAllRecipes(
 			@RequestParam(defaultValue = "latest") String filter,
