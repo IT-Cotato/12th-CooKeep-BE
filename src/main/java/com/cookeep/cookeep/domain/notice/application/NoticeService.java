@@ -13,14 +13,14 @@ import com.cookeep.cookeep.domain.notice.entity.Notice;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import static com.cookeep.cookeep.common.util.InboxPolicy.RETENTION_DAYS;
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class NoticeService {
-	private final NoticeRepository noticeRepository;
 
-	// 알림함에는 최근 30일 이내 공지만 노출됨
-	private static final int RETENTION_DAYS = 30;
+	private final NoticeRepository noticeRepository;
 
 	// 공지사항 조회
 	public List<GetNoticeResponseDTO> getNotices() {

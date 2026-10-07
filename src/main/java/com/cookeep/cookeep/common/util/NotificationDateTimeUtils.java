@@ -7,10 +7,9 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.TemporalAdjusters;
 
-public class NotificationDateTimeUtils {
+import static com.cookeep.cookeep.common.util.InboxPolicy.RETENTION_DAYS;
 
-    // 알림함(공지사항/서비스 알림)에 노출되는 기간 - 30일 경과 시 자동 삭제됨
-    private static final long INBOX_RETENTION_DAYS = 30;
+public class NotificationDateTimeUtils {
 
     private static final DateTimeFormatter ABSOLUTE_DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy. M. d.");
 
@@ -56,7 +55,7 @@ public class NotificationDateTimeUtils {
             return days + "일 전";
         }
 
-        if (days <= INBOX_RETENTION_DAYS) {
+        if (days <= RETENTION_DAYS) {
             return createdAt.format(ABSOLUTE_DATE_FORMATTER);
         }
 
@@ -64,15 +63,4 @@ public class NotificationDateTimeUtils {
         return null;
     }
 
-    // 이번 주 월요일 00:00:00 계산
-    public static LocalDateTime getStartOfWeek() {
-        return LocalDate.now()
-                .with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
-                .atStartOfDay();
-    }
-
-    // 이번 주 일요일 23:59:59 계산
-    public static LocalDateTime getEndOfWeek() {
-        return getStartOfWeek().plusDays(7).minusNanos(1);
-    }
 }

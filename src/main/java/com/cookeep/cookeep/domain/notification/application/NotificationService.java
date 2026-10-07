@@ -14,15 +14,14 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import static com.cookeep.cookeep.common.util.InboxPolicy.RETENTION_DAYS;
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 // 알림함 조회/읽음 처리용
 public class NotificationService {
-
-    // 유효기간 - 30일
-    private static final int RETENTION_DAYS = 30;
 
     private final UserReader userReader;
     private final NotificationRepository notificationRepository;
