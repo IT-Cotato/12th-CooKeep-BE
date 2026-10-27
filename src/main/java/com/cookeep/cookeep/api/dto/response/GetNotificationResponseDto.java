@@ -42,7 +42,7 @@ public class GetNotificationResponseDto {
     @Schema(description = "알림 생성 시각", example = "2026-09-08T09:41:00")
     private LocalDateTime createdAt;
 
-    @Schema(description = "경과 시간 (방금 전 / n분 / n시간/ n일 전)", example = "방금 전")
+    @Schema(description = "경과 시간 (방금 전 / n분 / n시간/ n일 전 / 7일 이상은 yyyy.M.d.)", example = "방금 전")
     private String elapsedTime;
 
     public static GetNotificationResponseDto from(Notification notification) {

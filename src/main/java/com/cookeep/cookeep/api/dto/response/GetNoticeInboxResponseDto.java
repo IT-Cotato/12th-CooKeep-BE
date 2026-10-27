@@ -44,7 +44,7 @@ public class GetNoticeInboxResponseDto {
         @Schema(description = "공지사항 등록 시각", example = "2026-09-08T09:26:00")
         private LocalDateTime createdAt;
 
-        @Schema(description = "생성 시각으로부터 경과 시간 (방금 전 / n분 전 / n시간 전 / n일 전)", example = "방금 전")
+        @Schema(description = "생성 시각으로부터 경과 시간 (방금 전 / n분 전 / n시간 전 / n일 전 / 7일 이후는 yyyy.M.d. )", example = "방금 전")
         private String elapsedTime;
 
         public static NoticeItem from(Notice notice) {
