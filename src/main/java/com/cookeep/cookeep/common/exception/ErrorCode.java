@@ -102,6 +102,9 @@ public enum ErrorCode {
 	INVALID_ENDPOINT(HttpStatus.BAD_REQUEST, "subscription endpoint 정보가 누락되었습니다.", "NOTIFICATION-001"),
 	INVALID_REQUEST(HttpStatus.BAD_REQUEST, "요청 정보는 필수입니다.", "NOTIFICATION-002"),
 
+	// NOTICE
+	NOTICE_TYPE_REQUIRED(HttpStatus.BAD_REQUEST, "공지사항 종류(type)는 필수입니다.", "NOTICE-001"),
+
 	// ==============================
 	// 401 UNAUTHORIZED
 	// ==============================
