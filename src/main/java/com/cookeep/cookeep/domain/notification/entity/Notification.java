@@ -17,7 +17,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
         indexes = {
                 // 알림함 목록 조회(30일 이내/최신순) 복합 인덱스
                 @Index(name = "idx_notifications_user_created_at", columnList = "user_id, created_at"),
-                // 만료된(30일 경과) 알림 일괄 삭제 스케줄러용 인덱스
+                // 만료된(30일 경과) 알림 숨김처리 스케줄러용 인덱스
                 @Index(name = "idx_notifications_created_at", columnList = "created_at")
         }
 )
