@@ -18,8 +18,4 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
     // 읽음 처리 시 본인 소유 여부 검증을 위한 조회
     Optional<Notification> findByNotificationIdAndUser_UserId(Long notificationId, Long userId);
 
-    // 기준 시각 이전에 생성된 알림 일괄 삭제 (30일 경과 알림 자동 삭제 스케줄러용)
-    @Modifying
-    @Query("DELETE FROM Notification n WHERE n.createdAt < :before")
-    int deleteAllByCreatedAtBefore(@Param("before") LocalDateTime before);
 }

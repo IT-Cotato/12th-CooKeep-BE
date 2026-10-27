@@ -18,10 +18,4 @@ public interface NoticeRepository extends JpaRepository<Notice, Long> {
 	// 최근 30일 이내 공지를 최신순으로 조회
 	List<Notice> findAllByCreatedAtAfterOrderByCreatedAtDesc(LocalDateTime after);
 
-	// 기준 시각 이전에 등록된 공지 일괄 삭제
-	@Modifying
-	@Query("DELETE FROM Notice n WHERE n.createdAt < :before")
-	int deleteAllByCreatedAtBefore(@Param("before") LocalDateTime before);
-
-
 }
