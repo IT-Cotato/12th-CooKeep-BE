@@ -1,17 +1,16 @@
 package com.cookeep.cookeep.domain.notification.application;
 
 import com.cookeep.cookeep.api.dto.response.WebPushSendResponseDto;
-import com.cookeep.cookeep.common.exception.AppException;
-import com.cookeep.cookeep.common.exception.ErrorCode;
 import com.cookeep.cookeep.domain.ingredient.useringredient.dao.UserIngredientRepository;
+import com.cookeep.cookeep.domain.notification.dao.NotificationRepository;
 import com.cookeep.cookeep.domain.notification.dao.WebPushSubscriptionRepository;
+import com.cookeep.cookeep.domain.notification.entity.Notification;
 import com.cookeep.cookeep.domain.notification.entity.NotificationType;
 import com.cookeep.cookeep.domain.notification.entity.WebPushSubscription;
 import com.cookeep.cookeep.domain.user.application.UserReader;
 import com.cookeep.cookeep.domain.user.entity.User;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import nl.martijndwars.webpush.Notification;
 import nl.martijndwars.webpush.PushService;
 import org.jose4j.json.internal.json_simple.JSONObject;
 import org.springframework.stereotype.Service;
@@ -29,6 +28,7 @@ public class WebPushNotificationService {
     private final UserIngredientRepository userIngredientRepository;
     private final WebPushSubscriptionRepository webPushSubscriptionRepository;
     private final PushService pushService;
+    private final NotificationRepository notificationRepository;
 
     public WebPushSendResponseDto sendExpirationAlert(Long userId) {
 
@@ -69,9 +69,14 @@ public class WebPushNotificationService {
                 userId, subscriptions.size(), successCount);
 
         // 6. 성공 횟수가 0이면 모든 구독이 만료됐거나 전송에 실패한 것
-        return successCount > 0
-                ? WebPushSendResponseDto.sent(NotificationType.EXPIRATION)
-                : WebPushSendResponseDto.allSubscriptionsExpired();
+        if (successCount == 0) {
+            return WebPushSendResponseDto.allSubscriptionsExpired();
+        }
+
+        // 7. 실제로 최소 1개 이상의 브라우저에 전달된 경우에만 알림함 이력 저장
+        saveNotificationHistory(user, NotificationType.EXPIRATION);
+
+        return WebPushSendResponseDto.sent(NotificationType.EXPIRATION);
 
     }
 
@@ -101,9 +106,14 @@ public class WebPushNotificationService {
         log.info("식물 상태 푸시 알림 전송 완료. userId={}, type={}, total={}, success={}",
                 userId, type, subscriptions.size(), successCount);
 
-        return successCount > 0
-                ? WebPushSendResponseDto.sent(type)
-                : WebPushSendResponseDto.allSubscriptionsExpired();
+        if (successCount == 0) {
+            return WebPushSendResponseDto.allSubscriptionsExpired();
+        }
+
+        // 실제로 최소 1개 이상의 브라우저에 전달된 경우에만 알림함 이력 저장
+        saveNotificationHistory(user, type);
+
+        return WebPushSendResponseDto.sent(type);
     }
 
     // --- 내부 메서드 ---
@@ -127,11 +137,12 @@ public class WebPushNotificationService {
 
         for (WebPushSubscription subscription : subscriptions) {
             try {
-                Notification notification = new Notification(
-                        subscription.getEndpoint(),
-                        subscription.getP256dh(),
-                        subscription.getAuth(),
-                        payload.getBytes()
+                nl.martijndwars.webpush.Notification notification =
+                        new nl.martijndwars.webpush.Notification(
+                            subscription.getEndpoint(),
+                            subscription.getP256dh(),
+                            subscription.getAuth(),
+                            payload.getBytes()
                 );
 
                 int statusCode = pushService.send(notification).getStatusLine().getStatusCode();
@@ -160,6 +171,20 @@ public class WebPushNotificationService {
         }
         return successCount;
 
+    }
+
+    // 알림함에 노출할 발송 이력 저장
+    // 구독(기기)이 여러 개여도 유저 기준 알림함에는 한 건만 남김
+    private void saveNotificationHistory(User user, NotificationType type) {
+        Notification notification = Notification.builder()
+                .user(user)
+                .type(type)
+                .title(type.getTitle())
+                .body(type.getBody())
+                .url(type.getUrl())
+                .build();
+
+        notificationRepository.save(notification);
     }
 
 //    public void sendTestPush(Long userId) {
