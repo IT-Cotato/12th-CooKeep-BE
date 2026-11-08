@@ -1,16 +1,12 @@
 package com.cookeep.cookeep.domain.notice.entity;
 
+import com.cookeep.cookeep.common.exception.AppException;
+import com.cookeep.cookeep.common.exception.ErrorCode;
+import jakarta.persistence.*;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import com.cookeep.cookeep.common.entity.BaseEntity;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EntityListeners;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -34,5 +30,20 @@ public class Notice extends BaseEntity {
 
 	@Column(nullable = false, columnDefinition = "TEXT")
 	private String content;
+
+	@Enumerated(EnumType.STRING)
+	@Column(nullable = false, length = 20)
+	private NoticeType type;
+
+	// 신규 공지 등록용 빌더 - type을 지정하지 않으면 NOTICE_TYPE_REQUIRED 예외 발생
+	@Builder
+	private Notice(String title, String content, NoticeType type) {
+		if (type == null) {
+			throw new AppException(ErrorCode.NOTICE_TYPE_REQUIRED);
+		}
+		this.title = title;
+		this.content = content;
+		this.type = type;
+	}
 
 }
